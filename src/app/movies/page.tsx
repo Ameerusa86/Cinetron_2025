@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePopularMovies, useSearchMovies } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
+import { createMovieSlug } from "@/lib/slug-utils";
 import type { Movie } from "@/types";
 
 const genres = [
@@ -151,7 +152,7 @@ export default function MoviesPage() {
               {displayMovies.map((movie: Movie) => (
                 <Link
                   key={movie.id}
-                  href={`/movie/${movie.id}`}
+                  href={`/movie/${createMovieSlug(movie.title, movie.id)}`}
                   className="card-premium group cursor-pointer"
                 >
                   <div className="aspect-[2/3] relative overflow-hidden rounded-xl">

@@ -8,7 +8,14 @@ import {
   useNotificationStore,
   useUserStore,
 } from "@/stores";
-import type { Movie, MultiSearchResult } from "@/types";
+import type {
+  Movie,
+  MultiSearchResult,
+  TVShow,
+  MovieDetails,
+  TVShowDetails,
+} from "@/types";
+import { extractIdFromSlug } from "@/lib/slug-utils";
 
 // ======================
 // TMDB API HOOKS
@@ -722,4 +729,76 @@ export const useViewport = () => {
     isTablet,
     isDesktop,
   };
+};
+
+// ======================
+// SLUG-BASED HOOKS
+// ======================
+
+/**
+ * Hook to fetch movie details by slug
+ */
+export const useMovieDetailsBySlug = (
+  slug: string,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["movie-details-by-slug", slug],
+    queryFn: async () => {
+      try {
+        const movieId = extractIdFromSlug(slug);
+        const { getMovieDetails, addMovieDetails } = useCacheStore.getState();
+
+        const cached = getMovieDetails(movieId);
+        if (cached) {
+          return cached;
+        }
+
+        const data = await tmdbClient.getMovieDetails(movieId, [
+          "credits",
+          "videos",
+          "similar",
+          "recommendations",
+          "reviews",
+        ]);
+        addMovieDetails(movieId, data);
+        return data;
+      } catch (error) {
+        throw new Error(`Invalid movie slug: ${slug}`);
+      }
+    },
+    enabled: enabled && !!slug,
+    staleTime: 1000 * 60 * 15, // 15 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+  });
+};
+
+/**
+ * Hook to fetch TV show details by slug
+ */
+export const useTVShowDetailsBySlug = (
+  slug: string,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["tv-show-details-by-slug", slug],
+    queryFn: async () => {
+      try {
+        const tvShowId = extractIdFromSlug(slug);
+        const data = await tmdbClient.getTVShowDetails(tvShowId, [
+          "credits",
+          "videos",
+          "similar",
+          "recommendations",
+          "reviews",
+        ]);
+        return data;
+      } catch (error) {
+        throw new Error(`Invalid TV show slug: ${slug}`);
+      }
+    },
+    enabled: enabled && !!slug,
+    staleTime: 1000 * 60 * 15, // 15 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+  });
 };

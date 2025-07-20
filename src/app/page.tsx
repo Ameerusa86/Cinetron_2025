@@ -2,8 +2,10 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useTrendingMovies } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
+import { createMovieSlug } from "@/lib/slug-utils";
 
 export default function HomePage() {
   const { data: trendingMovies, isLoading, error } = useTrendingMovies();
@@ -85,8 +87,9 @@ export default function HomePage() {
           {trendingMovies && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6">
               {trendingMovies.results.slice(0, 16).map((movie) => (
-                <div
+                <Link
                   key={movie.id}
+                  href={`/movie/${createMovieSlug(movie.title, movie.id)}`}
                   className="card-premium group cursor-pointer"
                 >
                   <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
@@ -118,7 +121,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

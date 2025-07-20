@@ -4,6 +4,7 @@ import type {
   MovieDetails,
   MovieResponse,
   TVShowResponse,
+  TVShowDetails,
   Credits,
   VideoResponse,
   ReviewResponse,
@@ -128,6 +129,21 @@ class TMDBClient {
   async getPopularTVShows(page: number = 1): Promise<TVShowResponse> {
     const response = await this.api.get<TVShowResponse>("/tv/popular", {
       params: { page },
+    });
+    return response.data;
+  }
+
+  /**
+   * Get TV show details
+   */
+  async getTVShowDetails(
+    tvId: number,
+    appendToResponse: string[] = []
+  ): Promise<TVShowDetails> {
+    const response = await this.api.get<TVShowDetails>(`/tv/${tvId}`, {
+      params: {
+        append_to_response: appendToResponse.join(","),
+      },
     });
     return response.data;
   }

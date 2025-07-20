@@ -44,6 +44,27 @@ export interface MovieDetails extends Omit<Movie, "genre_ids"> {
   tagline?: string;
 }
 
+// Movie Details Type (extends Movie with additional fields)
+export interface MovieDetails extends Omit<Movie, "genre_ids"> {
+  belongs_to_collection?: Collection | null;
+  budget: number;
+  genres: Genre[];
+  homepage?: string;
+  imdb_id?: string;
+  production_companies: ProductionCompany[];
+  production_countries: ProductionCountry[];
+  revenue: number;
+  runtime?: number;
+  spoken_languages: SpokenLanguage[];
+  status: string;
+  tagline?: string;
+  credits?: Credits;
+  videos?: VideoResponse;
+  reviews?: ReviewResponse;
+  similar?: MovieResponse;
+  recommendations?: MovieResponse;
+}
+
 export interface Genre {
   id: number;
   name: string;
@@ -186,6 +207,94 @@ export interface TVShow {
   vote_average: number;
   origin_country: string[];
   media_type: "tv";
+}
+
+// TV Show Details Type (extends TVShow with additional fields)
+export interface TVShowDetails extends Omit<TVShow, "genre_ids"> {
+  genres: Genre[];
+  created_by: CreatedBy[];
+  episode_run_time: number[];
+  homepage?: string;
+  in_production: boolean;
+  languages: string[];
+  last_air_date?: string;
+  last_episode_to_air?: Episode;
+  next_episode_to_air?: Episode;
+  networks: Network[];
+  number_of_episodes: number;
+  number_of_seasons: number;
+  production_companies: ProductionCompany[];
+  production_countries: ProductionCountry[];
+  seasons: Season[];
+  spoken_languages: SpokenLanguage[];
+  status: string;
+  tagline?: string;
+  type: string;
+  credits?: Credits;
+  videos?: VideoResponse;
+  reviews?: ReviewResponse;
+  similar?: TVShowResponse;
+  recommendations?: TVShowResponse;
+}
+
+// Additional TV Show Types
+export interface CreatedBy {
+  id: number;
+  credit_id: string;
+  name: string;
+  gender: number;
+  profile_path?: string;
+}
+
+export interface Episode {
+  id: number;
+  name: string;
+  overview: string;
+  vote_average: number;
+  vote_count: number;
+  air_date: string;
+  episode_number: number;
+  production_code: string;
+  runtime: number;
+  season_number: number;
+  show_id: number;
+  still_path?: string;
+}
+
+export interface Season {
+  id: number;
+  air_date?: string;
+  episode_count: number;
+  name: string;
+  overview: string;
+  poster_path?: string;
+  season_number: number;
+}
+
+export interface Network {
+  id: number;
+  logo_path?: string;
+  name: string;
+  origin_country: string;
+}
+
+// Video Types
+export interface Video {
+  id: string;
+  iso_639_1: string;
+  iso_3166_1: string;
+  key: string;
+  name: string;
+  site: string;
+  size: number;
+  type: string;
+  official: boolean;
+  published_at: string;
+}
+
+export interface VideoResponse {
+  id: number;
+  results: Video[];
 }
 
 // Search Types

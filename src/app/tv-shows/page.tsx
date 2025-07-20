@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePopularTVShows } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
+import { createTVShowSlug } from "@/lib/slug-utils";
 import type { TVShow } from "@/types";
 
 const tvGenres = [
@@ -151,7 +152,7 @@ export default function TVShowsPage() {
               {displayShows.map((show: TVShow) => (
                 <Link
                   key={show.id}
-                  href={`/tv/${show.id}`}
+                  href={`/tv/${createTVShowSlug(show.name, show.id)}`}
                   className="card-premium group cursor-pointer"
                 >
                   <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
