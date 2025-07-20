@@ -111,7 +111,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full">
       {/* Hero Section */}
-      <section className="relative w-full bg-gradient-to-br from-purple-900 via-purple-700 to-pink-800 overflow-hidden">
+      <section className="relative w-full bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-purple-900 dark:via-purple-700 dark:to-pink-800 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -122,8 +122,8 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
           />
         </div>
 
-        <div className="relative z-10 px-4 sm:px-6 lg:px-8 xl:px-12 py-16">
-          <div className="w-full max-w-7xl mx-auto">
+        <div className="relative z-10 px-4 sm:px-6 lg:px-8 xl:px-12 py-16 w-full">
+          <div className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
               {/* Profile Photo */}
               <div className="lg:col-span-1">
@@ -151,16 +151,16 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
               </div>
 
               {/* Person Details */}
-              <div className="lg:col-span-2 text-white text-center lg:text-left">
+              <div className="lg:col-span-2 text-slate-900 dark:text-white text-center lg:text-left">
                 <div className="space-y-6">
                   {/* Name */}
                   <div>
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold mb-4">
-                      <span className="bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
+                      <span className="bg-gradient-to-r from-slate-800 to-slate-600 dark:from-purple-200 dark:to-pink-200 bg-clip-text text-transparent">
                         {person.name}
                       </span>
                     </h1>
-                    <p className="text-xl text-purple-200">
+                    <p className="text-xl text-slate-600 dark:text-purple-200">
                       {person.known_for_department}
                     </p>
                   </div>
@@ -168,11 +168,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                   {/* Personal Info Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     {person.birthday && (
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-purple-200 font-semibold mb-1">
+                      <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                        <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
                           Birthday
                         </div>
-                        <div className="text-white">
+                        <div className="text-slate-900 dark:text-white">
                           {new Date(person.birthday).toLocaleDateString(
                             "en-US",
                             {
@@ -182,7 +182,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                             }
                           )}
                           {!person.deathday && (
-                            <span className="text-purple-200 ml-2">
+                            <span className="text-slate-600 dark:text-purple-200 ml-2">
                               (Age {calculateAge(person.birthday)})
                             </span>
                           )}
@@ -191,11 +191,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                     )}
 
                     {person.deathday && (
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-purple-200 font-semibold mb-1">
+                      <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                        <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
                           Death
                         </div>
-                        <div className="text-white">
+                        <div className="text-slate-900 dark:text-white">
                           {new Date(person.deathday).toLocaleDateString(
                             "en-US",
                             {
@@ -205,7 +205,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                             }
                           )}
                           {person.birthday && (
-                            <span className="text-purple-200 ml-2">
+                            <span className="text-slate-600 dark:text-purple-200 ml-2">
                               (Age{" "}
                               {calculateAge(person.birthday, person.deathday)})
                             </span>
@@ -214,42 +214,42 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                       </div>
                     )}
 
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                      <div className="text-purple-200 font-semibold mb-1">
+                    <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                      <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
                         Gender
                       </div>
-                      <div className="text-white">
+                      <div className="text-slate-900 dark:text-white">
                         {getGenderDisplay(person.gender)}
                       </div>
                     </div>
 
                     {person.place_of_birth && (
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-purple-200 font-semibold mb-1">
+                      <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                        <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
                           Place of Birth
                         </div>
-                        <div className="text-white">
+                        <div className="text-slate-900 dark:text-white">
                           {person.place_of_birth}
                         </div>
                       </div>
                     )}
 
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                      <div className="text-purple-200 font-semibold mb-1">
+                    <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                      <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
                         Popularity
                       </div>
-                      <div className="text-white">
+                      <div className="text-slate-900 dark:text-white">
                         {person.popularity.toFixed(1)}
                       </div>
                     </div>
 
                     {person.also_known_as &&
                       person.also_known_as.length > 0 && (
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:col-span-2">
-                          <div className="text-purple-200 font-semibold mb-1">
+                        <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:col-span-2">
+                          <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
                             Also Known As
                           </div>
-                          <div className="text-white text-sm">
+                          <div className="text-slate-900 dark:text-white text-sm">
                             {person.also_known_as.slice(0, 5).join(", ")}
                             {person.also_known_as.length > 5 && "..."}
                           </div>
@@ -259,11 +259,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
 
                   {/* Biography */}
                   {person.biography && (
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6">
-                      <h2 className="text-xl font-semibold text-purple-200 mb-4">
+                    <div className="bg-slate-100/60 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6">
+                      <h2 className="text-xl font-semibold text-slate-700 dark:text-purple-200 mb-4">
                         Biography
                       </h2>
-                      <div className="text-white/90 leading-relaxed space-y-4">
+                      <div className="text-slate-700 dark:text-white/90 leading-relaxed space-y-4">
                         {person.biography
                           .split("\n\n")
                           .map((paragraph, index) => (
@@ -304,8 +304,8 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
       </section>
 
       {/* Credits Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12">
-        <div className="w-full max-w-7xl mx-auto">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
+        <div className="w-full">
           {/* Tabs */}
           <div className="flex justify-center mb-8">
             <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-1 flex">
@@ -621,31 +621,31 @@ function PersonDetailSkeleton() {
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full animate-pulse">
       {/* Hero Section Skeleton */}
-      <div className="bg-gradient-to-br from-purple-900 to-pink-800 px-4 sm:px-6 lg:px-8 xl:px-12 py-16">
-        <div className="w-full max-w-7xl mx-auto">
+      <div className="bg-gradient-to-br from-slate-200 to-slate-300 dark:from-purple-900 dark:to-pink-800 px-4 sm:px-6 lg:px-8 xl:px-12 py-16 w-full">
+        <div className="w-full">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
             <div className="lg:col-span-1">
-              <div className="aspect-[3/4] w-full max-w-sm mx-auto lg:max-w-none bg-white/20 rounded-2xl" />
+              <div className="aspect-[3/4] w-full max-w-sm mx-auto lg:max-w-none bg-slate-300/50 dark:bg-white/20 rounded-2xl" />
             </div>
             <div className="lg:col-span-2 space-y-6">
-              <div className="h-16 bg-white/20 rounded-lg w-3/4" />
-              <div className="h-6 bg-white/20 rounded-lg w-1/2" />
+              <div className="h-16 bg-slate-300/50 dark:bg-white/20 rounded-lg w-3/4" />
+              <div className="h-6 bg-slate-300/50 dark:bg-white/20 rounded-lg w-1/2" />
               <div className="grid grid-cols-2 gap-4">
-                <div className="h-20 bg-white/20 rounded-lg" />
-                <div className="h-20 bg-white/20 rounded-lg" />
+                <div className="h-20 bg-slate-300/50 dark:bg-white/20 rounded-lg" />
+                <div className="h-20 bg-slate-300/50 dark:bg-white/20 rounded-lg" />
               </div>
-              <div className="h-32 bg-white/20 rounded-lg" />
+              <div className="h-32 bg-slate-300/50 dark:bg-white/20 rounded-lg" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Content Skeleton */}
-      <div className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12">
-        <div className="w-full max-w-7xl mx-auto">
+      <div className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
+        <div className="w-full">
           <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-lg w-48 mx-auto mb-8" />
-          <div className="grid grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="space-y-4">
                 <div className="aspect-[2/3] bg-slate-200 dark:bg-slate-700 rounded-xl" />
                 <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full" />

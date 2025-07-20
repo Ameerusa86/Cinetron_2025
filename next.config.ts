@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/t/p/**",
       },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+        port: "",
+        pathname: "/vi/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cinemavault.app",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

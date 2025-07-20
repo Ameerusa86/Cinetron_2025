@@ -1,11 +1,15 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { useTrendingMovies } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
-import { createMovieSlug } from "@/lib/slug-utils";
+import {
+  ParallaxScroll,
+  ParticleEffects,
+  FloatingMovieElements,
+  EnhancedMovieCard,
+  InteractiveParticles,
+} from "@/components/3d-effects";
 
 export default function HomePage() {
   const { data: trendingMovies, isLoading, error } = useTrendingMovies();
@@ -14,6 +18,12 @@ export default function HomePage() {
     <div className="w-full min-h-screen">
       {/* Premium Hero Section - Full Screen */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-950">
+        {/* Interactive Particle Background */}
+        <InteractiveParticles className="opacity-30" />
+
+        {/* Floating Movie Elements */}
+        <FloatingMovieElements elements={15} className="opacity-20" />
+
         {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-slate-200/50 dark:from-slate-900/50 dark:to-slate-950/50" />
 
@@ -57,15 +67,27 @@ export default function HomePage() {
         />
       </section>
 
-      {/* Trending Section - Full Width Responsive */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="w-full">
+      {/* Trending Section - Full Width Responsive with Parallax */}
+      <ParallaxScroll
+        speed={0.3}
+        className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 xl:px-12 w-full relative"
+      >
+        {/* Particle Effects Background */}
+        <ParticleEffects
+          count={200}
+          color="#ff6b35"
+          size={0.01}
+          speed={0.2}
+          className="opacity-10"
+        />
+
+        <div className="w-full relative z-10">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-4">
               🔥 Trending Now
             </h2>
             <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400">
-              Discover what everyone is watching
+              Discover what everyone is watching with immersive 3D previews
             </p>
           </div>
 
@@ -86,47 +108,31 @@ export default function HomePage() {
 
           {trendingMovies && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6">
-              {trendingMovies.results.slice(0, 16).map((movie) => (
-                <Link
-                  key={movie.id}
-                  href={`/movie/${createMovieSlug(movie.title, movie.id)}`}
-                  className="card-premium group cursor-pointer"
-                >
-                  <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
-                    <Image
-                      src={
-                        tmdbClient.getImageUrl(movie.poster_path, "w500") ||
-                        "/placeholder-poster.svg"
-                      }
-                      alt={movie.title}
-                      width={300}
-                      height={450}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/placeholder-poster.svg";
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
-                      <h3 className="text-white font-semibold text-sm line-clamp-2 mb-1">
-                        {movie.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-slate-300">
-                        <span>⭐ {movie.vote_average.toFixed(1)}</span>
-                        <span>•</span>
-                        <span>
-                          {new Date(movie.release_date).getFullYear()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+              {trendingMovies.results.slice(0, 16).map((movie, index) => {
+                const imageUrl =
+                  tmdbClient.getImageUrl(movie.poster_path, "w500") ||
+                  "/placeholder-poster.svg";
+
+                // Alternate between different 3D modes for visual variety
+                const modes = ["standard", "3d", "360", "standard"] as const;
+                const mode = modes[index % modes.length];
+
+                return (
+                  <EnhancedMovieCard
+                    key={movie.id}
+                    movie={movie}
+                    imageUrl={imageUrl}
+                    mode={mode}
+                    autoRotate={index % 4 === 2} // Only auto-rotate some 360° cards
+                    showTrailer={index % 3 === 0} // Show trailer option on every 3rd card
+                    className="transform transition-all duration-500 hover:scale-105"
+                  />
+                );
+              })}
             </div>
           )}
         </div>
-      </section>
+      </ParallaxScroll>
 
       {/* Features Section - Full Width Responsive */}
       <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 xl:px-12 bg-slate-50 dark:bg-slate-900/50 w-full">
