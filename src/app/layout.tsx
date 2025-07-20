@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import Navbar from "@/components/Navbar";
 import SettingsModal from "@/components/modals/SettingsModal";
+import NotificationToast from "@/components/ui/NotificationToast";
 import { themeScript } from "@/lib/theme-script";
 
 // Premium Font Configuration
@@ -188,6 +189,9 @@ export default function RootLayout({
 
             {/* Modals */}
             <SettingsModal />
+
+            {/* Notifications */}
+            <NotificationToast />
 
             {/* Main Content */}
             <main className="relative z-10 w-full">{children}</main>

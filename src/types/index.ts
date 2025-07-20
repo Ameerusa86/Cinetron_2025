@@ -385,11 +385,26 @@ export interface User {
   email: string;
   avatar?: string;
   preferences: UserPreferences;
-  watchlist: number[];
+  watchlist: WatchlistItem[];
   favorites: number[];
   ratings: Record<number, number>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WatchlistItem {
+  id: number;
+  type: "movie" | "tv";
+  status: "plan-to-watch" | "watching" | "completed" | "on-hold" | "dropped";
+  priority: "low" | "medium" | "high";
+  addedAt: string;
+  completedAt?: string;
+  rating?: number;
+  notes?: string;
+  episodeProgress?: {
+    season: number;
+    episode: number;
+  };
 }
 
 export interface UserPreferences {

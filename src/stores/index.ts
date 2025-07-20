@@ -13,6 +13,7 @@ import type {
   Genre,
   User,
   UserPreferences,
+  WatchlistItem,
   Notification,
 } from "@/types";
 
@@ -283,20 +284,64 @@ export const useUserStore = create<{
   isAuthenticated: boolean;
   setUser: (user: User | null) => void;
   updatePreferences: (preferences: Partial<UserPreferences>) => void;
-  addToWatchlist: (movieId: number) => void;
-  removeFromWatchlist: (movieId: number) => void;
+  addToWatchlist: (item: {
+    id: number;
+    type: "movie" | "tv";
+    status?: "plan-to-watch" | "watching" | "completed";
+    priority?: "low" | "medium" | "high";
+    notes?: string;
+  }) => void;
+  removeFromWatchlist: (itemId: number) => void;
+  updateWatchlistItem: (
+    itemId: number,
+    updates: Partial<Omit<WatchlistItem, "id" | "addedAt">>
+  ) => void;
   addToFavorites: (movieId: number) => void;
   removeFromFavorites: (movieId: number) => void;
   rateMovie: (movieId: number, rating: number) => void;
-  isInWatchlist: (movieId: number) => boolean;
+  isInWatchlist: (itemId: number) => boolean;
   isInFavorites: (movieId: number) => boolean;
   getMovieRating: (movieId: number) => number | undefined;
+  getWatchlistItem: (itemId: number) => WatchlistItem | undefined;
+  getWatchlistStats: () => {
+    total: number;
+    movies: number;
+    tvShows: number;
+    completed: number;
+    watching: number;
+    planToWatch: number;
+  };
 }>()(
   persist(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      setUser: (user: User | null) => set({ user, isAuthenticated: !!user }),
+      setUser: (user: User | null) => {
+        // If setting a user for the first time, ensure they have the correct watchlist structure
+        if (
+          user &&
+          user.watchlist &&
+          Array.isArray(user.watchlist) &&
+          user.watchlist.length > 0
+        ) {
+          // Check if watchlist contains old format (numbers) and convert them
+          const firstItem = user.watchlist[0];
+          if (typeof firstItem === "number") {
+            // Convert old format to new format
+            user.watchlist = (user.watchlist as unknown as number[]).map(
+              (id: number) => ({
+                id,
+                type: "movie" as const,
+                status: "plan-to-watch" as const,
+                priority: "medium" as const,
+                addedAt: new Date().toISOString(),
+              })
+            );
+          }
+        }
+
+        set({ user, isAuthenticated: !!user });
+      },
       updatePreferences: (newPreferences: Partial<UserPreferences>) => {
         const { user } = get();
         if (user) {
@@ -309,25 +354,106 @@ export const useUserStore = create<{
           });
         }
       },
-      addToWatchlist: (movieId: number) => {
-        const { user } = get();
-        if (user && !user.watchlist.includes(movieId)) {
-          set({
-            user: {
-              ...user,
-              watchlist: [...user.watchlist, movieId],
-              updatedAt: new Date().toISOString(),
+      addToWatchlist: (item: {
+        id: number;
+        type: "movie" | "tv";
+        status?: "plan-to-watch" | "watching" | "completed";
+        priority?: "low" | "medium" | "high";
+        notes?: string;
+      }) => {
+        let { user } = get();
+
+        // If no user exists, create a default user
+        if (!user) {
+          user = {
+            id: crypto.randomUUID(),
+            username: "Guest User",
+            email: "",
+            avatar: undefined,
+            watchlist: [],
+            favorites: [],
+            ratings: {},
+            preferences: {
+              language: "en",
+              country: "US",
+              genres: [],
+              adultContent: false,
+              notifications: {
+                email: false,
+                push: false,
+                newReleases: true,
+                recommendations: true,
+                social: false,
+              },
+              privacy: {
+                profileVisibility: "private",
+                watchlistVisibility: "private",
+                activityVisibility: "private",
+              },
             },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        }
+
+        // Check if item is already in watchlist
+        if (!user.watchlist.some((w) => w.id === item.id)) {
+          const watchlistItem: WatchlistItem = {
+            id: item.id,
+            type: item.type,
+            status: item.status || "plan-to-watch",
+            priority: item.priority || "medium",
+            addedAt: new Date().toISOString(),
+            notes: item.notes,
+          };
+
+          const updatedUser: User = {
+            ...user,
+            watchlist: [...user.watchlist, watchlistItem],
+            updatedAt: new Date().toISOString(),
+          };
+
+          set({
+            user: updatedUser,
+            isAuthenticated: true,
           });
         }
       },
-      removeFromWatchlist: (movieId: number) => {
+      removeFromWatchlist: (itemId: number) => {
         const { user } = get();
         if (user) {
           set({
             user: {
               ...user,
-              watchlist: user.watchlist.filter((id) => id !== movieId),
+              watchlist: user.watchlist.filter((item) => item.id !== itemId),
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        }
+      },
+      updateWatchlistItem: (
+        itemId: number,
+        updates: Partial<Omit<WatchlistItem, "id" | "addedAt">>
+      ) => {
+        const { user } = get();
+        if (user) {
+          set({
+            user: {
+              ...user,
+              watchlist: user.watchlist.map((item) =>
+                item.id === itemId
+                  ? {
+                      ...item,
+                      ...updates,
+                      completedAt:
+                        updates.status === "completed" && !item.completedAt
+                          ? new Date().toISOString()
+                          : updates.status !== "completed"
+                          ? undefined
+                          : item.completedAt,
+                    }
+                  : item
+              ),
               updatedAt: new Date().toISOString(),
             },
           });
@@ -369,9 +495,9 @@ export const useUserStore = create<{
           });
         }
       },
-      isInWatchlist: (movieId: number) => {
+      isInWatchlist: (itemId: number) => {
         const { user } = get();
-        return user ? user.watchlist.includes(movieId) : false;
+        return user ? user.watchlist.some((item) => item.id === itemId) : false;
       },
       isInFavorites: (movieId: number) => {
         const { user } = get();
@@ -380,6 +506,40 @@ export const useUserStore = create<{
       getMovieRating: (movieId: number) => {
         const { user } = get();
         return user ? user.ratings[movieId] : undefined;
+      },
+      getWatchlistItem: (itemId: number) => {
+        const { user } = get();
+        return user
+          ? user.watchlist.find((item) => item.id === itemId)
+          : undefined;
+      },
+      getWatchlistStats: () => {
+        const { user } = get();
+        if (!user)
+          return {
+            total: 0,
+            movies: 0,
+            tvShows: 0,
+            completed: 0,
+            watching: 0,
+            planToWatch: 0,
+          };
+
+        const stats = {
+          total: user.watchlist.length,
+          movies: user.watchlist.filter((item) => item.type === "movie").length,
+          tvShows: user.watchlist.filter((item) => item.type === "tv").length,
+          completed: user.watchlist.filter(
+            (item) => item.status === "completed"
+          ).length,
+          watching: user.watchlist.filter((item) => item.status === "watching")
+            .length,
+          planToWatch: user.watchlist.filter(
+            (item) => item.status === "plan-to-watch"
+          ).length,
+        };
+
+        return stats;
       },
     }),
     {

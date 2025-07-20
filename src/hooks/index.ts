@@ -587,7 +587,7 @@ export const useMovieActions = () => {
           read: false,
         });
       } else {
-        addToWatchlist(movie.id);
+        addToWatchlist({ id: movie.id, type: "movie" });
         addNotification({
           type: "success",
           title: "Added to Watchlist",
@@ -923,6 +923,39 @@ export const useSeasonDetails = (
       }
     },
     enabled: enabled && !!tvShowSlug && seasonNumber > 0,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+};
+
+/**
+ * Hook to get watchlist movie/tv details
+ */
+export const useWatchlistDetails = (itemIds: number[]) => {
+  return useQuery({
+    queryKey: ["watchlist-details", itemIds.sort().join(",")],
+    queryFn: async () => {
+      if (itemIds.length === 0) return [];
+
+      // Fetch details for all items in parallel
+      const promises = itemIds.map(async (id) => {
+        try {
+          // Try movie first
+          return await tmdbClient.getMovieDetails(id);
+        } catch {
+          // If movie fails, try TV show
+          try {
+            return await tmdbClient.getTVShowDetails(id);
+          } catch {
+            return null;
+          }
+        }
+      });
+
+      const results = await Promise.all(promises);
+      return results.filter((item) => item !== null);
+    },
+    enabled: itemIds.length > 0,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
   });

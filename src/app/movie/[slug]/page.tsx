@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useMovieDetailsBySlug } from "@/hooks";
+import { useUserStore } from "@/stores";
+import { useNotificationStore } from "@/stores";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug, createPersonSlug } from "@/lib/slug-utils";
 
@@ -20,6 +22,18 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
 
   const { data: movie, isLoading, error } = useMovieDetailsBySlug(slug);
 
+  // Watchlist and favorites functionality
+  const {
+    addToWatchlist,
+    removeFromWatchlist,
+    addToFavorites,
+    removeFromFavorites,
+    isInWatchlist,
+    isInFavorites,
+  } = useUserStore();
+
+  const { addNotification } = useNotificationStore();
+
   if (isLoading) {
     return <MovieDetailSkeleton />;
   }
@@ -27,6 +41,54 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
   if (error || !movie) {
     notFound();
   }
+
+  const inWatchlist = isInWatchlist(movie.id);
+  const inFavorites = isInFavorites(movie.id);
+
+  const handleWatchlistToggle = () => {
+    if (inWatchlist) {
+      removeFromWatchlist(movie.id);
+      addNotification({
+        type: "success",
+        title: "Removed from Watchlist",
+        message: `"${movie.title}" has been removed from your watchlist.`,
+        read: false,
+      });
+    } else {
+      addToWatchlist({
+        id: movie.id,
+        type: "movie",
+        status: "plan-to-watch",
+        priority: "medium",
+      });
+      addNotification({
+        type: "success",
+        title: "Added to Watchlist",
+        message: `"${movie.title}" has been added to your watchlist.`,
+        read: false,
+      });
+    }
+  };
+
+  const handleFavoritesToggle = () => {
+    if (inFavorites) {
+      removeFromFavorites(movie.id);
+      addNotification({
+        type: "info",
+        title: "Removed from Favorites",
+        message: `"${movie.title}" has been removed from your favorites.`,
+        read: false,
+      });
+    } else {
+      addToFavorites(movie.id);
+      addNotification({
+        type: "success",
+        title: "Added to Favorites",
+        message: `"${movie.title}" has been added to your favorites.`,
+        read: false,
+      });
+    }
+  };
 
   // Get trailer or first video
   const trailer = movie.videos?.results?.find(
@@ -188,11 +250,25 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                       ▶️ Watch Trailer
                     </button>
                   )}
-                  <button className="btn-cinema-outline flex items-center justify-center gap-2 text-lg px-8 py-4">
-                    ➕ Add to Watchlist
+                  <button
+                    onClick={handleWatchlistToggle}
+                    className={`${
+                      inWatchlist ? "btn-cinema" : "btn-cinema-outline"
+                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
+                  >
+                    {inWatchlist ? "✅" : "➕"}{" "}
+                    {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
                   </button>
-                  <button className="btn-glass flex items-center justify-center gap-2 text-lg px-8 py-4">
-                    💝 Add to Favorites
+                  <button
+                    onClick={handleFavoritesToggle}
+                    className={`${
+                      inFavorites
+                        ? "btn-glass bg-red-500/20 border-red-500/30"
+                        : "btn-glass"
+                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
+                  >
+                    {inFavorites ? "❤️" : "💝"}{" "}
+                    {inFavorites ? "Favorited" : "Add to Favorites"}
                   </button>
                 </div>
               </div>

@@ -7,6 +7,8 @@ import { notFound } from "next/navigation";
 import { useTVShowDetailsBySlug } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
 import { createTVShowSlug, createPersonSlug } from "@/lib/slug-utils";
+import { useUserStore } from "@/stores";
+import { useNotificationStore } from "@/stores";
 
 interface TVShowDetailPageProps {
   params: Promise<{
@@ -20,6 +22,18 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
 
   const { data: tvShow, isLoading, error } = useTVShowDetailsBySlug(slug);
 
+  // Watchlist and favorites functionality
+  const {
+    addToWatchlist,
+    removeFromWatchlist,
+    addToFavorites,
+    removeFromFavorites,
+    isInWatchlist,
+    isInFavorites,
+  } = useUserStore();
+
+  const { addNotification } = useNotificationStore();
+
   if (isLoading) {
     return <TVShowDetailSkeleton />;
   }
@@ -27,6 +41,54 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
   if (error || !tvShow) {
     notFound();
   }
+
+  const inWatchlist = isInWatchlist(tvShow.id);
+  const inFavorites = isInFavorites(tvShow.id);
+
+  const handleWatchlistToggle = () => {
+    if (inWatchlist) {
+      removeFromWatchlist(tvShow.id);
+      addNotification({
+        type: "success",
+        title: "Removed from Watchlist",
+        message: `"${tvShow.name}" has been removed from your watchlist.`,
+        read: false,
+      });
+    } else {
+      addToWatchlist({
+        id: tvShow.id,
+        type: "tv",
+        status: "plan-to-watch",
+        priority: "medium",
+      });
+      addNotification({
+        type: "success",
+        title: "Added to Watchlist",
+        message: `"${tvShow.name}" has been added to your watchlist.`,
+        read: false,
+      });
+    }
+  };
+
+  const handleFavoritesToggle = () => {
+    if (inFavorites) {
+      removeFromFavorites(tvShow.id);
+      addNotification({
+        type: "info",
+        title: "Removed from Favorites",
+        message: `"${tvShow.name}" has been removed from your favorites.`,
+        read: false,
+      });
+    } else {
+      addToFavorites(tvShow.id);
+      addNotification({
+        type: "success",
+        title: "Added to Favorites",
+        message: `"${tvShow.name}" has been added to your favorites.`,
+        read: false,
+      });
+    }
+  };
 
   // Get trailer or first video
   const trailer = tvShow.videos?.results?.find(
@@ -232,11 +294,25 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                       ▶️ Watch Trailer
                     </button>
                   )}
-                  <button className="btn-cinema-outline flex items-center justify-center gap-2 text-lg px-8 py-4">
-                    ➕ Add to Watchlist
+                  <button
+                    onClick={handleWatchlistToggle}
+                    className={`${
+                      inWatchlist ? "btn-cinema" : "btn-cinema-outline"
+                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
+                  >
+                    {inWatchlist ? "✅" : "➕"}{" "}
+                    {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
                   </button>
-                  <button className="btn-glass flex items-center justify-center gap-2 text-lg px-8 py-4">
-                    💝 Add to Favorites
+                  <button
+                    onClick={handleFavoritesToggle}
+                    className={`${
+                      inFavorites
+                        ? "btn-glass bg-red-500/20 border-red-500/30"
+                        : "btn-glass"
+                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
+                  >
+                    {inFavorites ? "❤️" : "💝"}{" "}
+                    {inFavorites ? "Favorited" : "Add to Favorites"}
                   </button>
                 </div>
               </div>
