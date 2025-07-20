@@ -505,6 +505,56 @@ class TMDBClient {
   }
 
   /**
+   * Get TV show season details
+   */
+  async getSeasonDetails(
+    tvId: number,
+    seasonNumber: number
+  ): Promise<{
+    id: number;
+    name: string;
+    overview: string;
+    poster_path: string | null;
+    season_number: number;
+    air_date: string;
+    episode_count: number;
+    episodes: {
+      id: number;
+      name: string;
+      overview: string;
+      episode_number: number;
+      season_number: number;
+      air_date: string;
+      runtime: number | null;
+      still_path: string | null;
+      vote_average: number;
+      vote_count: number;
+      crew: {
+        id: number;
+        name: string;
+        job: string;
+        department: string;
+        profile_path: string | null;
+      }[];
+      guest_stars: {
+        id: number;
+        name: string;
+        character: string;
+        profile_path: string | null;
+        order: number;
+      }[];
+    }[];
+    credits?: Credits;
+  }> {
+    const response = await this.api.get(`/tv/${tvId}/season/${seasonNumber}`, {
+      params: {
+        append_to_response: "credits",
+      },
+    });
+    return response.data;
+  }
+
+  /**
    * Health check
    */
   async healthCheck(): Promise<boolean> {

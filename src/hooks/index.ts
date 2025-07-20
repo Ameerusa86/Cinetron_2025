@@ -875,3 +875,30 @@ export const usePersonTVCredits = (slug: string, enabled: boolean = true) => {
     gcTime: 1000 * 60 * 30, // 30 minutes
   });
 };
+
+/**
+ * Hook to fetch TV show season details
+ */
+export const useSeasonDetails = (
+  tvShowSlug: string,
+  seasonNumber: number,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["season-details", tvShowSlug, seasonNumber],
+    queryFn: async () => {
+      try {
+        const tvId = extractIdFromSlug(tvShowSlug);
+        const data = await tmdbClient.getSeasonDetails(tvId, seasonNumber);
+        return data;
+      } catch (error) {
+        throw new Error(
+          `Failed to fetch season ${seasonNumber} details for ${tvShowSlug}`
+        );
+      }
+    },
+    enabled: enabled && !!tvShowSlug && seasonNumber > 0,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+};

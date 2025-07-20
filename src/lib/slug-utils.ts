@@ -64,6 +64,15 @@ export function createPersonSlug(name: string, id: number): string {
 }
 
 /**
+ * Create a season slug for TV show seasons
+ * Format: "season-seasonnumber"
+ * Example: "season-1", "season-2"
+ */
+export function createSeasonSlug(seasonNumber: number): string {
+  return `season-${seasonNumber}`;
+}
+
+/**
  * Extract ID from a slug
  * Example: "the-dark-knight-155" -> 155
  */

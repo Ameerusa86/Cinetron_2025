@@ -257,9 +257,10 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
               {tvShow.seasons
                 .filter((season) => season.season_number > 0) // Filter out "Specials" (season 0)
                 .map((season) => (
-                  <div
+                  <Link
                     key={season.id}
-                    className="card-premium group cursor-pointer"
+                    href={`/tv/${slug}/season/${season.season_number}`}
+                    className="card-premium group cursor-pointer hover:scale-105 transition-all duration-300"
                   >
                     <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                       <Image
@@ -281,9 +282,21 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                       <div className="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                         Season {season.season_number}
                       </div>
+
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                      {/* Click Indicator */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+                          <span className="text-white text-lg">
+                            👁️ View Episodes
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2">
+                      <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
                         {season.name}
                       </h3>
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
@@ -299,7 +312,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                         {season.overview || "No overview available."}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
             </div>
           </div>
