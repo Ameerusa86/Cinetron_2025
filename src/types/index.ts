@@ -363,12 +363,19 @@ export type ReviewResponse = TMDBResponse<Review>;
 // ===========================
 
 // Theme Types
-export type Theme = "cinema" | "cinema-dark" | "system";
+export type Theme =
+  | "light"
+  | "dark"
+  | "system"
+  | "cinema"
+  | "cinema-dark"
+  | "auto";
 
 export interface ThemeState {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  isDark: boolean;
 }
 
 // User Types

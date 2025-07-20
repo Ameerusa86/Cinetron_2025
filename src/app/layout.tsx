@@ -3,6 +3,7 @@ import { Inter, Playfair_Display, Fira_Code } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import Navbar from "@/components/Navbar";
+import SettingsModal from "@/components/modals/SettingsModal";
 
 // Premium Font Configuration
 const inter = Inter({
@@ -177,6 +178,9 @@ export default function RootLayout({
 
             {/* Navigation */}
             <Navbar />
+
+            {/* Modals */}
+            <SettingsModal />
 
             {/* Main Content */}
             <main className="relative z-10 w-full">{children}</main>

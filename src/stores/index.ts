@@ -24,38 +24,82 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       theme: "system",
+      isDark: false,
       setTheme: (theme: Theme) => {
-        set({ theme });
+        const applyTheme = (isDarkMode: boolean) => {
+          const root = document.documentElement;
 
-        // Apply theme to document
-        const root = document.documentElement;
-        if (theme === "cinema") {
-          root.setAttribute("data-theme", "cinema");
-          root.classList.remove("dark");
-        } else if (theme === "cinema-dark") {
-          root.setAttribute("data-theme", "cinema-dark");
-          root.classList.add("dark");
-        } else {
-          // System theme
-          const isDark = window.matchMedia(
-            "(prefers-color-scheme: dark)"
-          ).matches;
-          root.setAttribute("data-theme", isDark ? "cinema-dark" : "cinema");
-          if (isDark) {
+          if (isDarkMode) {
             root.classList.add("dark");
+            root.setAttribute(
+              "data-theme",
+              theme === "cinema" || theme === "cinema-dark"
+                ? "cinema-dark"
+                : "dark"
+            );
           } else {
             root.classList.remove("dark");
+            root.setAttribute(
+              "data-theme",
+              theme === "cinema" || theme === "cinema-dark" ? "cinema" : "light"
+            );
           }
+
+          set({ isDark: isDarkMode });
+        };
+
+        set({ theme });
+
+        // Apply theme logic
+        if (theme === "light") {
+          applyTheme(false);
+        } else if (theme === "dark") {
+          applyTheme(true);
+        } else if (theme === "cinema") {
+          applyTheme(false);
+        } else if (theme === "cinema-dark") {
+          applyTheme(true);
+        } else if (theme === "system" || theme === "auto") {
+          // System/Auto theme - follow system preference
+          const isDarkSystem = window.matchMedia(
+            "(prefers-color-scheme: dark)"
+          ).matches;
+          applyTheme(isDarkSystem);
+
+          // Listen for system theme changes
+          const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+          const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+            if (get().theme === "system" || get().theme === "auto") {
+              applyTheme(e.matches);
+            }
+          };
+
+          // Remove existing listener and add new one
+          mediaQuery.removeEventListener("change", handleSystemThemeChange);
+          mediaQuery.addEventListener("change", handleSystemThemeChange);
         }
       },
       toggleTheme: () => {
         const { theme } = get();
-        const newTheme: Theme =
-          theme === "cinema"
-            ? "cinema-dark"
-            : theme === "cinema-dark"
-            ? "system"
-            : "cinema";
+        let newTheme: Theme;
+
+        // Smart toggle based on current theme
+        if (theme === "light") {
+          newTheme = "dark";
+        } else if (theme === "dark") {
+          newTheme = "light";
+        } else if (theme === "cinema") {
+          newTheme = "cinema-dark";
+        } else if (theme === "cinema-dark") {
+          newTheme = "cinema";
+        } else {
+          // For system/auto, toggle to opposite of current appearance
+          const isDarkSystem = window.matchMedia(
+            "(prefers-color-scheme: dark)"
+          ).matches;
+          newTheme = isDarkSystem ? "light" : "dark";
+        }
+
         get().setTheme(newTheme);
       },
     }),
