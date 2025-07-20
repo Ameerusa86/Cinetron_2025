@@ -331,8 +331,33 @@ export const useDiscoverMovies = (
       addMovies(cacheKey, data);
       return data;
     },
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+};
+
+/**
+ * Hook to fetch movies by genre
+ */
+export const useMoviesByGenre = (genreId: number, page: number = 1) => {
+  const { getMovies, addMovies } = useCacheStore();
+  const cacheKey = `genre-${genreId}-${page}`;
+
+  return useQuery({
+    queryKey: ["movies-by-genre", genreId, page],
+    queryFn: async () => {
+      const cached = getMovies(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      const data = await tmdbClient.getMoviesByGenre(genreId, page);
+      addMovies(cacheKey, data);
+      return data;
+    },
+    enabled: genreId > 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
   });
 };
 

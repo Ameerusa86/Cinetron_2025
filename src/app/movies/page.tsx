@@ -1,36 +1,149 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePopularMovies, useSearchMovies } from "@/hooks";
+import {
+  usePopularMovies,
+  useSearchMovies,
+  useUpcomingMovies,
+  useTopRatedMovies,
+  useGenres,
+  useMoviesByGenre,
+  useDiscoverMovies,
+} from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug } from "@/lib/slug-utils";
 import type { Movie } from "@/types";
 
-const genres = [
-  { id: 28, name: "Action", icon: "🎬" },
-  { id: 35, name: "Comedy", icon: "😂" },
-  { id: 18, name: "Drama", icon: "🎭" },
-  { id: 27, name: "Horror", icon: "👻" },
-  { id: 10749, name: "Romance", icon: "💕" },
-  { id: 878, name: "Sci-Fi", icon: "🚀" },
-  { id: 53, name: "Thriller", icon: "🔪" },
-  { id: 16, name: "Animation", icon: "🎨" },
-];
-
 export default function MoviesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState("popularity.desc");
+  const [sortBy, setSortBy] = useState("popular");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: popularMovies, isLoading, error } = usePopularMovies();
+  // Fetch dynamic genres
+  const { data: genresData } = useGenres();
+  const genres = genresData?.genres || [];
+
+  // Data fetching hooks
+  const { data: popularMovies, isLoading: popularLoading } =
+    usePopularMovies(currentPage);
+  const { data: upcomingMovies, isLoading: upcomingLoading } =
+    useUpcomingMovies(currentPage);
+  const { data: topRatedMovies, isLoading: topRatedLoading } =
+    useTopRatedMovies(currentPage);
   const { data: searchResults, isLoading: isSearching } =
     useSearchMovies(searchQuery);
+  const { data: genreMovies, isLoading: genreLoading } = useMoviesByGenre(
+    selectedGenre || 0,
+    currentPage
+  );
 
-  const displayMovies = searchQuery
-    ? searchResults?.results
-    : popularMovies?.results;
+  // Discover movies with sorting
+  const discoverOptions = useMemo(
+    () => ({
+      page: currentPage,
+      sort_by:
+        sortBy === "popular"
+          ? "popularity.desc"
+          : sortBy === "top_rated"
+          ? "vote_average.desc"
+          : sortBy === "upcoming"
+          ? "release_date.desc"
+          : sortBy === "latest"
+          ? "primary_release_date.desc"
+          : "popularity.desc",
+      with_genres: selectedGenre || undefined,
+      "primary_release_date.gte":
+        sortBy === "upcoming"
+          ? new Date().toISOString().split("T")[0]
+          : undefined,
+    }),
+    [currentPage, sortBy, selectedGenre]
+  );
+
+  const { data: discoveredMovies, isLoading: discoverLoading } =
+    useDiscoverMovies(discoverOptions);
+
+  // Genre icons mapping
+  const genreIcons: { [key: number]: string } = {
+    28: "🎬", // Action
+    12: "🏞️", // Adventure
+    16: "🎨", // Animation
+    35: "😂", // Comedy
+    80: "🕵️", // Crime
+    99: "📚", // Documentary
+    18: "🎭", // Drama
+    10751: "👨‍👩‍👧‍👦", // Family
+    14: "🧙‍♂️", // Fantasy
+    36: "📜", // History
+    27: "👻", // Horror
+    10402: "🎵", // Music
+    9648: "🔍", // Mystery
+    10749: "💕", // Romance
+    878: "🚀", // Science Fiction
+    10770: "📺", // TV Movie
+    53: "🔪", // Thriller
+    10752: "⚔️", // War
+    37: "🤠", // Western
+  };
+
+  // Get icon for genre
+  const getGenreIcon = (genreId: number) => {
+    return genreIcons[genreId] || "🎬";
+  };
+
+  // Determine which movies to display
+  const displayMovies = useMemo(() => {
+    if (searchQuery) {
+      return searchResults?.results || [];
+    }
+
+    if (selectedGenre) {
+      return genreMovies?.results || [];
+    }
+
+    switch (sortBy) {
+      case "popular":
+        return popularMovies?.results || [];
+      case "upcoming":
+        return upcomingMovies?.results || [];
+      case "top_rated":
+        return topRatedMovies?.results || [];
+      default:
+        return discoveredMovies?.results || [];
+    }
+  }, [
+    searchQuery,
+    searchResults,
+    selectedGenre,
+    genreMovies,
+    sortBy,
+    popularMovies,
+    upcomingMovies,
+    topRatedMovies,
+    discoveredMovies,
+  ]);
+
+  // Loading state
+  const isLoading =
+    popularLoading ||
+    upcomingLoading ||
+    topRatedLoading ||
+    isSearching ||
+    genreLoading ||
+    discoverLoading;
+
+  // Load more functionality
+  const handleLoadMore = () => {
+    setCurrentPage((prev) => prev + 1);
+  };
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedGenre, sortBy, searchQuery]);
 
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full">
@@ -101,7 +214,7 @@ export default function MoviesPage() {
                       : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                   }`}
                 >
-                  <span>{genre.icon}</span>
+                  <span>{getGenreIcon(genre.id)}</span>
                   <span>{genre.name}</span>
                 </button>
               ))}
@@ -113,10 +226,10 @@ export default function MoviesPage() {
               onChange={(e) => setSortBy(e.target.value)}
               className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             >
-              <option value="popularity.desc">Most Popular</option>
-              <option value="vote_average.desc">Highest Rated</option>
-              <option value="release_date.desc">Newest First</option>
-              <option value="revenue.desc">Highest Grossing</option>
+              <option value="popular">Most Popular</option>
+              <option value="top_rated">Highest Rated</option>
+              <option value="upcoming">Upcoming Movies</option>
+              <option value="latest">Latest Releases</option>
             </select>
           </div>
         </div>
@@ -125,21 +238,43 @@ export default function MoviesPage() {
       {/* Movies Grid - Full Width */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
         <div className="w-full">
-          {(isLoading || isSearching) && (
+          {/* Current Filter Status */}
+          <div className="mb-8">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <span>Showing:</span>
+              {searchQuery && (
+                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded">
+                  Search: &quot;{searchQuery}&quot;
+                </span>
+              )}
+              {selectedGenre && (
+                <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-2 py-1 rounded">
+                  Genre: {genres.find((g) => g.id === selectedGenre)?.name}
+                </span>
+              )}
+              {!searchQuery && !selectedGenre && (
+                <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded">
+                  {sortBy === "popular"
+                    ? "Popular Movies"
+                    : sortBy === "upcoming"
+                    ? "Upcoming Movies"
+                    : sortBy === "top_rated"
+                    ? "Top Rated Movies"
+                    : sortBy === "latest"
+                    ? "Latest Releases"
+                    : "All Movies"}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {isLoading && (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent"></div>
             </div>
           )}
 
-          {error && (
-            <div className="text-center py-12">
-              <p className="text-red-500 text-lg">
-                ⚠️ Unable to load movies. Please try again later.
-              </p>
-            </div>
-          )}
-
-          {displayMovies && displayMovies.length === 0 && (
+          {!isLoading && displayMovies && displayMovies.length === 0 && (
             <div className="text-center py-12">
               <p className="text-slate-500 text-lg">
                 No movies found. Try adjusting your search or filters.
@@ -147,7 +282,7 @@ export default function MoviesPage() {
             </div>
           )}
 
-          {displayMovies && displayMovies.length > 0 && (
+          {!isLoading && displayMovies && displayMovies.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6">
               {displayMovies.map((movie: Movie) => (
                 <Link
@@ -203,10 +338,14 @@ export default function MoviesPage() {
           )}
 
           {/* Load More Button */}
-          {displayMovies && displayMovies.length > 0 && (
+          {!isLoading && displayMovies && displayMovies.length > 0 && (
             <div className="text-center mt-12">
-              <button className="btn-cinema-outline px-8 py-3 text-lg">
-                Load More Movies
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoading}
+                className="btn-cinema-outline px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Loading..." : "Load More Movies"}
               </button>
             </div>
           )}
