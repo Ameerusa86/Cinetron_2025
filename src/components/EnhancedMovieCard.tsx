@@ -56,39 +56,45 @@ function StandardMovieCard({
         className="block group relative"
       >
         <motion.div
-          className="aspect-[2/3] relative overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800"
-          whileHover={{ scale: 1.03 }}
+          className="aspect-[2/3] relative overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-800 shadow-lg"
+          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           <Image
             src={displayImage}
             alt={movie.title}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
             onError={() => setImageError(true)}
           />
 
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Premium Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-400" />
 
-          {/* Content Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
-            <h3 className="text-white font-semibold text-sm line-clamp-2 mb-2">
+          {/* Subtle Border Glow on Hover */}
+          <div className="absolute inset-0 border-2 border-transparent group-hover:border-orange-500/50 rounded-xl transition-all duration-300" />
+
+          {/* Enhanced Content Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-all duration-400 opacity-0 group-hover:opacity-100">
+            <h3 className="text-white font-bold text-sm line-clamp-2 mb-3 drop-shadow-lg">
               {movie.title}
             </h3>
-            <div className="flex items-center justify-between text-xs text-slate-300">
-              <div className="flex items-center space-x-2">
-                <Star size={12} className="text-yellow-400 fill-current" />
-                <span>{movie.vote_average.toFixed(1)}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Calendar size={12} />
-                <span>{new Date(movie.release_date).getFullYear()}</span>
+            <div className="flex items-center justify-between text-xs text-slate-200">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
+                  <Star size={12} className="text-yellow-400 fill-current" />
+                  <span className="font-medium">{movie.vote_average.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center space-x-1 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
+                  <Calendar size={12} />
+                  <span className="font-medium">{new Date(movie.release_date).getFullYear()}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Trailer Play Button */}
+          {/* Enhanced Trailer Play Button */}
           {showTrailer && trailerKey && (
             <button
               onClick={(e) => {
@@ -96,15 +102,18 @@ function StandardMovieCard({
                 e.stopPropagation();
                 setShowTrailerModal(true);
               }}
-              className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-orange-500 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+              className="absolute top-3 right-3 p-3 bg-black/70 hover:bg-orange-500 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 backdrop-blur-sm"
             >
               <Play size={16} className="text-white fill-current ml-0.5" />
             </button>
           )}
 
-          {/* Rating Badge */}
-          <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-            ⭐ {movie.vote_average.toFixed(1)}
+          {/* Enhanced Rating Badge */}
+          <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/20">
+            <div className="flex items-center space-x-1">
+              <Star size={10} className="text-yellow-400 fill-current" />
+              <span className="font-semibold">{movie.vote_average.toFixed(1)}</span>
+            </div>
           </div>
         </motion.div>
       </Link>

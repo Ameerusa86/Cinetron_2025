@@ -7,9 +7,9 @@ import {
   ParallaxScroll,
   ParticleEffects,
   FloatingMovieElements,
-  EnhancedMovieCard,
   InteractiveParticles,
 } from "@/components/3d-effects";
+import EnhancedMovieCard from "@/components/EnhancedMovieCard";
 
 export default function HomePage() {
   const { data: trendingMovies, isLoading, error } = useTrendingMovies();
@@ -113,19 +113,14 @@ export default function HomePage() {
                   tmdbClient.getImageUrl(movie.poster_path, "w500") ||
                   "/placeholder-poster.svg";
 
-                // Alternate between different 3D modes for visual variety
-                const modes = ["standard", "3d", "360", "standard"] as const;
-                const mode = modes[index % modes.length];
-
                 return (
                   <EnhancedMovieCard
                     key={movie.id}
                     movie={movie}
                     imageUrl={imageUrl}
-                    mode={mode}
-                    autoRotate={index % 4 === 2} // Only auto-rotate some 360° cards
-                    showTrailer={index % 3 === 0} // Show trailer option on every 3rd card
-                    className="transform transition-all duration-500 hover:scale-105"
+                    mode="standard"
+                    showTrailer={index % 4 === 0} // Show trailer option on every 4th card
+                    className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-orange-500/20"
                   />
                 );
               })}
