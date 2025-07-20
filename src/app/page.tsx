@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useTrendingMovies } from "@/hooks";
-import tmdbClient from "@/lib/tmdb-client";
 import {
   ParallaxScroll,
   ParticleEffects,
@@ -109,17 +108,11 @@ export default function HomePage() {
           {trendingMovies && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6">
               {trendingMovies.results.slice(0, 16).map((movie, index) => {
-                const imageUrl =
-                  tmdbClient.getImageUrl(movie.poster_path, "w500") ||
-                  "/placeholder-poster.svg";
-
                 return (
                   <EnhancedMovieCard
                     key={movie.id}
                     movie={movie}
-                    imageUrl={imageUrl}
-                    mode="standard"
-                    showTrailer={index % 4 === 0} // Show trailer option on every 4th card
+                    mode={index % 4 === 0 ? "trailer" : "standard"} // Show trailer option on every 4th card
                     className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-orange-500/20"
                   />
                 );

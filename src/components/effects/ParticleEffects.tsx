@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface ParticleSystemProps {
@@ -15,126 +13,101 @@ interface ParticleSystemProps {
   className?: string;
 }
 
-// 3D Particle System Component
-function ParticleSystem({
-  count = 1000,
-  color = "#ffffff",
-  size = 0.05,
-  speed = 0.5,
-  spread = 10,
-}: {
-  count: number;
-  color: string;
-  size: number;
-  speed: number;
-  spread: number;
-}) {
-  const meshRef = useRef<THREE.Points>(null);
-
-  // Generate particle positions and properties
-  const particles = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const velocities = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-
-    for (let i = 0; i < count; i++) {
-      // Random positions in a sphere
-      const i3 = i * 3;
-      const radius = Math.random() * spread;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-
-      positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      positions[i3 + 2] = radius * Math.cos(phi);
-
-      // Random velocities
-      velocities[i3] = (Math.random() - 0.5) * speed;
-      velocities[i3 + 1] = (Math.random() - 0.5) * speed;
-      velocities[i3 + 2] = (Math.random() - 0.5) * speed;
-
-      // Random sizes
-      sizes[i] = Math.random() * size + size * 0.5;
-    }
-
-    return { positions, velocities, sizes };
-  }, [count, size, speed, spread]);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      const positions = meshRef.current.geometry.attributes.position
-        .array as Float32Array;
-      const time = state.clock.elapsedTime;
-
-      for (let i = 0; i < count; i++) {
-        const i3 = i * 3;
-
-        // Update positions with sine wave motion
-        positions[i3] += particles.velocities[i3] * 0.01;
-        positions[i3 + 1] +=
-          particles.velocities[i3 + 1] * 0.01 + Math.sin(time + i) * 0.001;
-        positions[i3 + 2] += particles.velocities[i3 + 2] * 0.01;
-
-        // Reset particles that go too far
-        if (
-          Math.abs(positions[i3]) > spread ||
-          Math.abs(positions[i3 + 1]) > spread ||
-          Math.abs(positions[i3 + 2]) > spread
-        ) {
-          positions[i3] = (Math.random() - 0.5) * spread * 0.5;
-          positions[i3 + 1] = (Math.random() - 0.5) * spread * 0.5;
-          positions[i3 + 2] = (Math.random() - 0.5) * spread * 0.5;
-        }
-      }
-
-      meshRef.current.geometry.attributes.position.needsUpdate = true;
-    }
-  });
-
-  return (
-    <points ref={meshRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[particles.positions, 3]}
-        />
-        <bufferAttribute attach="attributes-size" args={[particles.sizes, 1]} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={size}
-        color={color}
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
-  );
-}
-
-// Main Particle Effects Component
+// Simple CSS-based Particle Effects (no Three.js)
 export default function ParticleEffects({
-  count = 500,
+  count = 50,
   color = "#ffffff",
   size = 0.02,
-  speed = 0.3,
-  spread = 8,
   className = "",
 }: ParticleSystemProps) {
+  const [isClient, setIsClient] = useState(false);
+  const [particles, setParticles] = useState<
+    Array<{
+      id: number;
+      initialX: number;
+      initialY: number;
+      animateX: number;
+      animateY: number;
+      initialScale: number;
+      animateScale: number;
+      duration: number;
+      delay: number;
+    }>
+  >([]);
+
+  useEffect(() => {
+    setIsClient(true);
+
+    // Generate deterministic particle data to prevent hydration mismatch
+    const particleData = Array.from({ length: count }, (_, i) => {
+      // Use seeded random based on index to make it deterministic
+      const seed = i * 12345;
+      const random1 = (seed % 1000) / 1000;
+      const random2 = ((seed * 2) % 1000) / 1000;
+      const random3 = ((seed * 3) % 1000) / 1000;
+      const random4 = ((seed * 4) % 1000) / 1000;
+      const random5 = ((seed * 5) % 1000) / 1000;
+      const random6 = ((seed * 6) % 1000) / 1000;
+      const random7 = ((seed * 7) % 1000) / 1000;
+
+      const windowWidth =
+        typeof window !== "undefined" ? window.innerWidth : 1200;
+      const windowHeight =
+        typeof window !== "undefined" ? window.innerHeight : 800;
+
+      return {
+        id: i,
+        initialX: random1 * windowWidth,
+        initialY: random2 * windowHeight,
+        animateX: random3 * windowWidth,
+        animateY: random4 * windowHeight,
+        initialScale: 0.5 + random5 * 1,
+        animateScale: 0.3 + random6 * 0.7,
+        duration: 15 + random7 * 20,
+        delay: (i % 10) * 1, // Deterministic delay
+      };
+    });
+
+    setParticles(particleData);
+  }, [count]);
+
+  // Don't render on server to prevent hydration mismatch
+  if (!isClient) {
+    return null;
+  }
+
   return (
-    <div className={`absolute inset-0 pointer-events-none ${className}`}>
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 75 }}
-        style={{ background: "transparent" }}
-      >
-        <ParticleSystem
-          count={count}
-          color={color}
-          size={size}
-          speed={speed}
-          spread={spread}
+    <div
+      className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
+    >
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          className="absolute rounded-full opacity-30"
+          style={{
+            background: color,
+            width: `${size * 1000}px`,
+            height: `${size * 1000}px`,
+          }}
+          initial={{
+            x: particle.initialX,
+            y: particle.initialY,
+            scale: particle.initialScale,
+          }}
+          animate={{
+            x: particle.animateX,
+            y: particle.animateY,
+            scale: particle.animateScale,
+          }}
+          transition={{
+            duration: particle.duration,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "linear",
+            delay: particle.delay,
+          }}
         />
-      </Canvas>
+      ))}
     </div>
   );
 }
@@ -150,8 +123,8 @@ export function FloatingMovieElements({
   elements?: number;
   className?: string;
 }) {
-  const [isClient, setIsClient] = React.useState(false);
-  const [elementData, setElementData] = React.useState<
+  const [isClient, setIsClient] = useState(false);
+  const [elementData, setElementData] = useState<
     Array<{
       id: number;
       icon: string;
@@ -164,23 +137,29 @@ export function FloatingMovieElements({
   >([]);
 
   // Initialize client-side only to prevent hydration mismatch
-  React.useEffect(() => {
+  useEffect(() => {
     setIsClient(true);
 
     // Generate deterministic element data
-    const data = Array.from({ length: elements }, (_, i) => ({
-      id: i,
-      icon: MOVIE_ICONS[i % MOVIE_ICONS.length],
-      initialX:
-        (i * 123 + 456) %
-        (typeof window !== "undefined" ? window.innerWidth : 1200),
-      animateX:
-        (i * 789 + 234) %
-        (typeof window !== "undefined" ? window.innerWidth : 1200),
-      initialY: typeof window !== "undefined" ? window.innerHeight + 100 : 800,
-      duration: 10 + (i % 10),
-      delay: i % 5,
-    }));
+    const data = Array.from({ length: elements }, (_, i) => {
+      // Use deterministic values based on index for consistent SSR
+      const seed = i * 31415; // Use pi digits for pseudo-randomness
+      const iconIndex = i % MOVIE_ICONS.length;
+      const windowWidth =
+        typeof window !== "undefined" ? window.innerWidth : 1200;
+      const windowHeight =
+        typeof window !== "undefined" ? window.innerHeight : 800;
+
+      return {
+        id: i,
+        icon: MOVIE_ICONS[iconIndex],
+        initialX: (((seed * 123) % 1000) / 1000) * windowWidth,
+        animateX: (((seed * 456) % 1000) / 1000) * windowWidth,
+        initialY: windowHeight + 100,
+        duration: 10 + (i % 10), // Deterministic duration
+        delay: i % 5, // Deterministic delay
+      };
+    });
 
     setElementData(data);
   }, [elements]);
@@ -240,27 +219,42 @@ export function InteractiveParticles({
       color: string;
     }>
   >([]);
+  const [isClient, setIsClient] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Initialize particles
+    // Initialize particles with deterministic values for SSR consistency
     const initParticles = () => {
       particles.current = [];
       for (let i = 0; i < 100; i++) {
+        // Use deterministic values based on index
+        const seed = i * 7919; // Large prime for distribution
+        const x = (seed % 1000) / 1000;
+        const y = ((seed * 2) % 1000) / 1000;
+        const vx = (((seed * 3) % 1000) / 1000 - 0.5) * 2;
+        const vy = (((seed * 4) % 1000) / 1000 - 0.5) * 2;
+        const size = (((seed * 5) % 1000) / 1000) * 3 + 1;
+        const hue = ((seed * 6) % 60) + 200;
+        const lightness = ((seed * 7) % 30) + 50;
+
         particles.current.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2,
-          size: Math.random() * 3 + 1,
-          color: `hsl(${Math.random() * 60 + 200}, 70%, ${
-            50 + Math.random() * 30
-          }%)`,
+          x: x * canvas.width,
+          y: y * canvas.height,
+          vx,
+          vy,
+          size,
+          color: `hsl(${hue}, 70%, ${lightness}%)`,
         });
       }
     };
@@ -345,7 +339,12 @@ export function InteractiveParticles({
       canvas.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isClient]);
+
+  // Don't render on server
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <canvas
