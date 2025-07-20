@@ -313,8 +313,8 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
               {mainCast.map((person) => (
-                <Link 
-                  key={person.id} 
+                <Link
+                  key={person.id}
                   href={`/person/${createPersonSlug(person.name, person.id)}`}
                   className="group text-center hover:scale-105 transition-transform duration-300"
                 >

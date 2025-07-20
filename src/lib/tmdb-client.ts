@@ -426,8 +426,17 @@ class TMDBClient {
    * Get person TV credits
    */
   async getPersonTVCredits(personId: number): Promise<{
-    cast: (TVShow & { character: string; credit_id: string; episode_count: number })[];
-    crew: (TVShow & { department: string; job: string; credit_id: string; episode_count: number })[];
+    cast: (TVShow & {
+      character: string;
+      credit_id: string;
+      episode_count: number;
+    })[];
+    crew: (TVShow & {
+      department: string;
+      job: string;
+      credit_id: string;
+      episode_count: number;
+    })[];
   }> {
     const response = await this.api.get(`/person/${personId}/tv_credits`);
     return response.data;

@@ -4,7 +4,11 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { usePersonDetailsBySlug, usePersonMovieCredits, usePersonTVCredits } from "@/hooks";
+import {
+  usePersonDetailsBySlug,
+  usePersonMovieCredits,
+  usePersonTVCredits,
+} from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug, createTVShowSlug } from "@/lib/slug-utils";
 
@@ -18,8 +22,13 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   const { slug } = React.use(params);
   const [activeTab, setActiveTab] = useState<"movies" | "tv">("movies");
 
-  const { data: person, isLoading: personLoading, error: personError } = usePersonDetailsBySlug(slug);
-  const { data: movieCredits, isLoading: moviesLoading } = usePersonMovieCredits(slug);
+  const {
+    data: person,
+    isLoading: personLoading,
+    error: personError,
+  } = usePersonDetailsBySlug(slug);
+  const { data: movieCredits, isLoading: moviesLoading } =
+    usePersonMovieCredits(slug);
   const { data: tvCredits, isLoading: tvLoading } = usePersonTVCredits(slug);
 
   if (personLoading) {
@@ -36,8 +45,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
     const death = deathday ? new Date(deathday) : new Date();
     const age = death.getFullYear() - birth.getFullYear();
     const monthDiff = death.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && death.getDate() < birth.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && death.getDate() < birth.getDate())
+    ) {
       return age - 1;
     }
     return age;
@@ -46,31 +58,55 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   // Get gender display
   const getGenderDisplay = (gender: number) => {
     switch (gender) {
-      case 1: return "Female";
-      case 2: return "Male";
-      case 3: return "Non-binary";
-      default: return "Not specified";
+      case 1:
+        return "Female";
+      case 2:
+        return "Male";
+      case 3:
+        return "Non-binary";
+      default:
+        return "Not specified";
     }
   };
 
   // Sort and filter credits
-  const sortedMovieCredits = movieCredits ? {
-    cast: movieCredits.cast
-      .sort((a, b) => new Date(b.release_date || '1900-01-01').getTime() - new Date(a.release_date || '1900-01-01').getTime())
-      .slice(0, 20),
-    crew: movieCredits.crew
-      .sort((a, b) => new Date(b.release_date || '1900-01-01').getTime() - new Date(a.release_date || '1900-01-01').getTime())
-      .slice(0, 20)
-  } : null;
+  const sortedMovieCredits = movieCredits
+    ? {
+        cast: movieCredits.cast
+          .sort(
+            (a, b) =>
+              new Date(b.release_date || "1900-01-01").getTime() -
+              new Date(a.release_date || "1900-01-01").getTime()
+          )
+          .slice(0, 20),
+        crew: movieCredits.crew
+          .sort(
+            (a, b) =>
+              new Date(b.release_date || "1900-01-01").getTime() -
+              new Date(a.release_date || "1900-01-01").getTime()
+          )
+          .slice(0, 20),
+      }
+    : null;
 
-  const sortedTVCredits = tvCredits ? {
-    cast: tvCredits.cast
-      .sort((a, b) => new Date(b.first_air_date || '1900-01-01').getTime() - new Date(a.first_air_date || '1900-01-01').getTime())
-      .slice(0, 20),
-    crew: tvCredits.crew
-      .sort((a, b) => new Date(b.first_air_date || '1900-01-01').getTime() - new Date(a.first_air_date || '1900-01-01').getTime())
-      .slice(0, 20)
-  } : null;
+  const sortedTVCredits = tvCredits
+    ? {
+        cast: tvCredits.cast
+          .sort(
+            (a, b) =>
+              new Date(b.first_air_date || "1900-01-01").getTime() -
+              new Date(a.first_air_date || "1900-01-01").getTime()
+          )
+          .slice(0, 20),
+        crew: tvCredits.crew
+          .sort(
+            (a, b) =>
+              new Date(b.first_air_date || "1900-01-01").getTime() -
+              new Date(a.first_air_date || "1900-01-01").getTime()
+          )
+          .slice(0, 20),
+      }
+    : null;
 
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full">
@@ -78,9 +114,12 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
       <section className="relative w-full bg-gradient-to-br from-purple-900 via-purple-700 to-pink-800 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%239C92AC' fillOpacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%239C92AC' fillOpacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
         </div>
 
         <div className="relative z-10 px-4 sm:px-6 lg:px-8 xl:px-12 py-16">
@@ -90,7 +129,12 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
               <div className="lg:col-span-1">
                 <div className="aspect-[3/4] w-full max-w-sm mx-auto lg:max-w-none relative overflow-hidden rounded-2xl shadow-2xl">
                   <Image
-                    src={tmdbClient.getImageUrl(person.profile_path || null, "h632") || "/placeholder-avatar.svg"}
+                    src={
+                      tmdbClient.getImageUrl(
+                        person.profile_path || null,
+                        "h632"
+                      ) || "/placeholder-avatar.svg"
+                    }
                     alt={person.name}
                     width={400}
                     height={600}
@@ -125,13 +169,18 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     {person.birthday && (
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-purple-200 font-semibold mb-1">Birthday</div>
+                        <div className="text-purple-200 font-semibold mb-1">
+                          Birthday
+                        </div>
                         <div className="text-white">
-                          {new Date(person.birthday).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          {new Date(person.birthday).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
                           {!person.deathday && (
                             <span className="text-purple-200 ml-2">
                               (Age {calculateAge(person.birthday)})
@@ -143,16 +192,22 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
 
                     {person.deathday && (
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-purple-200 font-semibold mb-1">Death</div>
+                        <div className="text-purple-200 font-semibold mb-1">
+                          Death
+                        </div>
                         <div className="text-white">
-                          {new Date(person.deathday).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          {new Date(person.deathday).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
                           {person.birthday && (
                             <span className="text-purple-200 ml-2">
-                              (Age {calculateAge(person.birthday, person.deathday)})
+                              (Age{" "}
+                              {calculateAge(person.birthday, person.deathday)})
                             </span>
                           )}
                         </div>
@@ -160,41 +215,60 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                     )}
 
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                      <div className="text-purple-200 font-semibold mb-1">Gender</div>
-                      <div className="text-white">{getGenderDisplay(person.gender)}</div>
+                      <div className="text-purple-200 font-semibold mb-1">
+                        Gender
+                      </div>
+                      <div className="text-white">
+                        {getGenderDisplay(person.gender)}
+                      </div>
                     </div>
 
                     {person.place_of_birth && (
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-purple-200 font-semibold mb-1">Place of Birth</div>
-                        <div className="text-white">{person.place_of_birth}</div>
+                        <div className="text-purple-200 font-semibold mb-1">
+                          Place of Birth
+                        </div>
+                        <div className="text-white">
+                          {person.place_of_birth}
+                        </div>
                       </div>
                     )}
 
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                      <div className="text-purple-200 font-semibold mb-1">Popularity</div>
-                      <div className="text-white">{person.popularity.toFixed(1)}</div>
+                      <div className="text-purple-200 font-semibold mb-1">
+                        Popularity
+                      </div>
+                      <div className="text-white">
+                        {person.popularity.toFixed(1)}
+                      </div>
                     </div>
 
-                    {person.also_known_as && person.also_known_as.length > 0 && (
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:col-span-2">
-                        <div className="text-purple-200 font-semibold mb-1">Also Known As</div>
-                        <div className="text-white text-sm">
-                          {person.also_known_as.slice(0, 5).join(", ")}
-                          {person.also_known_as.length > 5 && "..."}
+                    {person.also_known_as &&
+                      person.also_known_as.length > 0 && (
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:col-span-2">
+                          <div className="text-purple-200 font-semibold mb-1">
+                            Also Known As
+                          </div>
+                          <div className="text-white text-sm">
+                            {person.also_known_as.slice(0, 5).join(", ")}
+                            {person.also_known_as.length > 5 && "..."}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
 
                   {/* Biography */}
                   {person.biography && (
                     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6">
-                      <h2 className="text-xl font-semibold text-purple-200 mb-4">Biography</h2>
+                      <h2 className="text-xl font-semibold text-purple-200 mb-4">
+                        Biography
+                      </h2>
                       <div className="text-white/90 leading-relaxed space-y-4">
-                        {person.biography.split('\n\n').map((paragraph, index) => (
-                          <p key={index}>{paragraph}</p>
-                        ))}
+                        {person.biography
+                          .split("\n\n")
+                          .map((paragraph, index) => (
+                            <p key={index}>{paragraph}</p>
+                          ))}
                       </div>
                     </div>
                   )}
@@ -281,12 +355,20 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                     {sortedMovieCredits.cast.map((movie) => (
                       <Link
                         key={movie.credit_id}
-                        href={`/movie/${createMovieSlug(movie.title, movie.id)}`}
+                        href={`/movie/${createMovieSlug(
+                          movie.title,
+                          movie.id
+                        )}`}
                         className="card-premium group cursor-pointer"
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image
-                            src={tmdbClient.getImageUrl(movie.poster_path || null, "w300") || "/placeholder-poster.svg"}
+                            src={
+                              tmdbClient.getImageUrl(
+                                movie.poster_path || null,
+                                "w300"
+                              ) || "/placeholder-poster.svg"
+                            }
                             alt={movie.title}
                             width={200}
                             height={300}
@@ -297,7 +379,9 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                             }}
                           />
                           <div className="absolute top-3 right-3 bg-purple-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(movie.release_date || '1900-01-01').getFullYear()}
+                            {new Date(
+                              movie.release_date || "1900-01-01"
+                            ).getFullYear()}
                           </div>
                         </div>
                         <div className="p-4">
@@ -310,7 +394,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                             <span>⭐ {movie.vote_average.toFixed(1)}</span>
                             <span>•</span>
-                            <span>{new Date(movie.release_date || '1900-01-01').getFullYear()}</span>
+                            <span>
+                              {new Date(
+                                movie.release_date || "1900-01-01"
+                              ).getFullYear()}
+                            </span>
                           </div>
                         </div>
                       </Link>
@@ -329,12 +417,20 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                     {sortedMovieCredits.crew.map((movie) => (
                       <Link
                         key={movie.credit_id}
-                        href={`/movie/${createMovieSlug(movie.title, movie.id)}`}
+                        href={`/movie/${createMovieSlug(
+                          movie.title,
+                          movie.id
+                        )}`}
                         className="card-premium group cursor-pointer"
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image
-                            src={tmdbClient.getImageUrl(movie.poster_path || null, "w300") || "/placeholder-poster.svg"}
+                            src={
+                              tmdbClient.getImageUrl(
+                                movie.poster_path || null,
+                                "w300"
+                              ) || "/placeholder-poster.svg"
+                            }
                             alt={movie.title}
                             width={200}
                             height={300}
@@ -345,7 +441,9 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                             }}
                           />
                           <div className="absolute top-3 right-3 bg-pink-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(movie.release_date || '1900-01-01').getFullYear()}
+                            {new Date(
+                              movie.release_date || "1900-01-01"
+                            ).getFullYear()}
                           </div>
                         </div>
                         <div className="p-4">
@@ -358,7 +456,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                             <span>⭐ {movie.vote_average.toFixed(1)}</span>
                             <span>•</span>
-                            <span>{new Date(movie.release_date || '1900-01-01').getFullYear()}</span>
+                            <span>
+                              {new Date(
+                                movie.release_date || "1900-01-01"
+                              ).getFullYear()}
+                            </span>
                           </div>
                         </div>
                       </Link>
@@ -387,7 +489,12 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image
-                            src={tmdbClient.getImageUrl(show.poster_path || null, "w300") || "/placeholder-poster.svg"}
+                            src={
+                              tmdbClient.getImageUrl(
+                                show.poster_path || null,
+                                "w300"
+                              ) || "/placeholder-poster.svg"
+                            }
                             alt={show.name}
                             width={200}
                             height={300}
@@ -398,7 +505,9 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                             }}
                           />
                           <div className="absolute top-3 right-3 bg-purple-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(show.first_air_date || '1900-01-01').getFullYear()}
+                            {new Date(
+                              show.first_air_date || "1900-01-01"
+                            ).getFullYear()}
                           </div>
                           {show.episode_count > 1 && (
                             <div className="absolute top-3 left-3 bg-black/80 text-white text-xs px-2 py-1 rounded-full">
@@ -416,7 +525,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                             <span>⭐ {show.vote_average.toFixed(1)}</span>
                             <span>•</span>
-                            <span>{new Date(show.first_air_date || '1900-01-01').getFullYear()}</span>
+                            <span>
+                              {new Date(
+                                show.first_air_date || "1900-01-01"
+                              ).getFullYear()}
+                            </span>
                           </div>
                         </div>
                       </Link>
@@ -440,7 +553,12 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image
-                            src={tmdbClient.getImageUrl(show.poster_path || null, "w300") || "/placeholder-poster.svg"}
+                            src={
+                              tmdbClient.getImageUrl(
+                                show.poster_path || null,
+                                "w300"
+                              ) || "/placeholder-poster.svg"
+                            }
                             alt={show.name}
                             width={200}
                             height={300}
@@ -451,7 +569,9 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                             }}
                           />
                           <div className="absolute top-3 right-3 bg-pink-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(show.first_air_date || '1900-01-01').getFullYear()}
+                            {new Date(
+                              show.first_air_date || "1900-01-01"
+                            ).getFullYear()}
                           </div>
                           {show.episode_count > 1 && (
                             <div className="absolute top-3 left-3 bg-black/80 text-white text-xs px-2 py-1 rounded-full">
@@ -469,7 +589,11 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                             <span>⭐ {show.vote_average.toFixed(1)}</span>
                             <span>•</span>
-                            <span>{new Date(show.first_air_date || '1900-01-01').getFullYear()}</span>
+                            <span>
+                              {new Date(
+                                show.first_air_date || "1900-01-01"
+                              ).getFullYear()}
+                            </span>
                           </div>
                         </div>
                       </Link>
@@ -515,7 +639,7 @@ function PersonDetailSkeleton() {
           </div>
         </div>
       </div>
-      
+
       {/* Content Skeleton */}
       <div className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="w-full max-w-7xl mx-auto">

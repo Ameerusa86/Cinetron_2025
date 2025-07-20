@@ -858,10 +858,7 @@ export const usePersonMovieCredits = (
 /**
  * Hook to fetch person TV credits by slug
  */
-export const usePersonTVCredits = (
-  slug: string,
-  enabled: boolean = true
-) => {
+export const usePersonTVCredits = (slug: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["person-tv-credits", slug],
     queryFn: async () => {
