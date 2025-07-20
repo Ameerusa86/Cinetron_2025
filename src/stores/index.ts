@@ -29,6 +29,9 @@ export const useThemeStore = create<ThemeState>()(
         const applyTheme = (isDarkMode: boolean) => {
           const root = document.documentElement;
 
+          // Debug logging
+          console.log(`Applying theme: ${theme}, isDark: ${isDarkMode}`);
+
           if (isDarkMode) {
             root.classList.add("dark");
             root.setAttribute(
@@ -46,6 +49,10 @@ export const useThemeStore = create<ThemeState>()(
           }
 
           set({ isDark: isDarkMode });
+
+          // Debug logging
+          console.log(`Theme applied. Root classes:`, root.className);
+          console.log(`Data theme:`, root.getAttribute("data-theme"));
         };
 
         set({ theme });

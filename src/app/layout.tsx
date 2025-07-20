@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import Navbar from "@/components/Navbar";
 import SettingsModal from "@/components/modals/SettingsModal";
+import { themeScript } from "@/lib/theme-script";
 
 // Premium Font Configuration
 const inter = Inter({
@@ -159,6 +160,9 @@ export default function RootLayout({
           as="image"
           type="image/jpeg"
         />
+
+        {/* Theme initialization script - prevents flash of wrong theme */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body
         className={`
@@ -166,13 +170,16 @@ export default function RootLayout({
           ${playfairDisplay.variable} 
           ${firaCode.variable} 
           font-sans antialiased min-h-screen
-          selection:bg-orange-500/20 selection:text-orange-900
+          bg-gradient-to-br from-slate-50 via-white to-slate-100 
+          dark:from-slate-950 dark:via-slate-900 dark:to-slate-950
+          text-slate-900 dark:text-slate-100
+          selection:bg-orange-500/20 selection:text-orange-900 dark:selection:text-orange-100
         `}
         suppressHydrationWarning
       >
         <Providers>
           {/* Full Screen Container */}
-          <div className="relative min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+          <div className="relative min-h-screen w-full overflow-x-hidden">
             {/* Background Pattern */}
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(244,110,12,0.1),transparent)] pointer-events-none z-0" />
 

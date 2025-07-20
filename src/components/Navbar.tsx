@@ -34,7 +34,7 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
-          ? "bg-slate-900/95 backdrop-blur-xl shadow-premium"
+          ? "bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-premium"
           : "bg-transparent"
       }`}
     >
@@ -51,7 +51,7 @@ export default function Navbar() {
               <span className="text-xl lg:text-2xl xl:text-3xl font-display font-bold text-gradient-premium">
                 CinemaVault
               </span>
-              <span className="text-xs lg:text-sm text-slate-400 font-medium">
+              <span className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 font-medium">
                 Premium Experience
               </span>
             </div>
@@ -66,7 +66,7 @@ export default function Navbar() {
                 className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                   pathname === item.href
                     ? "text-white bg-gradient-cinema shadow-lg"
-                    : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
                 }`}
               >
                 <span className="flex items-center space-x-2">
@@ -83,7 +83,7 @@ export default function Navbar() {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3">
             {/* Search Button */}
-            <button className="p-2 lg:p-3 rounded-xl bg-slate-800/50 text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-300">
+            <button className="p-2 lg:p-3 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50 transition-all duration-300">
               <svg
                 className="w-5 h-5 lg:w-6 lg:h-6"
                 fill="none"
@@ -102,7 +102,7 @@ export default function Navbar() {
             {/* Settings Button */}
             <button
               onClick={() => setSettingsModal(true)}
-              className="p-2 lg:p-3 rounded-xl bg-slate-800/50 text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-300"
+              className="p-2 lg:p-3 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50 transition-all duration-300"
               title="Settings"
             >
               <svg
@@ -141,7 +141,7 @@ export default function Navbar() {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 rounded-xl bg-slate-800/50 text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-300"
+              className="lg:hidden p-2 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700/50 transition-all duration-300"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <svg
@@ -167,7 +167,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 shadow-2xl">
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border-t border-slate-300 dark:border-slate-800 shadow-2xl">
             <div className="px-4 py-6 space-y-4">
               {navItems.map((item) => (
                 <Link
@@ -176,7 +176,7 @@ export default function Navbar() {
                   className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
                     pathname === item.href
                       ? "bg-gradient-cinema text-white shadow-lg"
-                      : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+                      : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -184,7 +184,7 @@ export default function Navbar() {
                   <span className="font-medium">{item.label}</span>
                 </Link>
               ))}
-              <div className="flex space-x-3 pt-4 border-t border-slate-800">
+              <div className="flex space-x-3 pt-4 border-t border-slate-300 dark:border-slate-800">
                 <button className="flex-1 btn-cinema-outline text-center py-3">
                   Sign In
                 </button>

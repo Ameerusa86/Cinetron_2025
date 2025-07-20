@@ -13,9 +13,9 @@ export default function HomePage() {
   return (
     <div className="w-full min-h-screen">
       {/* Premium Hero Section - Full Screen */}
-      <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+      <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-950">
         {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-slate-200/50 dark:from-slate-900/50 dark:to-slate-950/50" />
 
         {/* Premium Pattern Overlay */}
         <div className="absolute inset-0 opacity-20">
@@ -25,12 +25,12 @@ export default function HomePage() {
 
         {/* Content - Full Width Responsive */}
         <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 w-full">
-          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-display font-bold text-white mb-4 sm:mb-6">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-display font-bold text-slate-900 dark:text-white mb-4 sm:mb-6">
             <span className="text-gradient-premium">Cinema</span>
-            <span className="text-white">Vault</span>
+            <span className="text-slate-800 dark:text-white">Vault</span>
           </h1>
 
-          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-slate-300 mb-8 sm:mb-12 leading-relaxed px-4 max-w-5xl mx-auto">
+          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-slate-600 dark:text-slate-300 mb-8 sm:mb-12 leading-relaxed px-4 max-w-5xl mx-auto">
             Experience movies like never before with our premium collection,
             AI-powered recommendations, and immersive 3D previews.
           </p>
