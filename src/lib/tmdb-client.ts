@@ -3,15 +3,17 @@ import type {
   Movie,
   MovieDetails,
   MovieResponse,
+  TVShow,
   TVShowResponse,
   TVShowDetails,
   Credits,
   VideoResponse,
   ReviewResponse,
+  Person,
+  PersonDetails,
   Genre,
   MultiSearchResult,
   TMDBResponse,
-  Person,
   PersonResponse,
   MultiSearchResponse,
 } from "@/types";
@@ -404,16 +406,7 @@ class TMDBClient {
   /**
    * Get person details
    */
-  async getPersonDetails(personId: number): Promise<
-    Person & {
-      biography?: string;
-      birthday?: string;
-      deathday?: string;
-      place_of_birth?: string;
-      homepage?: string;
-      imdb_id?: string;
-    }
-  > {
+  async getPersonDetails(personId: number): Promise<PersonDetails> {
     const response = await this.api.get(`/person/${personId}`);
     return response.data;
   }
@@ -426,6 +419,17 @@ class TMDBClient {
     crew: (Movie & { department: string; job: string; credit_id: string })[];
   }> {
     const response = await this.api.get(`/person/${personId}/movie_credits`);
+    return response.data;
+  }
+
+  /**
+   * Get person TV credits
+   */
+  async getPersonTVCredits(personId: number): Promise<{
+    cast: (TVShow & { character: string; credit_id: string; episode_count: number })[];
+    crew: (TVShow & { department: string; job: string; credit_id: string; episode_count: number })[];
+  }> {
+    const response = await this.api.get(`/person/${personId}/tv_credits`);
     return response.data;
   }
 

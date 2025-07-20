@@ -802,3 +802,79 @@ export const useTVShowDetailsBySlug = (
     gcTime: 1000 * 60 * 60, // 1 hour
   });
 };
+
+// ======================
+// PERSON HOOKS
+// ======================
+
+/**
+ * Hook to fetch person details by slug
+ */
+export const usePersonDetailsBySlug = (
+  slug: string,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["person-details-by-slug", slug],
+    queryFn: async () => {
+      try {
+        const personId = extractIdFromSlug(slug);
+        const data = await tmdbClient.getPersonDetails(personId);
+        return data;
+      } catch (error) {
+        throw new Error(`Invalid person slug: ${slug}`);
+      }
+    },
+    enabled: enabled && !!slug,
+    staleTime: 1000 * 60 * 15, // 15 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+  });
+};
+
+/**
+ * Hook to fetch person movie credits by slug
+ */
+export const usePersonMovieCredits = (
+  slug: string,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["person-movie-credits", slug],
+    queryFn: async () => {
+      try {
+        const personId = extractIdFromSlug(slug);
+        const data = await tmdbClient.getPersonMovieCredits(personId);
+        return data;
+      } catch (error) {
+        throw new Error(`Invalid person slug: ${slug}`);
+      }
+    },
+    enabled: enabled && !!slug,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+};
+
+/**
+ * Hook to fetch person TV credits by slug
+ */
+export const usePersonTVCredits = (
+  slug: string,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["person-tv-credits", slug],
+    queryFn: async () => {
+      try {
+        const personId = extractIdFromSlug(slug);
+        const data = await tmdbClient.getPersonTVCredits(personId);
+        return data;
+      } catch (error) {
+        throw new Error(`Invalid person slug: ${slug}`);
+      }
+    },
+    enabled: enabled && !!slug,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+};

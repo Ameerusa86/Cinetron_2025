@@ -54,6 +54,16 @@ export function createTVShowSlug(name: string, id: number): string {
 }
 
 /**
+ * Create a person slug with ID for unique identification
+ * Format: "name-personid"
+ * Example: "leonardo-dicaprio-6193"
+ */
+export function createPersonSlug(name: string, id: number): string {
+  const nameSlug = createSlug(name);
+  return `${nameSlug}-${id}`;
+}
+
+/**
  * Extract ID from a slug
  * Example: "the-dark-knight-155" -> 155
  */

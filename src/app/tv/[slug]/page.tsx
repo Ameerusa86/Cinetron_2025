@@ -6,7 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useTVShowDetailsBySlug } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
-import { createTVShowSlug } from "@/lib/slug-utils";
+import { createTVShowSlug, createPersonSlug } from "@/lib/slug-utils";
 
 interface TVShowDetailPageProps {
   params: Promise<{
@@ -313,7 +313,11 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
               {mainCast.map((person) => (
-                <div key={person.id} className="group text-center">
+                <Link 
+                  key={person.id} 
+                  href={`/person/${createPersonSlug(person.name, person.id)}`}
+                  className="group text-center hover:scale-105 transition-transform duration-300"
+                >
                   <div className="aspect-square relative overflow-hidden rounded-full mb-3 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                     <Image
                       src={
@@ -338,7 +342,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                   <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
                     {person.character}
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

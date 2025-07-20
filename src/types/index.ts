@@ -130,6 +130,57 @@ export interface CrewMember {
   popularity: number;
 }
 
+// Person Credits Types (for cast/person detail pages)
+export interface PersonCredits {
+  id: number;
+  cast: PersonMovieCredit[] | PersonTVCredit[];
+  crew: PersonMovieCredit[] | PersonTVCredit[];
+}
+
+export interface PersonMovieCredit {
+  id: number;
+  title: string;
+  original_title: string;
+  overview: string;
+  poster_path?: string;
+  backdrop_path?: string;
+  release_date: string;
+  genre_ids: number[];
+  adult: boolean;
+  original_language: string;
+  popularity: number;
+  vote_count: number;
+  vote_average: number;
+  video: boolean;
+  character?: string;
+  credit_id: string;
+  order?: number;
+  job?: string;
+  department?: string;
+}
+
+export interface PersonTVCredit {
+  id: number;
+  name: string;
+  original_name: string;
+  overview: string;
+  poster_path?: string;
+  backdrop_path?: string;
+  first_air_date: string;
+  genre_ids: number[];
+  adult: boolean;
+  original_language: string;
+  popularity: number;
+  vote_count: number;
+  vote_average: number;
+  origin_country: string[];
+  character?: string;
+  credit_id: string;
+  episode_count?: number;
+  job?: string;
+  department?: string;
+}
+
 // Video Types
 export interface VideoResponse {
   id: number;
