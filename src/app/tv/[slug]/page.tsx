@@ -359,19 +359,45 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                 {videos.slice(0, 6).map((video) => (
                   <div
                     key={video.id}
-                    className="group relative aspect-video bg-slate-200 dark:bg-slate-800 rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300"
+                    className="group relative aspect-video bg-slate-200 dark:bg-slate-800 rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                     onClick={() => setSelectedVideo(video.key)}
                   >
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/30 transition-colors duration-300">
-                      <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    {/* YouTube Thumbnail */}
+                    <Image
+                      src={`https://img.youtube.com/vi/${video.key}/maxresdefault.jpg`}
+                      alt={video.name}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      onError={(e) => {
+                        // Fallback to high quality thumbnail if maxres fails
+                        e.currentTarget.src = `https://img.youtube.com/vi/${video.key}/hqdefault.jpg`;
+                      }}
+                    />
+
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300" />
+
+                    {/* Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 bg-purple-600/90 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg group-hover:bg-purple-500">
                         <span className="text-white text-2xl ml-1">▶</span>
                       </div>
                     </div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white font-semibold text-sm line-clamp-2 drop-shadow-lg">
+
+                    {/* Video Duration Badge (if available) */}
+                    <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                      {video.type === "Trailer"
+                        ? "TRAILER"
+                        : video.type.toUpperCase()}
+                    </div>
+
+                    {/* Title and Info */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                      <h3 className="text-white font-semibold text-sm line-clamp-2 drop-shadow-lg mb-1">
                         {video.name}
                       </h3>
-                      <p className="text-slate-200 text-xs capitalize">
+                      <p className="text-slate-200 text-xs capitalize opacity-90">
                         {video.type} •{" "}
                         {video.published_at &&
                           new Date(video.published_at).getFullYear()}
