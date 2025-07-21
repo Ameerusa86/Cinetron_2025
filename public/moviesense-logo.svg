@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Movie Clapper -->
+  <g transform="translate(20, 40)">
+    <!-- Main clapper body -->
+    <rect x="0" y="40" width="60" height="45" fill="url(#logoGradient)" rx="4"/>
+    <rect x="0" y="40" width="60" height="8" fill="#ffffff" opacity="0.9"/>
+    
+    <!-- Clapper top -->
+    <path d="M 8 20 L 68 35 L 68 45 L 8 30 Z" fill="url(#logoGradient)" filter="url(#glow)"/>
+    
+    <!-- Stripes -->
+    <rect x="10" y="22" width="8" height="6" fill="#ffffff"/>
+    <rect x="22" y="24" width="8" height="6" fill="#000000"/>
+    <rect x="34" y="26" width="8" height="6" fill="#ffffff"/>
+    <rect x="46" y="28" width="8" height="6" fill="#000000"/>
+    
+    <!-- Film holes -->
+    <circle cx="8" cy="52" r="2" fill="#ffffff" opacity="0.3"/>
+    <circle cx="8" cy="60" r="2" fill="#ffffff" opacity="0.3"/>
+    <circle cx="8" cy="68" r="2" fill="#ffffff" opacity="0.3"/>
+    <circle cx="52" cy="52" r="2" fill="#ffffff" opacity="0.3"/>
+    <circle cx="52" cy="60" r="2" fill="#ffffff" opacity="0.3"/>
+    <circle cx="52" cy="68" r="2" fill="#ffffff" opacity="0.3"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="100" y="85" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#logoGradient)" filter="url(#glow)">MOVIESENSE</text>
+  <text x="100" y="110" font-family="Arial, sans-serif" font-size="14" fill="#94A3B8">YOUR MOVIE COMPANION</text>
+</svg>
