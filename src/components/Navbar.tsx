@@ -2,9 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { QuickThemeToggle } from "./ui/ThemeSelector";
 import { motion, AnimatePresence } from "framer-motion";
+import { TMDBClient } from "@/lib/tmdb-client";
+import { Movie } from "@/types";
+import Image from "next/image";
+
+const tmdbClient = new TMDBClient();
 
 const navItems = [
   { href: "/", label: "Home", icon: "🏠" },
@@ -20,7 +25,81 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Search function
+  const performSearch = async (query: string) => {
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await tmdbClient.searchMovies(query, 1);
+      setSearchResults(results.results.slice(0, 6)); // Show top 6 results
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle search input change with debouncing
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+  };
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Handle search submit
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  };
+
+  // Handle result click
+  const handleResultClick = (movieId: number) => {
+    router.push(`/movie/${movieId}`);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  // Close search on escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsSearchOpen(false);
+        setSearchQuery("");
+        setSearchResults([]);
+      }
+    };
+
+    if (isSearchOpen) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isSearchOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -264,16 +343,128 @@ export default function Navbar() {
                 className="py-4 border-t border-white/10"
               >
                 <div className="relative max-w-2xl mx-auto">
-                  <input
-                    type="text"
-                    placeholder="Search for movies, shows, actors..."
-                    className="w-full px-6 py-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-purple-500/50 focus:bg-slate-800/70 transition-all duration-300"
-                  />
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    <kbd className="px-3 py-1 bg-slate-700/50 border border-slate-600 rounded-lg text-xs text-slate-400">
-                      Enter
-                    </kbd>
-                  </div>
+                  <form onSubmit={handleSearchSubmit}>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      placeholder="Search for movies, shows, actors..."
+                      className="w-full px-6 py-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-purple-500/50 focus:bg-slate-800/70 transition-all duration-300"
+                      autoFocus
+                    />
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                      {isSearching && (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                          className="w-4 h-4"
+                        >
+                          <svg
+                            className="w-4 h-4 text-purple-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                        </motion.div>
+                      )}
+                      <kbd className="px-3 py-1 bg-slate-700/50 border border-slate-600 rounded-lg text-xs text-slate-400">
+                        Enter
+                      </kbd>
+                    </div>
+                  </form>
+
+                  {/* Search Results */}
+                  {searchResults.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                    >
+                      <div className="px-4 py-2 border-b border-white/10">
+                        <span className="text-sm text-slate-400 font-medium">
+                          Search Results ({searchResults.length})
+                        </span>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {searchResults.map((movie, index) => (
+                          <motion.div
+                            key={movie.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            onClick={() => handleResultClick(movie.id)}
+                            className="flex items-center space-x-4 px-4 py-3 hover:bg-white/5 cursor-pointer transition-all duration-200"
+                          >
+                            <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
+                              {movie.poster_path ? (
+                                <Image
+                                  src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                                  alt={movie.title}
+                                  width={48}
+                                  height={64}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-500">
+                                  🎬
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-white font-medium truncate">
+                                {movie.title}
+                              </h4>
+                              <p className="text-slate-400 text-sm">
+                                {movie.release_date
+                                  ? new Date(movie.release_date).getFullYear()
+                                  : "N/A"}
+                              </p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <span className="text-yellow-400 text-xs">
+                                  ★
+                                </span>
+                                <span className="text-slate-400 text-xs">
+                                  {movie.vote_average.toFixed(1)}
+                                </span>
+                              </div>
+                            </div>
+                            <svg
+                              className="w-5 h-5 text-slate-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </motion.div>
+                        ))}
+                      </div>
+                      <div className="px-4 py-3 border-t border-white/10 bg-slate-800/50">
+                        <button
+                          onClick={handleSearchSubmit}
+                          className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                        >
+                          View all results for &ldquo;{searchQuery}&rdquo;
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </motion.div>
             )}
