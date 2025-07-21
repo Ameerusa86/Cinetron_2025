@@ -90,10 +90,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
     }
   };
 
-  // Get trailer or first video
-  const trailer = movie.videos?.results?.find(
-    (video) => video.type === "Trailer" && video.site === "YouTube"
-  );
+  // Get videos
   const videos =
     movie.videos?.results?.filter((video) => video.site === "YouTube") || [];
 
@@ -242,14 +239,6 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  {trailer && (
-                    <button
-                      onClick={() => setSelectedVideo(trailer.key)}
-                      className="btn-cinema flex items-center justify-center gap-2 text-lg px-8 py-4"
-                    >
-                      ▶️ Watch Trailer
-                    </button>
-                  )}
                   <button
                     onClick={handleWatchlistToggle}
                     className={`${
@@ -338,36 +327,66 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                   >
                     {/* YouTube Thumbnail */}
                     <Image
-                      src={`https://img.youtube.com/vi/${video.key}/maxresdefault.jpg`}
+                      src={`https://img.youtube.com/vi/${video.key}/hqdefault.jpg`}
                       alt={video.name}
                       fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105 z-10"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       onError={(e) => {
-                        // Fallback to high quality thumbnail if maxres fails
-                        e.currentTarget.src = `https://img.youtube.com/vi/${video.key}/hqdefault.jpg`;
+                        // Fallback to medium quality thumbnail if hq fails
+                        const target = e.target as HTMLImageElement;
+                        if (target.src.includes("hqdefault")) {
+                          target.src = `https://img.youtube.com/vi/${video.key}/mqdefault.jpg`;
+                        } else if (target.src.includes("mqdefault")) {
+                          target.src = `https://img.youtube.com/vi/${video.key}/default.jpg`;
+                        } else {
+                          // Hide the image completely to show CSS fallback
+                          target.style.display = "none";
+                          // Also hide the parent container's background
+                          const container = target.closest(".group");
+                          if (container) {
+                            container.classList.add("show-fallback");
+                          }
+                        }
                       }}
                     />
 
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300" />
-
-                    {/* Play Button */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 bg-red-600/90 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg group-hover:bg-red-500">
-                        <span className="text-white text-2xl ml-1">▶</span>
+                    {/* CSS Fallback Background - only shows when image fails completely */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center opacity-0 group-[.show-fallback]:opacity-100 z-5">
+                      <div className="text-center text-white/80">
+                        <div className="text-4xl mb-2">🎬</div>
+                        <div className="text-sm font-medium">Video Preview</div>
+                        <div className="text-xs mt-1 opacity-75">
+                          {video.type}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Video Duration Badge (if available) */}
-                    <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300 z-20" />
+
+                    {/* Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center z-30">
+                      <div className="w-16 h-16 bg-red-600/90 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg hover:bg-red-500">
+                        <svg
+                          className="w-6 h-6 text-white ml-1"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Video Type Badge */}
+                    <div className="absolute top-3 right-3 bg-black/80 text-white text-xs px-3 py-1 rounded-full z-30">
                       {video.type === "Trailer"
                         ? "TRAILER"
                         : video.type.toUpperCase()}
                     </div>
 
                     {/* Title and Info */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 z-30">
                       <h3 className="text-white font-semibold text-sm line-clamp-2 drop-shadow-lg mb-1">
                         {video.name}
                       </h3>

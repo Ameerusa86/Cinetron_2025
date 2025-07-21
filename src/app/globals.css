@@ -98,6 +98,11 @@
     @apply bg-orange-500/20 text-orange-900;
   }
 
+  /* Cinema Mode Gradients */
+  .bg-gradient-radial {
+    background: radial-gradient(circle at center, var(--tw-gradient-stops));
+  }
+
   /* Images */
   img {
     @apply max-w-full h-auto;
