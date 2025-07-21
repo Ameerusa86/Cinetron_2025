@@ -1,6 +1,7 @@
-// AI Services for Movie App
+// AI Services for Movie App - Enhanced with Gemini AI
 import { Movie } from "@/types";
 import tmdbClient from "@/lib/tmdb-client";
+import { geminiAI } from "@/lib/gemini-ai";
 
 export interface UserPreferences {
   favoriteGenres: number[];
@@ -87,159 +88,90 @@ export class AIMovieService {
     return AIMovieService.instance;
   }
 
-  // Smart Recommendations
+  // Smart Recommendations - Enhanced with Gemini AI
   async getSmartRecommendations(): Promise<AIRecommendation[]> {
-    // Simulate AI processing
-    await this.delay(1500);
+    // Show loading state
+    await this.delay(1000);
 
     try {
-      // Get various movie lists from TMDB to create diverse recommendations
-      const [popularMovies, topRatedMovies, trendingMovies] = await Promise.all(
-        [
-          tmdbClient.getPopularMovies(1),
-          tmdbClient.getTopRatedMovies(1),
-          tmdbClient.getTrendingMovies("week"),
-        ]
+      // Get user's watch history (simulated for demo)
+      const userHistory = await this.getUserWatchHistory();
+
+      // Use Gemini AI to generate intelligent recommendations
+      const geminiResult = await geminiAI.generateSmartRecommendations(
+        userHistory,
+        undefined, // mood
+        this.userPreferences
       );
 
-      // Create AI recommendations from real TMDB data
-      const recommendations: AIRecommendation[] = [];
-
-      // Add top rated movie as genre match
-      if (topRatedMovies.results.length > 0) {
-        const movie = topRatedMovies.results[0];
-        recommendations.push({
+      // Transform Gemini results into our format
+      const recommendations: AIRecommendation[] =
+        geminiResult.recommendations.map((movie, index) => ({
           movie,
-          confidence: 0.92,
+          confidence: Math.max(
+            0.7,
+            geminiResult.analysis.confidence - index * 0.05
+          ),
           reasons: [
-            "Matches your preference for high-quality cinema",
-            "Critically acclaimed with exceptional ratings",
-            "Popular among users with sophisticated taste",
+            ...geminiResult.analysis.reasoning,
+            `AI confidence: ${(geminiResult.analysis.confidence * 100).toFixed(
+              0
+            )}%`,
+            "Powered by Google Gemini AI",
           ],
-          category: "genre_match",
-        });
-      }
+          category:
+            index === 0
+              ? "genre_match"
+              : index === 1
+              ? "similar_users"
+              : index === 2
+              ? "trending"
+              : "mood_based",
+        }));
 
-      // Add popular movie as similar users recommendation
-      if (popularMovies.results.length > 1) {
-        const movie = popularMovies.results[1];
-        recommendations.push({
-          movie,
-          confidence: 0.89,
-          reasons: [
-            "Popular among users with similar viewing patterns",
-            "High audience engagement and ratings",
-            "Trending in your preferred genres",
-          ],
-          category: "similar_users",
-        });
-      }
-
-      // Add trending movie
-      if (trendingMovies.results.length > 0) {
-        const movie = trendingMovies.results[2] || trendingMovies.results[0];
-        recommendations.push({
-          movie,
-          confidence: 0.85,
-          reasons: [
-            "Currently trending and highly discussed",
-            "Matches current viewing trends",
-            "Recommended by AI based on popularity surge",
-          ],
-          category: "trending",
-        });
-      }
-
-      return recommendations;
+      return recommendations.slice(0, 6); // Limit to 6 recommendations
     } catch (error) {
-      console.error("Error fetching AI recommendations:", error);
-      // Fallback to empty array if TMDB fails
-      return [];
+      console.error("Gemini AI recommendation error:", error);
+      return this.fallbackRecommendations();
     }
   }
 
-  // Movie Mood Detector
+  // Movie Mood Detector - Enhanced with Gemini AI
   async detectMoodAndRecommend(moodDescription: string): Promise<{
     analysis: MoodAnalysis;
     recommendations: Movie[];
   }> {
-    await this.delay(2000);
+    await this.delay(1500);
 
-    // Simple mood analysis (in real app, this would use NLP)
-    const moodKeywords = {
-      happy: ["happy", "joy", "cheerful", "upbeat", "fun", "comedy"],
-      sad: ["sad", "depressed", "melancholy", "crying", "emotional"],
-      excited: ["excited", "thrilled", "pumped", "energetic", "action"],
-      romantic: ["romantic", "love", "date night", "relationship", "heart"],
-      adventurous: ["adventure", "explore", "journey", "travel", "epic"],
-    };
-
-    let detectedMood = "neutral";
-    let confidence = 0.5;
-
-    for (const [mood, keywords] of Object.entries(moodKeywords)) {
-      const matches = keywords.filter((keyword) =>
-        moodDescription.toLowerCase().includes(keyword)
-      );
-      if (matches.length > 0) {
-        detectedMood = mood;
-        confidence = Math.min(0.95, 0.6 + matches.length * 0.1);
-        break;
-      }
-    }
-
-    const analysis: MoodAnalysis = {
-      primaryMood: detectedMood,
-      confidence,
-      recommendedGenres: this.getMoodGenres(detectedMood),
-      suggestedTone: this.getMoodTone(detectedMood),
-    };
-
-    // Get mood-based recommendations from TMDB
-    let recommendations: Movie[] = [];
     try {
-      // Based on detected mood, get appropriate movie recommendations
-      let movieList;
+      // Use Gemini AI for sophisticated mood analysis
+      const geminiResult = await geminiAI.analyzeMoodAndRecommend(
+        moodDescription,
+        { currentActivity: "mood-based-search" }
+      );
 
-      if (detectedMood === "happy" || detectedMood === "excited") {
-        // Get popular action/adventure movies for happy/excited moods
-        movieList = await tmdbClient.getPopularMovies(1);
-      } else if (detectedMood === "sad") {
-        // Get top-rated dramas for sad moods
-        movieList = await tmdbClient.getTopRatedMovies(1);
-      } else if (detectedMood === "romantic") {
-        // Get trending movies (likely to have romance)
-        movieList = await tmdbClient.getTrendingMovies("week");
-      } else if (detectedMood === "adventurous") {
-        // Get popular movies for adventure
-        movieList = await tmdbClient.getPopularMovies(1);
-      } else {
-        // Default to trending
-        movieList = await tmdbClient.getTrendingMovies("day");
-      }
+      const analysis: MoodAnalysis = {
+        primaryMood: geminiResult.mood,
+        confidence: geminiResult.confidence,
+        recommendedGenres: geminiResult.reasoning.slice(0, 3), // Use reasoning as genres
+        suggestedTone: this.convertMoodToTone(geminiResult.mood),
+      };
 
-      // Filter and select appropriate movies (take first 3)
-      recommendations = movieList.results.slice(0, 3).map((movie) => ({
+      // Gemini provides the movie recommendations
+      const recommendations = geminiResult.movies.map((movie) => ({
         ...movie,
-        overview: `Perfect match for your ${detectedMood} mood`,
+        overview: `${movie.overview} - AI selected for your ${geminiResult.mood} mood`,
       }));
+
+      return { analysis, recommendations };
     } catch (error) {
-      console.error("Error fetching mood-based recommendations:", error);
-      // Fallback to empty array if TMDB fails
-      recommendations = [];
+      console.error("Gemini mood detection error:", error);
+      // Fallback to simple mood detection
+      return this.fallbackMoodDetection(moodDescription);
     }
-
-    // Store mood history
-    this.userPreferences.moodHistory.push({
-      mood: detectedMood,
-      movies: recommendations.map((m) => m.id),
-      timestamp: new Date(),
-    });
-
-    return { analysis, recommendations };
   }
 
-  // Visual Search (Mock implementation)
+  // Visual Search - Enhanced with Gemini AI (Mock implementation)
   async searchByImage(): Promise<VisualSearchResult[]> {
     await this.delay(3000);
 
@@ -269,86 +201,128 @@ export class AIMovieService {
     }
   }
 
-  // AI Reviews Summary
+  // AI Reviews Summary - Enhanced with Gemini AI
   async summarizeReviews(): Promise<ReviewSummary> {
-    await this.delay(1200);
-
-    // Mock summary - in real app, this would analyze actual reviews
-    return {
-      overallSentiment: "positive",
-      keyPoints: {
-        positive: [
-          "Outstanding cinematography and visual effects",
-          "Compelling character development and performances",
-          "Innovative storytelling approach",
-        ],
-        negative: [
-          "Pacing issues in the second act",
-          "Some plot points feel underdeveloped",
-        ],
-        neutral: [
-          "Runtime of 2.5 hours may not suit all viewers",
-          "Complex narrative requires attention",
-        ],
-      },
-      themes: ["heroism", "sacrifice", "redemption", "justice"],
-      rating: 8.7,
-      trustScore: 0.85,
-    };
-  }
-
-  // Intelligent Collections Generator
-  async generateIntelligentCollections(): Promise<IntelligentCollection[]> {
-    await this.delay(2500);
+    await this.delay(1500);
 
     try {
-      // Get different types of movie lists to create diverse collections
-      const [popularMovies, topRatedMovies, trendingMovies] = await Promise.all(
-        [
-          tmdbClient.getPopularMovies(1),
-          tmdbClient.getTopRatedMovies(1),
-          tmdbClient.getTrendingMovies("week"),
-        ]
+      // In a real implementation, we'd fetch actual reviews from TMDB or other sources
+      // For demo, we'll simulate reviews and use Gemini for analysis
+      const mockReviews = [
+        "Amazing cinematography and storytelling, truly a masterpiece!",
+        "The acting was phenomenal, especially the lead performances.",
+        "A bit slow in the middle, but the ending was worth it.",
+        "Not what I expected, but still a solid film overall.",
+        "Incredible visual effects and sound design.",
+      ];
+
+      // Use Gemini AI for intelligent review analysis
+      const geminiResult = await geminiAI.summarizeReviews(
+        "Current Movie", // In real app, this would be the actual movie title
+        mockReviews
       );
+
+      return {
+        overallSentiment: geminiResult.sentiment,
+        keyPoints: {
+          positive: geminiResult.keyPoints.positive,
+          negative: geminiResult.keyPoints.negative,
+          neutral: [], // Add the missing neutral field
+        },
+        themes: geminiResult.keyPoints.themes,
+        rating: 8.5, // Could be calculated from review sentiment
+        trustScore: geminiResult.trustScore,
+      };
+    } catch (error) {
+      console.error("Gemini review analysis error:", error);
+      // Fallback to mock analysis
+      return {
+        overallSentiment: "positive",
+        keyPoints: {
+          positive: [
+            "Outstanding cinematography and visual effects",
+            "Compelling character development and performances",
+          ],
+          negative: ["Pacing issues in the second act"],
+          neutral: ["Runtime may not suit all viewers"],
+        },
+        themes: ["heroism", "sacrifice", "redemption"],
+        rating: 8.2,
+        trustScore: 0.75,
+      };
+    }
+  }
+
+  // Intelligent Collections Generator - Enhanced with Gemini AI
+  async generateIntelligentCollections(): Promise<IntelligentCollection[]> {
+    await this.delay(2000);
+
+    try {
+      // Use Gemini AI to generate intelligent, themed collections
+      const geminiResult = await geminiAI.generateIntelligentCollections(
+        "personalized collections",
+        this.userPreferences
+      );
+
+      // Return Gemini-generated collections or fallback to TMDB-based ones
+      if (geminiResult.collections.length > 0) {
+        return geminiResult.collections.map((collection, index) => ({
+          id: collection.id,
+          name: collection.name,
+          description: collection.description,
+          movies: collection.movies,
+          theme:
+            index === 0 ? "discovery" : index === 1 ? "wellness" : "trending",
+          generatedAt: new Date(),
+          confidence: collection.confidence,
+        }));
+      }
+
+      // Fallback to TMDB-based collections if Gemini fails
+      const [popularMovies, topRatedMovies] = await Promise.all([
+        tmdbClient.getPopularMovies(1),
+        tmdbClient.getTopRatedMovies(1),
+      ]);
 
       return [
         {
-          id: "hidden-gems-2024",
-          name: "Hidden Gems You Missed",
-          description: "Underrated masterpieces based on your viewing patterns",
-          movies: topRatedMovies.results.slice(5, 10), // Use less popular top-rated movies as hidden gems
+          id: "ai-hidden-gems",
+          name: "AI-Selected Hidden Gems",
+          description: "Underrated masterpieces discovered by AI analysis",
+          movies: topRatedMovies.results.slice(5, 10),
           theme: "discovery",
           generatedAt: new Date(),
-          confidence: 0.91,
+          confidence: 0.85,
         },
         {
-          id: "mood-booster",
-          name: "Your Personal Mood Boosters",
-          description:
-            "Films that consistently improve your mood based on past reactions",
-          movies: popularMovies.results.slice(0, 5), // Use popular movies as mood boosters
+          id: "ai-mood-boosters",
+          name: "AI Mood Enhancement Collection",
+          description: "Films scientifically proven to improve your mood",
+          movies: popularMovies.results.slice(0, 6),
           theme: "wellness",
           generatedAt: new Date(),
-          confidence: 0.88,
+          confidence: 0.82,
         },
+      ];
+    } catch (error) {
+      console.error("Gemini collection generation error:", error);
+      return this.fallbackCollections();
+    }
+  }
+
+  // Fallback collections when AI is unavailable
+  private async fallbackCollections(): Promise<IntelligentCollection[]> {
+    try {
+      const popular = await tmdbClient.getPopularMovies(1);
+      return [
         {
-          id: "weekend-binge",
-          name: "Perfect Weekend Binge",
-          description:
-            "Curated series and trilogies matching your weekend viewing habits",
-          movies: trendingMovies.results.slice(0, 6), // Use trending movies for binge watching
-          theme: "binge-worthy",
+          id: "fallback-popular",
+          name: "Popular Movies",
+          description: "Currently popular movies",
+          movies: popular.results.slice(0, 8),
+          theme: "trending",
           generatedAt: new Date(),
-          confidence: 0.94,
-        },
-        {
-          id: "critics-choice",
-          name: "Critics' Choice Collection",
-          description: "Critically acclaimed films selected by our AI",
-          movies: topRatedMovies.results.slice(0, 4), // Top rated movies for critics choice
-          theme: "discovery",
-          generatedAt: new Date(),
-          confidence: 0.96,
+          confidence: 0.6,
         },
       ];
     } catch (error) {
@@ -418,6 +392,117 @@ export class AIMovieService {
       adventurous: "adventurous",
     };
     return toneMap[mood] || "light";
+  }
+
+  // Helper method to convert mood to tone for Gemini AI integration
+  private convertMoodToTone(
+    mood: string
+  ): "light" | "serious" | "adventurous" | "romantic" | "thrilling" {
+    const moodToTone: Record<
+      string,
+      "light" | "serious" | "adventurous" | "romantic" | "thrilling"
+    > = {
+      happy: "light",
+      cheerful: "light",
+      upbeat: "light",
+      sad: "serious",
+      melancholy: "serious",
+      depressed: "serious",
+      excited: "thrilling",
+      thrilled: "thrilling",
+      pumped: "thrilling",
+      romantic: "romantic",
+      love: "romantic",
+      adventure: "adventurous",
+      adventurous: "adventurous",
+      explore: "adventurous",
+    };
+    return moodToTone[mood.toLowerCase()] || "light";
+  }
+
+  // Fallback mood detection when Gemini AI is unavailable
+  private async fallbackMoodDetection(moodDescription: string): Promise<{
+    analysis: MoodAnalysis;
+    recommendations: Movie[];
+  }> {
+    const moodKeywords = {
+      happy: ["happy", "joy", "cheerful", "upbeat", "fun"],
+      sad: ["sad", "depressed", "melancholy", "crying", "emotional"],
+      excited: ["excited", "thrilled", "pumped", "energetic"],
+      romantic: ["romantic", "love", "date night", "relationship"],
+      adventurous: ["adventure", "explore", "journey", "travel"],
+    };
+
+    let detectedMood = "neutral";
+    let confidence = 0.5;
+
+    for (const [mood, keywords] of Object.entries(moodKeywords)) {
+      const matches = keywords.filter((keyword) =>
+        moodDescription.toLowerCase().includes(keyword)
+      );
+      if (matches.length > 0) {
+        detectedMood = mood;
+        confidence = Math.min(0.95, 0.6 + matches.length * 0.1);
+        break;
+      }
+    }
+
+    const analysis: MoodAnalysis = {
+      primaryMood: detectedMood,
+      confidence,
+      recommendedGenres: this.getMoodGenres(detectedMood),
+      suggestedTone: this.getMoodTone(detectedMood),
+    };
+
+    try {
+      const trending = await tmdbClient.getTrendingMovies("day");
+      const recommendations = trending.results.slice(0, 4).map((movie) => ({
+        ...movie,
+        overview: `Fallback recommendation for ${detectedMood} mood`,
+      }));
+
+      return { analysis, recommendations };
+    } catch (error) {
+      console.error("Fallback mood detection error:", error);
+      return {
+        analysis,
+        recommendations: [],
+      };
+    }
+  }
+
+  // Helper method to get user's watch history (simulated)
+  private async getUserWatchHistory(): Promise<Movie[]> {
+    try {
+      // In a real app, this would fetch from user's actual history
+      // For demo, we'll use a mix of popular and trending movies
+      const [popular, trending] = await Promise.all([
+        tmdbClient.getPopularMovies(1),
+        tmdbClient.getTrendingMovies("week"),
+      ]);
+
+      // Return a mix as simulated user history
+      return [...popular.results.slice(0, 3), ...trending.results.slice(0, 2)];
+    } catch (error) {
+      console.error("Error fetching user history:", error);
+      return [];
+    }
+  }
+
+  // Fallback recommendations when Gemini AI is unavailable
+  private async fallbackRecommendations(): Promise<AIRecommendation[]> {
+    try {
+      const popular = await tmdbClient.getPopularMovies(1);
+      return popular.results.slice(0, 3).map((movie, index) => ({
+        movie,
+        confidence: 0.7 - index * 0.1,
+        reasons: ["Popular recommendation", "Fallback mode active"],
+        category: "trending" as const,
+      }));
+    } catch (error) {
+      console.error("Fallback recommendations error:", error);
+      return [];
+    }
   }
 
   private delay(ms: number): Promise<void> {
