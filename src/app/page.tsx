@@ -9,6 +9,7 @@ import {
   InteractiveParticles,
 } from "@/components/3d-effects";
 import EnhancedMovieCard from "@/components/EnhancedMovieCard";
+import { AIFeaturesShowcase } from "@/components/sections/AIFeaturesShowcase";
 
 export default function HomePage() {
   const { data: trendingMovies, isLoading, error } = useTrendingMovies();
@@ -65,6 +66,9 @@ export default function HomePage() {
           style={{ animationDelay: "4s" }}
         />
       </section>
+
+      {/* AI Features Showcase */}
+      <AIFeaturesShowcase />
 
       {/* Trending Section - Full Width Responsive with Parallax */}
       <ParallaxScroll

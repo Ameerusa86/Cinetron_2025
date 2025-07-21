@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useThemeStore } from "@/stores";
 import { QuickThemeToggle } from "./ui/ThemeSelector";
 
 const navItems = [
@@ -12,6 +11,7 @@ const navItems = [
   { href: "/tv-shows", label: "TV Shows", icon: "📺" },
   { href: "/trending", label: "Trending", icon: "🔥" },
   { href: "/discover", label: "Discover", icon: "🔍" },
+  { href: "/ai", label: "AI Features", icon: "🤖" },
   { href: "/watchlist", label: "Watchlist", icon: "📋" },
 ];
 
