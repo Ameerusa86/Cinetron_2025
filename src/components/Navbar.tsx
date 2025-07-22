@@ -113,7 +113,7 @@ export default function Navbar() {
   return (
     <>
       {/* Premium Backdrop Blur */}
-      <div className="fixed top-0 left-0 right-0 z-40 h-20 lg:h-24 bg-gradient-to-b from-black/80 via-slate-900/60 to-transparent backdrop-blur-xl" />
+      <div className="fixed top-0 left-0 right-0 z-40 h-16 sm:h-20 lg:h-24 bg-gradient-to-b from-black/80 via-slate-900/60 to-transparent backdrop-blur-xl" />
 
       <motion.nav
         initial={{ y: -100 }}
@@ -126,9 +126,12 @@ export default function Navbar() {
         }`}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center justify-between h-20 lg:h-24">
-            {/* Premium Logo */}
-            <Link href="/" className="flex items-center space-x-4 group">
+          <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
+            {/* Premium Logo - Responsive */}
+            <Link
+              href="/"
+              className="flex items-center space-x-2 sm:space-x-4 group"
+            >
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 2 }}
                 whileTap={{ scale: 0.95 }}
@@ -136,8 +139,8 @@ export default function Navbar() {
                 className="relative"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="relative w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-300">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 relative">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-300">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 relative">
                     <svg viewBox="0 0 80 80" className="w-full h-full">
                       <defs>
                         <linearGradient
@@ -183,7 +186,7 @@ export default function Navbar() {
 
               <div className="flex flex-col">
                 <motion.span
-                  className="text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-tight"
+                  className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-tight"
                   style={{
                     background:
                       "linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #3B82F6 100%)",
@@ -197,7 +200,7 @@ export default function Navbar() {
                 >
                   MOVIESENSE
                 </motion.span>
-                <span className="text-xs lg:text-sm text-slate-400 font-medium tracking-wider uppercase">
+                <span className="hidden sm:block text-xs lg:text-sm text-slate-400 font-medium tracking-wider uppercase">
                   Your Movie Companion
                 </span>
               </div>
@@ -251,17 +254,17 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Premium Right Side Actions */}
-            <div className="flex items-center space-x-3">
+            {/* Premium Right Side Actions - Responsive */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {/* Premium Search */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative p-3 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
+                className="relative p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
                 <svg
-                  className="w-5 h-5 lg:w-6 lg:h-6"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -276,12 +279,12 @@ export default function Navbar() {
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-xl blur opacity-0 hover:opacity-30 transition-opacity duration-300" />
               </motion.button>
 
-              {/* Premium User Actions */}
-              <div className="hidden md:flex items-center space-x-3">
+              {/* Premium User Actions - Only show full buttons on XL screens */}
+              <div className="hidden xl:flex items-center space-x-3">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative px-6 py-2.5 lg:px-8 lg:py-3 rounded-xl bg-transparent border border-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white font-medium transition-all duration-300 overflow-hidden group"
+                  className="relative px-4 py-2.5 rounded-xl bg-transparent border border-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white font-medium transition-all duration-300 overflow-hidden group"
                 >
                   <span className="relative z-10">Sign In</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 group-hover:from-purple-500/20 group-hover:via-pink-500/20 group-hover:to-blue-500/20 transition-all duration-300" />
@@ -290,7 +293,7 @@ export default function Navbar() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative px-6 py-2.5 lg:px-8 lg:py-3 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium transition-all duration-300 overflow-hidden group shadow-lg hover:shadow-xl hover:shadow-purple-500/25"
+                  className="relative px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium transition-all duration-300 overflow-hidden group shadow-lg hover:shadow-xl hover:shadow-purple-500/25"
                 >
                   <span className="relative z-10 flex items-center space-x-2">
                     <span>✨</span>
@@ -300,15 +303,28 @@ export default function Navbar() {
                 </motion.button>
               </div>
 
+              {/* Compact Premium Button for medium screens */}
+              <div className="hidden md:block xl:hidden">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative p-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium transition-all duration-300 overflow-hidden group shadow-lg hover:shadow-xl hover:shadow-purple-500/25"
+                  title="Get Premium"
+                >
+                  <span className="relative z-10 text-lg">✨</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-blue-400 transition-all duration-300" />
+                </motion.button>
+              </div>
+
               {/* Mobile Menu Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="lg:hidden relative p-3 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
+                className="lg:hidden relative p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-5 h-5 sm:w-6 sm:h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -477,7 +493,7 @@ export default function Navbar() {
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="lg:hidden absolute top-full left-0 right-0 bg-gradient-to-b from-slate-900/98 to-slate-800/98 backdrop-blur-2xl border-t border-white/10 shadow-2xl"
               >
-                <div className="px-4 py-6 space-y-2">
+                <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-2">
                   {navItems.map((item, index) => (
                     <motion.div
                       key={item.href}
@@ -487,29 +503,29 @@ export default function Navbar() {
                     >
                       <Link
                         href={item.href}
-                        className={`flex items-center space-x-4 px-6 py-4 rounded-xl transition-all duration-300 group ${
+                        className={`flex items-center space-x-3 sm:space-x-4 px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-300 group ${
                           pathname === item.href
                             ? "bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 text-white border border-white/10"
                             : "text-slate-300 hover:text-white hover:bg-white/5"
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <span className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-300">
                           {item.icon}
                         </span>
-                        <span className="font-medium text-lg">
+                        <span className="font-medium text-base sm:text-lg">
                           {item.label}
                         </span>
                       </Link>
                     </motion.div>
                   ))}
 
-                  {/* Mobile Actions */}
+                  {/* Mobile Actions - More compact */}
                   <div className="flex flex-col space-y-3 pt-6 border-t border-white/10">
-                    <button className="w-full py-4 bg-transparent border border-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white font-medium rounded-xl transition-all duration-300">
+                    <button className="w-full py-3 bg-transparent border border-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white font-medium rounded-xl transition-all duration-300 text-sm">
                       Sign In
                     </button>
-                    <button className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg">
+                    <button className="w-full py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg text-sm">
                       ✨ Get Premium
                     </button>
                   </div>

@@ -48,7 +48,7 @@ const aiFeatures = [
 
 export function AIFeaturesShowcase() {
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -62,7 +62,7 @@ export function AIFeaturesShowcase() {
             <div className="p-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl backdrop-blur-sm border border-blue-500/30">
               <Brain className="w-8 h-8 text-blue-500" />
             </div>
-            <h2 className="text-4xl lg:text-5xl font-display font-bold text-gradient-premium">
+            <h2 className="text-4xl lg:text-5xl font-display font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-purple-400 dark:to-pink-400">
               AI-Powered Features
             </h2>
             <div className="p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl backdrop-blur-sm border border-purple-500/30">
