@@ -70,6 +70,82 @@ export default function HomePage() {
       {/* AI Features Showcase */}
       <AIFeaturesShowcase />
 
+      {/* Interactive Games Section */}
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 xl:px-12 w-full bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+        <div className="w-full relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-4">
+              🎮 Interactive Games
+            </h2>
+            <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+              Challenge your movie knowledge with our premium game collection
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {[
+              {
+                title: "Movie Quiz",
+                icon: "🎭",
+                description: "AI-generated quizzes from popular films",
+                href: "/games/quiz",
+                color: "from-purple-500 to-pink-500",
+              },
+              {
+                title: "Movie Bingo",
+                icon: "🎯",
+                description: "Interactive bingo for movie nights",
+                href: "/games/bingo",
+                color: "from-blue-500 to-cyan-500",
+              },
+              {
+                title: "Predictions",
+                icon: "🔮",
+                description: "Predict box office and awards",
+                href: "/games/prediction",
+                color: "from-green-500 to-emerald-500",
+              },
+              {
+                title: "Trivia Challenge",
+                icon: "🧠",
+                description: "Daily movie trivia challenges",
+                href: "/games/trivia",
+                color: "from-orange-500 to-red-500",
+              },
+            ].map((game) => (
+              <a
+                key={game.title}
+                href={game.href}
+                className="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
+              >
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                  {game.icon}
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-500 group-hover:to-pink-500 group-hover:bg-clip-text transition-all duration-300">
+                  {game.title}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+                  {game.description}
+                </p>
+                <div
+                  className={`mt-4 w-full h-1 bg-gradient-to-r ${game.color} rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300`}
+                ></div>
+              </a>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <a
+              href="/games"
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-purple-500 hover:to-pink-500 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25"
+            >
+              <span>Explore All Games</span>
+              <span>🚀</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Trending Section - Full Width Responsive with Parallax */}
       <ParallaxScroll
         speed={0.3}

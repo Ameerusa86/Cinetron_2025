@@ -16,6 +16,7 @@ const navItems = [
   { href: "/tv-shows", label: "TV Shows", icon: "📺" },
   { href: "/trending", label: "Trending", icon: "🔥" },
   { href: "/discover", label: "Discover", icon: "🔍" },
+  { href: "/games", label: "Games", icon: "🎮" },
   { href: "/ai", label: "AI Features", icon: "🤖" },
   { href: "/watchlist", label: "Watchlist", icon: "📋" },
 ];

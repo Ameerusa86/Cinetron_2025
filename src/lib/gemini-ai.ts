@@ -1128,3 +1128,152 @@ export class GeminiAIService {
 }
 
 export const geminiAI = GeminiAIService.getInstance();
+
+// Trivia Questions Generation
+export interface TriviaQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  category: "general" | "quotes" | "cast" | "trivia" | "tech";
+  difficulty: "easy" | "medium" | "hard";
+  points: number;
+  explanation?: string;
+}
+
+export async function generateTriviaQuestions(
+  category: string,
+  difficulty: "easy" | "medium" | "hard",
+  count: number = 5
+): Promise<TriviaQuestion[]> {
+  try {
+    const genAI = new GoogleGenerativeAI(
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY!
+    );
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const difficultyPrompt = {
+      easy: "basic knowledge that most movie fans would know",
+      medium: "moderate difficulty requiring some movie knowledge",
+      hard: "challenging questions for serious movie enthusiasts",
+    };
+
+    const categoryPrompt = {
+      general:
+        "general movie knowledge including awards, box office, and popular culture",
+      quotes: "famous movie quotes and memorable dialogue",
+      cast: "actors, directors, producers and behind-the-scenes crew",
+      trivia:
+        "behind-the-scenes facts, production details, and interesting movie trivia",
+      tech: "technical aspects like cinematography, special effects, and film techniques",
+    };
+
+    const prompt = `Generate ${count} movie trivia questions about ${
+      categoryPrompt[category as keyof typeof categoryPrompt] ||
+      categoryPrompt.general
+    } with ${difficultyPrompt[difficulty]} difficulty level.
+
+Requirements:
+- Each question should have exactly 4 multiple choice options
+- Include the correct answer index (0, 1, 2, or 3)
+- Add a brief explanation for each answer
+- Cover different movies and time periods
+- Make questions engaging and fun
+- Points: easy=10, medium=15, hard=25
+
+Return the response in this exact JSON format:
+[
+  {
+    "id": "unique_id",
+    "question": "Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": 0,
+    "category": "${category}",
+    "difficulty": "${difficulty}",
+    "points": ${difficulty === "easy" ? 10 : difficulty === "medium" ? 15 : 25},
+    "explanation": "Brief explanation of the correct answer"
+  }
+]`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean up the response to extract JSON
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error("No valid JSON found in response");
+    }
+
+    const questionsData = JSON.parse(jsonMatch[0]);
+
+    return questionsData.map(
+      (
+        q: {
+          id?: string;
+          question: string;
+          options: string[];
+          correctAnswer: number;
+          explanation?: string;
+        },
+        index: number
+      ) => ({
+        id: q.id || `gemini_${Date.now()}_${index}`,
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        category: category as TriviaQuestion["category"],
+        difficulty: difficulty,
+        points: difficulty === "easy" ? 10 : difficulty === "medium" ? 15 : 25,
+        explanation: q.explanation,
+      })
+    );
+  } catch (error) {
+    console.error("Error generating trivia questions:", error);
+
+    // Fallback questions if Gemini fails
+    const fallbackQuestions: TriviaQuestion[] = [
+      {
+        id: `fallback_${Date.now()}`,
+        question: "Which movie won the Academy Award for Best Picture in 2023?",
+        options: [
+          "Everything Everywhere All at Once",
+          "Top Gun: Maverick",
+          "Avatar: The Way of Water",
+          "The Banshees of Inisherin",
+        ],
+        correctAnswer: 0,
+        category: category as TriviaQuestion["category"],
+        difficulty: difficulty,
+        points: difficulty === "easy" ? 10 : difficulty === "medium" ? 15 : 25,
+        explanation:
+          "Everything Everywhere All at Once swept the 2023 Oscars, winning 7 awards including Best Picture.",
+      },
+    ];
+
+    return fallbackQuestions.slice(0, count);
+  }
+}
+
+export async function generateDailyChallenge(theme: string): Promise<{
+  id: string;
+  date: string;
+  theme: string;
+  questions: TriviaQuestion[];
+  bonusMultiplier: number;
+}> {
+  try {
+    const questions = await generateTriviaQuestions("general", "medium", 5);
+
+    return {
+      id: `daily_${Date.now()}`,
+      date: new Date().toISOString().split("T")[0],
+      theme: theme,
+      questions: questions,
+      bonusMultiplier: 2.0,
+    };
+  } catch (error) {
+    console.error("Error generating daily challenge:", error);
+    throw error;
+  }
+}
