@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTrendingMovies, usePopularTVShows } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
 
@@ -21,6 +22,7 @@ const contentTypes = [
 export default function TrendingPage() {
   const [selectedTimeWindow, setSelectedTimeWindow] = useState("week");
   const [selectedContentType, setSelectedContentType] = useState("all");
+  const router = useRouter();
 
   const {
     data: trendingMovies,
@@ -129,6 +131,7 @@ export default function TrendingPage() {
                     <div
                       key={movie.id}
                       className="card-premium group cursor-pointer relative overflow-hidden"
+                      onClick={() => router.push(`/movie/${movie.id}`)}
                     >
                       {/* Trending Badge */}
                       <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
@@ -208,6 +211,7 @@ export default function TrendingPage() {
                     <div
                       key={show.id}
                       className="card-premium group cursor-pointer relative overflow-hidden"
+                      onClick={() => router.push(`/tv/${show.id}`)}
                     >
                       {/* Trending Badge */}
                       <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">

@@ -9,6 +9,8 @@ import { createMovieSlug, createTVShowSlug } from "@/lib/slug-utils";
 import tmdbClient from "@/lib/tmdb-client";
 import { WatchlistItem } from "@/types";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProfileBreadcrumb } from "@/components/ui/Breadcrumb";
+import { User, Plus, Tv, Search } from "lucide-react";
 
 function WatchlistContent() {
   const { user, updateWatchlistItem, removeFromWatchlist } = useUserStore();
@@ -177,6 +179,9 @@ function WatchlistContent() {
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full bg-gradient-to-br from-slate-50 via-white to-orange-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb Navigation */}
+        <ProfileBreadcrumb currentPage="My Watchlist" />
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl lg:text-5xl font-display font-bold text-slate-900 dark:text-white mb-4">
@@ -278,6 +283,43 @@ function WatchlistContent() {
                 </span>
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8 bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+          <div className="flex flex-wrap gap-4 justify-center sm:justify-start">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/20 to-orange-600/20 hover:from-orange-500/30 hover:to-orange-600/30 border border-orange-500/20 rounded-lg text-orange-300 hover:text-orange-200 transition-all group"
+            >
+              <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-medium">Back to Profile</span>
+            </Link>
+
+            <Link
+              href="/movies"
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-slate-300 hover:text-white transition-all group"
+            >
+              <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-medium">Add Movies</span>
+            </Link>
+
+            <Link
+              href="/tv-shows"
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-slate-300 hover:text-white transition-all group"
+            >
+              <Tv className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-medium">Add TV Shows</span>
+            </Link>
+
+            <Link
+              href="/discover"
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-slate-300 hover:text-white transition-all group"
+            >
+              <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-medium">Discover</span>
+            </Link>
           </div>
         </div>
 
@@ -465,6 +507,15 @@ function WatchlistContent() {
             })}
           </div>
         )}
+
+        {/* Floating Profile Button */}
+        <Link
+          href="/profile"
+          className="fixed bottom-8 right-8 z-50 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 group"
+        >
+          <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span className="text-sm font-medium hidden sm:inline">Profile</span>
+        </Link>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Play, Heart, BookmarkPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Movie } from "@/types";
 import MovieTrailer from "./effects/MovieTrailer";
@@ -22,10 +23,20 @@ export default function EnhancedMovieCard({
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const router = useRouter();
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : "/placeholder-movie.jpg";
+
+  const handleCardClick = () => {
+    router.push(`/movie/${movie.id}`);
+  };
+
+  const handleActionClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation(); // Prevent card click when clicking action buttons
+    action();
+  };
 
   return (
     <>
@@ -33,6 +44,7 @@ export default function EnhancedMovieCard({
         className={`relative group cursor-pointer ${className}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={handleCardClick}
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.3 }}
       >
@@ -62,7 +74,9 @@ export default function EnhancedMovieCard({
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => setIsTrailerOpen(true)}
+                        onClick={(e) =>
+                          handleActionClick(e, () => setIsTrailerOpen(true))
+                        }
                         className="bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
                       >
                         <Play size={24} />
@@ -72,7 +86,9 @@ export default function EnhancedMovieCard({
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsFavorite(!isFavorite)}
+                      onClick={(e) =>
+                        handleActionClick(e, () => setIsFavorite(!isFavorite))
+                      }
                       className={`backdrop-blur-sm p-3 rounded-full transition-colors ${
                         isFavorite
                           ? "bg-red-500/80 text-white"
@@ -88,7 +104,11 @@ export default function EnhancedMovieCard({
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsWatchlisted(!isWatchlisted)}
+                      onClick={(e) =>
+                        handleActionClick(e, () =>
+                          setIsWatchlisted(!isWatchlisted)
+                        )
+                      }
                       className={`backdrop-blur-sm p-3 rounded-full transition-colors ${
                         isWatchlisted
                           ? "bg-blue-500/80 text-white"

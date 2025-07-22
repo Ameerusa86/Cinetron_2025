@@ -54,7 +54,7 @@ interface EnrichedFavoriteItem {
 
 function ProfileContent() {
   const { user: clerkUser } = useUser();
-  const { user: appUser, getWatchlistStats } = useUserStore();
+  const { user: appUser } = useUserStore();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const [enrichedWatchlist, setEnrichedWatchlist] = useState<
@@ -80,8 +80,26 @@ function ProfileContent() {
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
-  // Get user statistics
-  const stats = getWatchlistStats();
+  // Get user statistics - filter out completed items from watchlist count
+  const getFilteredStats = () => {
+    if (!appUser?.watchlist) return { movies: 0, tvShows: 0, completed: 0 };
+
+    // Separate active watchlist (not completed) from completed items
+    const activeWatchlist = appUser.watchlist.filter(
+      (item) => item.status !== "completed"
+    );
+    const completedItems = appUser.watchlist.filter(
+      (item) => item.status === "completed"
+    );
+
+    return {
+      movies: activeWatchlist.filter((item) => item.type === "movie").length,
+      tvShows: activeWatchlist.filter((item) => item.type === "tv").length,
+      completed: completedItems.length,
+    };
+  };
+
+  const stats = getFilteredStats();
   const totalRatings = appUser?.ratings
     ? Object.keys(appUser.ratings).length
     : 0;
@@ -121,8 +139,13 @@ function ProfileContent() {
         return;
       }
 
+      // Filter out completed items from watchlist - they should only appear in history
+      const activeWatchlistItems = appUser.watchlist.filter(
+        (item) => item.status !== "completed"
+      );
+
       const enriched = await Promise.all(
-        appUser.watchlist
+        activeWatchlistItems
           .slice(0, 10)
           .map(async (item): Promise<EnrichedWatchlistItem> => {
             try {
@@ -244,7 +267,25 @@ function ProfileContent() {
 
     const handleWatchlistClick = (e: React.MouseEvent) => {
       e.stopPropagation(); // Prevent card click
-      router.push("/watchlist");
+
+      // Context-aware watchlist button behavior
+      if (activeTab === "watchlist") {
+        // If we're on watchlist tab, navigate to the full watchlist page
+        router.push("/watchlist");
+      } else if (activeTab === "history") {
+        // If we're on history tab, go back to watchlist to see current items
+        setActiveTab("watchlist");
+      } else {
+        // From other tabs, switch to watchlist tab
+        setActiveTab("watchlist");
+      }
+    };
+
+    const handleDetailsClick = (e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent card click
+      const detailPath =
+        item.type === "movie" ? `/movie/${item.id}` : `/tv/${item.id}`;
+      router.push(detailPath);
     };
 
     return (
@@ -293,7 +334,7 @@ function ProfileContent() {
             <div className="absolute bottom-4 left-4 right-4 flex gap-2">
               <button
                 className="flex-1 bg-white/20 backdrop-blur-sm text-white py-2 px-3 rounded-lg font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
-                onClick={(e) => e.stopPropagation()}
+                onClick={handleDetailsClick}
               >
                 <Play className="w-4 h-4" />
                 Details
@@ -303,8 +344,22 @@ function ProfileContent() {
                   className="flex-1 bg-orange-500/20 backdrop-blur-sm text-orange-300 py-2 px-3 rounded-lg font-medium hover:bg-orange-500/30 transition-colors flex items-center justify-center gap-2"
                   onClick={handleWatchlistClick}
                 >
-                  <Clock className="w-4 h-4" />
-                  Watchlist
+                  {activeTab === "watchlist" ? (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      Manage
+                    </>
+                  ) : activeTab === "history" ? (
+                    <>
+                      <Clock className="w-4 h-4" />
+                      Watchlist
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-4 h-4" />
+                      Watchlist
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -410,33 +465,33 @@ function ProfileContent() {
               icon: Search,
               label: "Find Movies",
               color: "from-blue-500 to-blue-600",
-              href: "/discover",
+              action: () => router.push("/discover"),
             },
             {
               icon: Clock,
-              label: "My Watchlist",
+              label: "Manage Watchlist",
               color: "from-green-500 to-green-600",
-              href: "/watchlist",
+              action: () => router.push("/watchlist"),
             },
             {
               icon: BookmarkPlus,
               label: "Add to Watchlist",
               color: "from-orange-500 to-orange-600",
-              href: "/movies",
+              action: () => router.push("/movies"),
             },
             {
               icon: TrendingUp,
               label: "Trending Now",
               color: "from-purple-500 to-purple-600",
-              href: "/trending",
+              action: () => router.push("/trending"),
             },
           ].map((action) => (
-            <motion.a
+            <motion.button
               key={action.label}
-              href={action.href}
+              onClick={action.action}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-center transition-all group block"
+              className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-center transition-all group"
             >
               <div
                 className={`w-10 h-10 bg-gradient-to-r ${action.color} rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform`}
@@ -446,7 +501,7 @@ function ProfileContent() {
               <span className="text-slate-300 text-sm font-medium">
                 {action.label}
               </span>
-            </motion.a>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -457,12 +512,16 @@ function ProfileContent() {
     items: (EnrichedWatchlistItem | EnrichedFavoriteItem)[],
     title: string,
     emptyMessage: string,
-    showStatus = false
+    showStatus = false,
+    addNewUrl = "/movies"
   ) => (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-white">{title}</h3>
-        <button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2">
+        <button
+          onClick={() => router.push(addNewUrl)}
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+        >
           <Plus className="w-4 h-4" />
           Add New
         </button>
@@ -481,16 +540,42 @@ function ProfileContent() {
             No items yet
           </h3>
           <p className="text-slate-400 mb-6">{emptyMessage}</p>
-          <a
-            href="/discover"
-            className="inline-block bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-lg text-white font-medium transition-all"
-          >
-            Browse Movies & TV Shows
-          </a>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => router.push("/discover")}
+              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-lg text-white font-medium transition-all hover:scale-105 active:scale-95"
+            >
+              Browse Movies & TV Shows
+            </button>
+            <button
+              onClick={() => setActiveTab("overview")}
+              className="bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3 rounded-lg text-white font-medium transition-all hover:scale-105 active:scale-95"
+            >
+              Back to Overview
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {items.map((item) => renderMovieCard(item, showStatus))}
+        <div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {items.map((item) => renderMovieCard(item, showStatus))}
+          </div>
+          {items.length >= 10 && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={() => {
+                  // Navigate to appropriate page based on current tab
+                  if (title.includes("Watchlist")) setActiveTab("watchlist");
+                  else if (title.includes("Favorites"))
+                    setActiveTab("favorites");
+                  else if (title.includes("Recently")) setActiveTab("history");
+                }}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3 rounded-lg text-white font-medium transition-all hover:scale-105 active:scale-95"
+              >
+                View All ({title})
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -503,26 +588,40 @@ function ProfileContent() {
       case "watchlist":
         return renderList(
           enrichedWatchlist,
-          "My Watchlist",
-          "Start adding movies and TV shows you want to watch!",
-          true
+          `My Watchlist (${enrichedWatchlist.length} active)`,
+          "Add movies and TV shows you want to watch! Completed items will automatically move to your viewing history.",
+          true,
+          "/movies"
         );
       case "favorites":
         return renderList(
           enrichedFavorites,
           "My Favorites",
-          "Mark movies and shows as favorites to see them here!"
+          "Mark movies and shows as favorites to see them here!",
+          false,
+          "/movies"
         );
       case "history":
         return renderList(
           recentlyWatched,
-          "Recently Watched",
-          "Your viewing history will appear here as you watch content!"
+          `Recently Watched (${recentlyWatched.length} completed)`,
+          "Your completed movies and TV shows will appear here. Mark items as 'completed' in your watchlist to see them here!",
+          false,
+          "/watchlist"
         );
       case "reviews":
         return (
           <div>
-            <h3 className="text-2xl font-bold text-white mb-6">My Reviews</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white">My Reviews</h3>
+              <button
+                onClick={() => router.push("/movies")}
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                Write Review
+              </button>
+            </div>
             <div className="bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center">
               <Star className="w-12 h-12 text-slate-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">
@@ -531,21 +630,33 @@ function ProfileContent() {
               <p className="text-slate-400 mb-6">
                 Share your thoughts about movies and TV shows!
               </p>
-              <a
-                href="/watchlist"
-                className="inline-block bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-lg text-white font-medium transition-all"
+              <button
+                onClick={() => router.push("/movies")}
+                className="inline-block bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-lg text-white font-medium transition-all hover:scale-105 active:scale-95"
               >
                 Write Your First Review
-              </a>
+              </button>
             </div>
           </div>
         );
       case "settings":
         return (
           <div>
-            <h3 className="text-2xl font-bold text-white mb-6">
-              Account Settings
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white">
+                Account Settings
+              </h3>
+              <button
+                onClick={() => {
+                  // Here you could implement save functionality
+                  alert("Settings saved!");
+                }}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 px-4 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+              >
+                <Settings className="w-4 h-4" />
+                Save Changes
+              </button>
+            </div>
             <div className="space-y-6">
               <div className="bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-6">
                 <h4 className="text-lg font-semibold text-white mb-4">
@@ -643,9 +754,52 @@ function ProfileContent() {
             key={activeTab}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="max-w-7xl mx-auto"
           >
+            {activeTab === "watchlist" && recentlyWatched.length > 0 && (
+              <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-5 h-5 text-blue-400" />
+                    <span className="text-blue-300 font-medium">
+                      You have {recentlyWatched.length} completed item
+                      {recentlyWatched.length !== 1 ? "s" : ""} in your viewing
+                      history
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("history")}
+                    className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    View History →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "history" && enrichedWatchlist.length > 0 && (
+              <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-green-400" />
+                    <span className="text-green-300 font-medium">
+                      You have {enrichedWatchlist.length} active item
+                      {enrichedWatchlist.length !== 1 ? "s" : ""} in your
+                      watchlist
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("watchlist")}
+                    className="bg-green-500/20 hover:bg-green-500/30 text-green-300 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    View Watchlist →
+                  </button>
+                </div>
+              </div>
+            )}
+
             {renderContent()}
           </motion.div>
         </div>
