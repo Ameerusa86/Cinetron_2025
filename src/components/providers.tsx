@@ -8,7 +8,6 @@ import {
   initializeNotifications,
   useThemeStore,
 } from "@/stores";
-import AuthProvider from "@/components/providers/AuthProvider";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -68,8 +67,6 @@ export function Providers({ children }: ProvidersProps) {
   }, [theme, setTheme]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }

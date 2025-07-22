@@ -8,8 +8,9 @@ import { useWatchlistDetails } from "@/hooks";
 import { createMovieSlug, createTVShowSlug } from "@/lib/slug-utils";
 import tmdbClient from "@/lib/tmdb-client";
 import { WatchlistItem } from "@/types";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
-export default function WatchlistPage() {
+function WatchlistContent() {
   const { user, updateWatchlistItem, removeFromWatchlist } = useUserStore();
   const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
   const [statusFilter, setStatusFilter] = useState<
@@ -466,5 +467,13 @@ export default function WatchlistPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function WatchlistPage() {
+  return (
+    <ProtectedRoute>
+      <WatchlistContent />
+    </ProtectedRoute>
   );
 }

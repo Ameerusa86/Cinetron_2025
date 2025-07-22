@@ -281,7 +281,6 @@ export const useSearchStore = create<SearchState>()(
 
 export const useUserStore = create<{
   user: User | null;
-  isAuthenticated: boolean;
   setUser: (user: User | null) => void;
   updatePreferences: (preferences: Partial<UserPreferences>) => void;
   addToWatchlist: (item: {
@@ -315,7 +314,6 @@ export const useUserStore = create<{
   persist(
     (set, get) => ({
       user: null,
-      isAuthenticated: false,
       setUser: (user: User | null) => {
         // If setting a user for the first time, ensure they have the correct watchlist structure
         if (
@@ -340,7 +338,7 @@ export const useUserStore = create<{
           }
         }
 
-        set({ user, isAuthenticated: !!user });
+        set({ user });
       },
       updatePreferences: (newPreferences: Partial<UserPreferences>) => {
         const { user } = get();
@@ -415,7 +413,6 @@ export const useUserStore = create<{
 
           set({
             user: updatedUser,
-            isAuthenticated: true,
           });
         }
       },

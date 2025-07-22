@@ -7,6 +7,10 @@ import SettingsModal from "@/components/modals/SettingsModal";
 import NotificationToast from "@/components/ui/NotificationToast";
 import { themeScript } from "@/lib/theme-script";
 
+// Clerk
+import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkUserSyncProvider } from "@/components/providers/ClerkUserSyncProvider";
+
 // Premium Font Configuration
 const inter = Inter({
   subsets: ["latin"],
@@ -127,46 +131,50 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Preconnect to external domains for performance */}
-        <link rel="preconnect" href="https://image.tmdb.org" />
-        <link rel="preconnect" href="https://api.themoviedb.org" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* Preconnect to external domains for performance */}
+          <link rel="preconnect" href="https://image.tmdb.org" />
+          <link rel="preconnect" href="https://api.themoviedb.org" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
 
-        {/* Favicon and App Icons */}
-        <link rel="icon" href="/favicon.ico" sizes="32x32" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
+          {/* Favicon and App Icons */}
+          <link rel="icon" href="/favicon.ico" sizes="32x32" />
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+          <link rel="manifest" href="/manifest.json" />
 
-        {/* PWA meta tags */}
-        <meta name="application-name" content="MovieSense" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="MovieSense" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#f46e0c" />
+          {/* PWA meta tags */}
+          <meta name="application-name" content="MovieSense" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="default"
+          />
+          <meta name="apple-mobile-web-app-title" content="MovieSense" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="msapplication-config" content="/browserconfig.xml" />
+          <meta name="msapplication-TileColor" content="#f46e0c" />
 
-        {/* Preload critical resources */}
-        <link
-          rel="preload"
-          href="/hero-background.jpg"
-          as="image"
-          type="image/jpeg"
-        />
+          {/* Preload critical resources */}
+          <link
+            rel="preload"
+            href="/hero-background.jpg"
+            as="image"
+            type="image/jpeg"
+          />
 
-        {/* Theme initialization script - prevents flash of wrong theme */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
-      <body
-        className={`
+          {/* Theme initialization script - prevents flash of wrong theme */}
+          <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        </head>
+        <body
+          className={`
           ${inter.variable} 
           ${playfairDisplay.variable} 
           ${firaCode.variable} 
@@ -176,28 +184,31 @@ export default function RootLayout({
           text-slate-900 dark:text-slate-100
           selection:bg-orange-500/20 selection:text-orange-900 dark:selection:text-orange-100
         `}
-        suppressHydrationWarning
-      >
-        <Providers>
-          {/* Full Screen Container */}
-          <div className="relative min-h-screen w-full overflow-x-hidden">
-            {/* Background Pattern */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(244,110,12,0.1),transparent)] pointer-events-none z-0" />
+          suppressHydrationWarning
+        >
+          <ClerkUserSyncProvider>
+            <Providers>
+              {/* Full Screen Container */}
+              <div className="relative min-h-screen w-full overflow-x-hidden">
+                {/* Background Pattern */}
+                <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(244,110,12,0.1),transparent)] pointer-events-none z-0" />
 
-            {/* Navigation */}
-            <Navbar />
+                {/* Navigation */}
+                <Navbar />
 
-            {/* Modals */}
-            <SettingsModal />
+                {/* Modals */}
+                <SettingsModal />
 
-            {/* Notifications */}
-            <NotificationToast />
+                {/* Notifications */}
+                <NotificationToast />
 
-            {/* Main Content */}
-            <main className="relative z-10 w-full">{children}</main>
-          </div>
-        </Providers>
-      </body>
-    </html>
+                {/* Main Content */}
+                <main className="relative z-10 w-full">{children}</main>
+              </div>
+            </Providers>
+          </ClerkUserSyncProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

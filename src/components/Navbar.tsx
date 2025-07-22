@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TMDBClient } from "@/lib/tmdb-client";
 import { Movie } from "@/types";
 import Image from "next/image";
-import AuthButton from "@/components/ui/AuthButton";
+import ClerkAuthButton from "@/components/ui/ClerkAuthButton";
 
 const tmdbClient = new TMDBClient();
 
@@ -19,7 +19,6 @@ const navItems = [
   { href: "/discover", label: "Discover", icon: "🔍" },
   { href: "/games", label: "Games", icon: "🎮" },
   { href: "/ai", label: "AI Features", icon: "🤖" },
-  { href: "/watchlist", label: "Watchlist", icon: "📋" },
 ];
 
 export default function Navbar() {
@@ -282,7 +281,7 @@ export default function Navbar() {
 
               {/* Premium User Actions - Only show full buttons on XL screens */}
               <div className="hidden xl:flex items-center space-x-3">
-                <AuthButton />
+                <ClerkAuthButton />
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -299,7 +298,7 @@ export default function Navbar() {
 
               {/* Compact Premium Button for medium screens */}
               <div className="hidden md:flex xl:hidden items-center space-x-2">
-                <AuthButton />
+                <ClerkAuthButton />
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -519,7 +518,7 @@ export default function Navbar() {
                   {/* Mobile Actions - More compact */}
                   <div className="flex flex-col space-y-3 pt-6 border-t border-white/10">
                     <div className="w-full">
-                      <AuthButton />
+                      <ClerkAuthButton />
                     </div>
                     <button className="w-full py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg text-sm">
                       ✨ Get Premium
