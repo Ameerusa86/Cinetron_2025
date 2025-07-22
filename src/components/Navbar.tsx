@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { QuickThemeToggle } from "./ui/ThemeSelector";
 import { motion, AnimatePresence } from "framer-motion";
 import { TMDBClient } from "@/lib/tmdb-client";
 import { Movie } from "@/types";
@@ -275,9 +274,6 @@ export default function Navbar() {
                 </svg>
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-xl blur opacity-0 hover:opacity-30 transition-opacity duration-300" />
               </motion.button>
-
-              {/* Theme Toggle */}
-              <QuickThemeToggle size="lg" />
 
               {/* Premium User Actions */}
               <div className="hidden md:flex items-center space-x-3">
