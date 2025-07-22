@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TMDBClient } from "@/lib/tmdb-client";
 import { Movie } from "@/types";
 import Image from "next/image";
+import AuthButton from "@/components/ui/AuthButton";
 
 const tmdbClient = new TMDBClient();
 
@@ -281,14 +282,7 @@ export default function Navbar() {
 
               {/* Premium User Actions - Only show full buttons on XL screens */}
               <div className="hidden xl:flex items-center space-x-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative px-4 py-2.5 rounded-xl bg-transparent border border-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white font-medium transition-all duration-300 overflow-hidden group"
-                >
-                  <span className="relative z-10">Sign In</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 group-hover:from-purple-500/20 group-hover:via-pink-500/20 group-hover:to-blue-500/20 transition-all duration-300" />
-                </motion.button>
+                <AuthButton />
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -304,7 +298,9 @@ export default function Navbar() {
               </div>
 
               {/* Compact Premium Button for medium screens */}
-              <div className="hidden md:block xl:hidden">
+              <div className="hidden md:flex xl:hidden items-center space-x-2">
+                <AuthButton />
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -522,9 +518,9 @@ export default function Navbar() {
 
                   {/* Mobile Actions - More compact */}
                   <div className="flex flex-col space-y-3 pt-6 border-t border-white/10">
-                    <button className="w-full py-3 bg-transparent border border-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white font-medium rounded-xl transition-all duration-300 text-sm">
-                      Sign In
-                    </button>
+                    <div className="w-full">
+                      <AuthButton />
+                    </div>
                     <button className="w-full py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg text-sm">
                       ✨ Get Premium
                     </button>

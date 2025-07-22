@@ -100,8 +100,7 @@ export class AIMovieService {
       // Use Gemini AI to generate intelligent recommendations
       const geminiResult = await geminiAI.generateSmartRecommendations(
         userHistory,
-        undefined, // mood
-        this.userPreferences
+        undefined // mood
       );
 
       // Transform Gemini results into our format

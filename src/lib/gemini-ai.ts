@@ -1,6 +1,7 @@
 // Gemini AI Service for Enhanced Movie Features
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import { Movie } from "@/types";
+import { parseAIError } from "@/types/errors";
 import tmdbClient from "@/lib/tmdb-client";
 
 interface MovieContext {
@@ -86,8 +87,8 @@ export class GeminiAIService {
    */
   async generateSmartRecommendations(
     userHistory: Movie[],
-    currentMood?: string,
-    preferences?: UserPreferences
+    currentMood?: string
+    // preferences?: UserPreferences
   ): Promise<{
     recommendations: Movie[];
     analysis: AnalysisResult;
@@ -132,7 +133,7 @@ export class GeminiAIService {
       const aiAnalysis = this.parseJSONResponse(response.text());
 
       // Get movies based on AI analysis
-      const movies = await this.fetchRecommendedMovies(aiAnalysis);
+      const movies = await this.fetchRecommendedMovies();
 
       return {
         recommendations: movies,
@@ -200,7 +201,7 @@ export class GeminiAIService {
       const analysis = this.parseJSONResponse(response.text());
 
       // Fetch movies based on mood analysis
-      const movies = await this.fetchMoodBasedMovies(analysis);
+      const movies = await this.fetchMoodBasedMovies();
 
       return {
         mood: this.isMoodAnalysisValid(analysis)
@@ -360,9 +361,7 @@ export class GeminiAIService {
       const collections = await Promise.all(
         collectionsArray.map(
           async (collection: AICollection, index: number) => {
-            const movies = await this.fetchCollectionMovies(
-              collection.criteria || {}
-            );
+            const movies = await this.fetchCollectionMovies();
             return {
               id: `ai-collection-${theme}-${index}`,
               name: collection.name || `Collection ${index + 1}`,
@@ -1030,9 +1029,8 @@ export class GeminiAIService {
     );
   }
 
-  private async fetchRecommendedMovies(
-    _analysis: Record<string, unknown>
-  ): Promise<Movie[]> {
+  private async fetchRecommendedMovies(): // _analysis: Record<string, unknown>
+  Promise<Movie[]> {
     try {
       const [popular, topRated, trending] = await Promise.all([
         tmdbClient.getPopularMovies(1),
@@ -1051,26 +1049,24 @@ export class GeminiAIService {
     }
   }
 
-  private async fetchMoodBasedMovies(
-    _analysis: Record<string, unknown>
-  ): Promise<Movie[]> {
+  private async fetchMoodBasedMovies(): // _analysis: Record<string, unknown>
+  Promise<Movie[]> {
     try {
       // For now, return trending movies
       // In a real implementation, you'd filter by the analyzed genres
       const trending = await tmdbClient.getTrendingMovies("week");
       return trending.results.slice(0, 8);
-    } catch (_error) {
+    } catch {
       return [];
     }
   }
 
-  private async fetchCollectionMovies(
-    _criteria: CollectionCriteria
-  ): Promise<Movie[]> {
+  private async fetchCollectionMovies(): // _criteria: CollectionCriteria
+  Promise<Movie[]> {
     try {
       const popular = await tmdbClient.getPopularMovies(1);
       return popular.results.slice(0, 8);
-    } catch (_error) {
+    } catch {
       return [];
     }
   }
@@ -1147,9 +1143,13 @@ export async function generateTriviaQuestions(
   count: number = 5
 ): Promise<TriviaQuestion[]> {
   try {
-    const genAI = new GoogleGenerativeAI(
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY!
-    );
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+    if (!apiKey) {
+      throw parseAIError(new Error("Missing API key"));
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const difficultyPrompt = {
@@ -1231,27 +1231,8 @@ Return the response in this exact JSON format:
   } catch (error) {
     console.error("Error generating trivia questions:", error);
 
-    // Fallback questions if Gemini fails
-    const fallbackQuestions: TriviaQuestion[] = [
-      {
-        id: `fallback_${Date.now()}`,
-        question: "Which movie won the Academy Award for Best Picture in 2023?",
-        options: [
-          "Everything Everywhere All at Once",
-          "Top Gun: Maverick",
-          "Avatar: The Way of Water",
-          "The Banshees of Inisherin",
-        ],
-        correctAnswer: 0,
-        category: category as TriviaQuestion["category"],
-        difficulty: difficulty,
-        points: difficulty === "easy" ? 10 : difficulty === "medium" ? 15 : 25,
-        explanation:
-          "Everything Everywhere All at Once swept the 2023 Oscars, winning 7 awards including Best Picture.",
-      },
-    ];
-
-    return fallbackQuestions.slice(0, count);
+    // Parse and re-throw the AI error for proper handling in components
+    throw parseAIError(error);
   }
 }
 

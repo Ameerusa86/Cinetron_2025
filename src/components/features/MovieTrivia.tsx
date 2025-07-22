@@ -6,6 +6,8 @@ import {
   generateTriviaQuestions,
   generateDailyChallenge,
 } from "@/lib/gemini-ai";
+import { AIError, parseAIError } from "@/types/errors";
+import { AIErrorDisplay } from "@/components/ui/AIErrorDisplay";
 
 interface TriviaQuestion {
   id: string;
@@ -184,6 +186,7 @@ export default function MovieTrivia() {
   const [questionsSource, setQuestionsSource] = useState<"sample" | "ai">(
     "sample"
   );
+  const [aiError, setAiError] = useState<AIError | null>(null);
 
   const currentQuestions =
     activeMode === "daily"
@@ -196,6 +199,8 @@ export default function MovieTrivia() {
   // Generate AI questions for practice mode
   const generateAIQuestions = async () => {
     setIsGeneratingQuestions(true);
+    setAiError(null);
+
     try {
       const questions = await generateTriviaQuestions(
         selectedCategory,
@@ -206,16 +211,25 @@ export default function MovieTrivia() {
       setQuestionsSource("ai");
     } catch (error) {
       console.error("Failed to generate AI questions:", error);
-      // Fallback to sample questions
-      setQuestionsSource("sample");
+      const aiError = parseAIError(error);
+      setAiError(aiError);
+      // Don't automatically fallback - let user choose
     } finally {
       setIsGeneratingQuestions(false);
     }
   };
 
+  // Handle fallback to sample questions
+  const useSampleQuestions = () => {
+    setAiError(null);
+    setQuestionsSource("sample");
+  };
+
   // Generate daily challenge with AI
   const generateDailyChallengeWithAI = async () => {
     setIsGeneratingQuestions(true);
+    setAiError(null);
+
     try {
       const challenge = await generateDailyChallenge(
         "Movie Masterpiece Monday"
@@ -223,6 +237,8 @@ export default function MovieTrivia() {
       setDailyChallenge(challenge);
     } catch (error) {
       console.error("Failed to generate daily challenge:", error);
+      const aiError = parseAIError(error);
+      setAiError(aiError);
       // Use fallback daily challenge
       setDailyChallenge(dailyChallenges[0]);
     } finally {
@@ -779,6 +795,15 @@ export default function MovieTrivia() {
                     Creating personalized trivia questions just for you...
                   </p>
                 </div>
+              ) : aiError ? (
+                <AIErrorDisplay
+                  error={aiError}
+                  onRetry={generateDailyChallengeWithAI}
+                  onUseFallback={() => {
+                    setAiError(null);
+                    setDailyChallenge(dailyChallenges[0]);
+                  }}
+                />
               ) : (
                 <>
                   {/* AI Challenge Header */}
@@ -922,6 +947,17 @@ export default function MovieTrivia() {
                 </div>
 
                 <div className="text-center mt-8">
+                  {aiError && questionsSource === "ai" ? (
+                    <div className="mb-6">
+                      <AIErrorDisplay
+                        error={aiError}
+                        onRetry={generateAIQuestions}
+                        onUseFallback={useSampleQuestions}
+                        compact
+                      />
+                    </div>
+                  ) : null}
+
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -929,7 +965,9 @@ export default function MovieTrivia() {
                       if (questionsSource === "ai") {
                         await generateAIQuestions();
                       }
-                      setCurrentQuestion(1);
+                      if (!aiError) {
+                        setCurrentQuestion(1);
+                      }
                     }}
                     disabled={isGeneratingQuestions}
                     className={`px-12 py-4 font-bold text-xl rounded-2xl transition-all duration-300 ${

@@ -253,7 +253,7 @@ export default function HomePage() {
       <footer className="bg-slate-900 text-white py-8 sm:py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
         <div className="w-full text-center">
           <h3 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold mb-3 sm:mb-4 text-gradient-premium">
-            CinemaVault Premium
+            MovieSense Premium
           </h3>
           <p className="text-slate-400 mb-6 sm:mb-8 text-sm sm:text-base lg:text-lg">
             The future of movie discovery is here

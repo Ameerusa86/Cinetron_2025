@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cinemavault.app",
+        hostname: "MovieSense.app",
         port: "",
         pathname: "/**",
       },

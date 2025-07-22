@@ -32,11 +32,11 @@ const firaCode = Fira_Code({
 // SEO Metadata
 export const metadata: Metadata = {
   title: {
-    default: "CinemaVault - Premium Movie Experience",
-    template: "%s | CinemaVault Premium",
+    default: "MovieSense - Premium Movie Experience",
+    template: "%s | MovieSense Premium",
   },
   description:
-    "Discover movies like never before. CinemaVault offers a premium cinematic experience with AI-powered recommendations, 3D movie posters, and immersive social features.",
+    "Discover movies like never before. MovieSense offers a premium cinematic experience with AI-powered recommendations, 3D movie posters, and immersive social features.",
   keywords: [
     "movies",
     "cinema",
@@ -51,9 +51,9 @@ export const metadata: Metadata = {
     "3D movie posters",
     "AI recommendations",
   ],
-  authors: [{ name: "CinemaVault Team" }],
-  creator: "CinemaVault Premium",
-  publisher: "CinemaVault",
+  authors: [{ name: "MovieSense Team" }],
+  creator: "MovieSense Premium",
+  publisher: "MovieSense",
   formatDetection: {
     email: false,
     address: false,
@@ -69,8 +69,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    siteName: "CinemaVault Premium",
-    title: "CinemaVault - Premium Movie Experience",
+    siteName: "MovieSense Premium",
+    title: "MovieSense - Premium Movie Experience",
     description:
       "Discover movies like never before with AI-powered recommendations and immersive 3D experiences.",
     images: [
@@ -78,17 +78,17 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "CinemaVault - Premium Movie Experience",
+        alt: "MovieSense - Premium Movie Experience",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CinemaVault - Premium Movie Experience",
+    title: "MovieSense - Premium Movie Experience",
     description:
       "Discover movies like never before with AI-powered recommendations and immersive 3D experiences.",
     images: ["/twitter-image.jpg"],
-    creator: "@cinemavault",
+    creator: "@MovieSense",
   },
   robots: {
     index: true,
@@ -146,10 +146,10 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
 
         {/* PWA meta tags */}
-        <meta name="application-name" content="CinemaVault" />
+        <meta name="application-name" content="MovieSense" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="CinemaVault" />
+        <meta name="apple-mobile-web-app-title" content="MovieSense" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#f46e0c" />
