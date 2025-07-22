@@ -608,22 +608,22 @@ function ProfileContent() {
 
   return (
     <ClerkPremiumBackground>
-      <div className="relative z-10 min-h-screen">
-        <div className="container mx-auto px-4 py-8">
+      <div className="relative z-10 min-h-screen pt-20 lg:pt-28 w-full">
+        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 pb-16">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
               <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                 My Profile
               </span>
             </h1>
-            <p className="text-slate-300 text-lg">
+            <p className="text-slate-300 text-lg lg:text-xl max-w-2xl mx-auto">
               Your personal cinema experience dashboard
             </p>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8 bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-2">
+          <div className="flex flex-wrap justify-center gap-2 mb-12 bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-2 max-w-4xl mx-auto">
             {tabs.map((tab) => (
               <motion.button
                 key={tab.id}
@@ -644,6 +644,7 @@ function ProfileContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
+            className="max-w-7xl mx-auto"
           >
             {renderContent()}
           </motion.div>
