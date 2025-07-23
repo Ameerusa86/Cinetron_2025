@@ -283,7 +283,7 @@ export default function Navbar() {
               <div className="hidden xl:flex items-center space-x-3">
                 <ClerkAuthButton />
 
-                <motion.button
+                {/* <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="relative px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium transition-all duration-300 overflow-hidden group shadow-lg hover:shadow-xl hover:shadow-purple-500/25"
@@ -293,7 +293,7 @@ export default function Navbar() {
                     <span>Premium</span>
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-blue-400 transition-all duration-300" />
-                </motion.button>
+                </motion.button> */}
               </div>
 
               {/* Compact Premium Button for medium screens */}

@@ -27,7 +27,7 @@ export default function EnhancedMovieCard({
 
   const imageUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    : "/placeholder-movie.jpg";
+    : "/placeholder-movie.svg";
 
   const handleCardClick = () => {
     router.push(`/movie/${movie.id}`);
