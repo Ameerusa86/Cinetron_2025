@@ -490,6 +490,92 @@
   }
 }
 
+/* Clerk Avatar Size Override */
+.clerk-avatar-large {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.clerk-avatar-large [data-testid="userButton-avatarBox"],
+.clerk-avatar-large .cl-avatarBox,
+.clerk-avatar-large .cl-userButtonAvatarBox {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  min-width: 1.5rem !important;
+  min-height: 1.5rem !important;
+}
+
+.clerk-avatar-large img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+}
+
+@media (min-width: 640px) {
+  .clerk-avatar-large {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .clerk-avatar-large [data-testid="userButton-avatarBox"],
+  .clerk-avatar-large .cl-avatarBox,
+  .clerk-avatar-large .cl-userButtonAvatarBox {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .clerk-avatar-large {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+
+  .clerk-avatar-large [data-testid="userButton-avatarBox"],
+  .clerk-avatar-large .cl-avatarBox,
+  .clerk-avatar-large .cl-userButtonAvatarBox {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .clerk-avatar-large {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
+
+  .clerk-avatar-large [data-testid="userButton-avatarBox"],
+  .clerk-avatar-large .cl-avatarBox,
+  .clerk-avatar-large .cl-userButtonAvatarBox {
+    width: 3rem !important;
+    height: 3rem !important;
+    min-width: 3rem !important;
+    min-height: 3rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .clerk-avatar-large {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+  }
+
+  .clerk-avatar-large [data-testid="userButton-avatarBox"],
+  .clerk-avatar-large .cl-avatarBox,
+  .clerk-avatar-large .cl-userButtonAvatarBox {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    min-width: 3.5rem !important;
+    min-height: 3.5rem !important;
+  }
+}
+
 /* Print Styles */
 @media print {
   * {

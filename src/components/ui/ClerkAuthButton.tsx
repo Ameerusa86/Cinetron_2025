@@ -34,15 +34,16 @@ export default function ClerkAuthButton() {
       {/* When signed in */}
       <SignedIn>
         <div className="flex items-center">
-          {/* Clerk User Button */}
-          <UserButton
-            afterSignOutUrl="/"
-            userProfileUrl="/profile"
-            appearance={{
-              elements: {
-                avatarBox:
-                  "w-24 h-24 sm:w-24 sm:h-24 lg:w-24 lg:h-24 border-2 border-orange-500/50 hover:border-orange-500 transition-colors",
-                userButtonPopoverCard: `
+          {/* Clerk User Button with Large Avatar */}
+          <div className="clerk-avatar-large">
+            <UserButton
+              afterSignOutUrl="/"
+              userProfileUrl="/profile"
+              appearance={{
+                elements: {
+                  avatarBox:
+                    "border-2 border-orange-500/50 hover:border-orange-500 transition-colors duration-200",
+                  userButtonPopoverCard: `
                   bg-slate-900/90 
                   backdrop-blur-xl 
                   border 
@@ -51,8 +52,8 @@ export default function ClerkAuthButton() {
                   shadow-black/50 
                   rounded-2xl
                 `,
-                userButtonPopoverActions: "bg-transparent",
-                userButtonPopoverActionButton: `
+                  userButtonPopoverActions: "bg-transparent",
+                  userButtonPopoverActionButton: `
                   text-slate-300 
                   hover:text-white 
                   hover:bg-white/10 
@@ -60,12 +61,13 @@ export default function ClerkAuthButton() {
                   transition-all 
                   duration-200
                 `,
-                userButtonPopoverActionButtonText:
-                  "text-slate-300 hover:text-white",
-                userButtonPopoverFooter: "hidden",
-              },
-            }}
-          />
+                  userButtonPopoverActionButtonText:
+                    "text-slate-300 hover:text-white",
+                  userButtonPopoverFooter: "hidden",
+                },
+              }}
+            />
+          </div>
         </div>
       </SignedIn>
     </>
