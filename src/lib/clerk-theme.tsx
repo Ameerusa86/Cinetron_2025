@@ -1,5 +1,5 @@
 /**
- * Shared Clerk appearance configuration for CinemaVault Premium
+ * Shared Clerk appearance configuration for Cinetron Premium
  * This provides consistent theming across all Clerk components
  */
 

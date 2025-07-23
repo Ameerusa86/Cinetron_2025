@@ -312,7 +312,7 @@ export default function Navbar() {
                   whileHover={{ scale: 1.03 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  MOVIESENSE
+                  Cinetron
                 </motion.span>
                 <motion.span
                   className="hidden sm:block text-xs lg:text-sm text-slate-400 font-medium tracking-wider uppercase"

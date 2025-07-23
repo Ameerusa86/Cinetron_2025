@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "MovieSense.app",
+        hostname: "Cinetron.app",
         port: "",
         pathname: "/**",
       },

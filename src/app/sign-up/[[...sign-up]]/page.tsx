@@ -13,7 +13,7 @@ export default function SignUpPage() {
           <h1 className="text-4xl font-bold mb-3">
             Join{" "}
             <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-              CinemaVault
+              Cinetron
             </span>
           </h1>
           <p className="text-slate-300 text-lg font-medium max-w-md mx-auto">

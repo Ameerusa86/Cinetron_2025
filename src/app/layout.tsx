@@ -37,11 +37,11 @@ const firaCode = Fira_Code({
 // SEO Metadata
 export const metadata: Metadata = {
   title: {
-    default: "MovieSense - Premium Movie Experience",
-    template: "%s | MovieSense Premium",
+    default: "Cinetron - Premium Movie Experience",
+    template: "%s | Cinetron Premium",
   },
   description:
-    "Discover movies like never before. MovieSense offers a premium cinematic experience with AI-powered recommendations, 3D movie posters, and immersive social features.",
+    "Discover movies like never before. Cinetron offers a premium cinematic experience with AI-powered recommendations, 3D movie posters, and immersive social features.",
   keywords: [
     "movies",
     "cinema",
@@ -56,9 +56,9 @@ export const metadata: Metadata = {
     "3D movie posters",
     "AI recommendations",
   ],
-  authors: [{ name: "MovieSense Team" }],
-  creator: "MovieSense Premium",
-  publisher: "MovieSense",
+  authors: [{ name: "Cinetron Team" }],
+  creator: "Cinetron Premium",
+  publisher: "Cinetron",
   formatDetection: {
     email: false,
     address: false,
@@ -74,8 +74,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    siteName: "MovieSense Premium",
-    title: "MovieSense - Premium Movie Experience",
+    siteName: "Cinetron Premium",
+    title: "Cinetron - Premium Movie Experience",
     description:
       "Discover movies like never before with AI-powered recommendations and immersive 3D experiences.",
     images: [
@@ -83,17 +83,17 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "MovieSense - Premium Movie Experience",
+        alt: "Cinetron - Premium Movie Experience",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MovieSense - Premium Movie Experience",
+    title: "Cinetron - Premium Movie Experience",
     description:
       "Discover movies like never before with AI-powered recommendations and immersive 3D experiences.",
     images: ["/twitter-image.jpg"],
-    creator: "@MovieSense",
+    creator: "@Cinetron",
   },
   robots: {
     index: true,
@@ -152,13 +152,13 @@ export default function RootLayout({
           <link rel="manifest" href="/manifest.json" />
 
           {/* PWA meta tags */}
-          <meta name="application-name" content="MovieSense" />
+          <meta name="application-name" content="Cinetron" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta
             name="apple-mobile-web-app-status-bar-style"
             content="default"
           />
-          <meta name="apple-mobile-web-app-title" content="MovieSense" />
+          <meta name="apple-mobile-web-app-title" content="Cinetron" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="msapplication-config" content="/browserconfig.xml" />
           <meta name="msapplication-TileColor" content="#f46e0c" />

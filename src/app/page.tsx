@@ -36,8 +36,8 @@ export default function HomePage() {
         {/* Content - Full Width Responsive */}
         <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 w-full">
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-display font-bold text-slate-900 dark:text-white mb-4 sm:mb-6">
-            <span className="text-gradient-premium">Cinema</span>
-            <span className="text-slate-800 dark:text-white">Vault</span>
+            <span className="text-gradient-premium">Cine</span>
+            <span className="text-slate-800 dark:text-white">tron</span>
           </h1>
 
           <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-slate-600 dark:text-slate-300 mb-8 sm:mb-12 leading-relaxed px-4 max-w-5xl mx-auto">
@@ -265,7 +265,7 @@ export default function HomePage() {
       <footer className="bg-slate-900 text-white py-8 sm:py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
         <div className="w-full text-center">
           <h3 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold mb-3 sm:mb-4 text-gradient-premium">
-            MovieSense Premium
+            Cinetron Premium
           </h3>
           <p className="text-slate-400 mb-6 sm:mb-8 text-sm sm:text-base lg:text-lg">
             The future of movie discovery is here
@@ -322,7 +322,7 @@ export default function HomePage() {
             <p className="text-xs sm:text-sm text-slate-500">
               Created by{" "}
               <span className="text-orange-400 font-medium">Ameer Hasan</span> •
-              © 2025 MovieSense Premium
+              © 2025 Cinetron Premium
             </p>
           </div>
         </div>

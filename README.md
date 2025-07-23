@@ -1,4 +1,4 @@
-# MovieSense - Premium Movie Discovery App
+# Cinetron - Premium Movie Discovery App
 
 A modern, premium movie discovery application built with Next.js 15, TypeScript, and Clerk authentication.
 
@@ -36,7 +36,7 @@ NEXT_PUBLIC_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
 
 # Application Configuration
 NEXT_PUBLIC_APP_URL=https://your-app-domain.vercel.app
-NEXT_PUBLIC_APP_NAME=MovieSense
+NEXT_PUBLIC_APP_NAME=Cinetron
 
 # Google Gemini AI Configuration
 NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here

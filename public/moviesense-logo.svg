@@ -39,6 +39,6 @@
   </g>
   
   <!-- Text -->
-  <text x="100" y="85" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#logoGradient)" filter="url(#glow)">MOVIESENSE</text>
+  <text x="100" y="85" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#logoGradient)" filter="url(#glow)">Cinetron</text>
   <text x="100" y="110" font-family="Arial, sans-serif" font-size="14" fill="#94A3B8">YOUR MOVIE COMPANION</text>
 </svg>
