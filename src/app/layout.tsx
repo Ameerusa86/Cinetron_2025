@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import SettingsModal from "@/components/modals/SettingsModal";
 import NotificationToast from "@/components/ui/NotificationToast";
 import { themeScript } from "@/lib/theme-script";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // Clerk
 import { ClerkProvider } from "@clerk/nextjs";
@@ -209,6 +210,7 @@ export default function RootLayout({
           </ClerkUserSyncProvider>
         </body>
       </html>
+      <SpeedInsights />
     </ClerkProvider>
   );
 }

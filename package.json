@@ -14,6 +14,7 @@
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
     "@tanstack/react-query": "^5.83.0",
+    "@vercel/speed-insights": "^1.2.0",
     "axios": "^1.10.0",
     "daisyui": "^5.0.46",
     "framer-motion": "^12.23.6",
