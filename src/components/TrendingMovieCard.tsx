@@ -89,32 +89,30 @@ export default function TrendingMovieCard({
                   ? new Date(movie.release_date).getFullYear()
                   : "TBA"}
               </span>
-              <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm">
-                <span className="text-yellow-400">★</span>
-                <span className="text-white font-medium">
+              <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-400/20 via-amber-500/20 to-orange-500/20 border border-yellow-300/30 px-2.5 py-1 rounded-full backdrop-blur-sm">
+                <span className="text-yellow-400 text-sm">⭐</span>
+                <span className="text-white font-bold text-sm">
                   {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
                 </span>
               </div>
             </div>
           </motion.div>
 
-          {/* Rating Badge */}
+          {/* Enhanced Rating Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 + 0.3 }}
-            className={`absolute top-3 right-3 backdrop-blur-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 border ${getRatingBadgeStyle(
-              movie.vote_average
-            )}`}
+            className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 text-black font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-lg backdrop-blur-sm border border-yellow-300/50 transform hover:scale-110 transition-all duration-300"
           >
-            <span className="text-yellow-400 text-sm">★</span>
-            <span
-              className={`text-sm font-semibold ${getRatingColor(
-                movie.vote_average
-              )}`}
-            >
-              {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
-            </span>
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-800 text-sm">⭐</span>
+              <span className="font-black">
+                {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
+              </span>
+            </div>
+            {/* Glow effect */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl blur-sm opacity-50 -z-10"></div>
           </motion.div>
         </div>
 

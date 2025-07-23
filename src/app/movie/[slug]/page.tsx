@@ -119,9 +119,9 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
 
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full">
-      {/* Hero Section with Backdrop */}
-      <section className="relative h-screen w-full overflow-hidden">
-        {/* Backdrop Image */}
+      {/* Enhanced Premium Hero Section */}
+      <section className="relative min-h-screen w-full overflow-hidden">
+        {/* Dynamic Background with Parallax Effect */}
         {movie.backdrop_path && (
           <div className="absolute inset-0">
             <Image
@@ -131,139 +131,219 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
               alt={movie.title}
               width={1920}
               height={1080}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover scale-110 hover:scale-105 transition-transform duration-[3s] ease-out"
               priority
             />
-            {/* Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/50" />
+            {/* Enhanced Multi-Layer Gradient Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/20 to-black/70" />
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-blue-900/20" />
+
+            {/* Animated Overlay Effects */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-20 left-20 w-2 h-2 bg-purple-400/60 rounded-full animate-pulse" />
+              <div className="absolute top-40 right-32 w-1 h-1 bg-pink-400/70 rounded-full animate-bounce" />
+              <div className="absolute bottom-40 left-1/4 w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-ping" />
+              <div className="absolute top-60 left-1/3 w-1 h-1 bg-cyan-400/60 rounded-full animate-pulse" />
+            </div>
           </div>
         )}
 
-        {/* Movie Information */}
-        <div className="relative z-10 h-full flex items-center px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
-            {/* Poster */}
-            <div className="lg:col-span-2">
-              <div className="aspect-[2/3] w-full max-w-md mx-auto lg:max-w-none relative overflow-hidden rounded-2xl shadow-2xl">
-                <Image
-                  src={
-                    tmdbClient.getImageUrl(movie.poster_path, "w500") ||
-                    "/placeholder-poster.svg"
-                  }
-                  alt={movie.title}
-                  width={400}
-                  height={600}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/placeholder-poster.svg";
-                  }}
-                />
-                {/* 3D Hover Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 opacity-0 hover:opacity-100 transition-opacity duration-500" />
-              </div>
-            </div>
+        {/* Enhanced Content Container */}
+        <div className="relative z-10 min-h-screen flex items-center px-4 sm:px-6 lg:px-8 xl:px-12 py-12">
+          <div className="w-full max-w-8xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+              {/* Enhanced Poster Section */}
+              <div className="lg:col-span-4 xl:col-span-3">
+                <div className="group relative">
+                  <div className="aspect-[2/3] w-full max-w-sm mx-auto lg:max-w-none relative overflow-hidden rounded-3xl shadow-2xl transform hover:scale-105 transition-all duration-700 ease-out">
+                    {/* Glow Effect Behind Poster */}
+                    <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-            {/* Movie Details */}
-            <div className="lg:col-span-3 text-white text-center lg:text-left">
-              <div className="space-y-6">
-                {/* Title */}
-                <div>
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-display font-bold text-gradient-premium mb-4">
-                    {movie.title}
-                  </h1>
-                  {movie.tagline && (
-                    <p className="text-xl lg:text-2xl text-slate-300 italic">
-                      &ldquo;{movie.tagline}&rdquo;
-                    </p>
-                  )}
+                    <Image
+                      src={
+                        tmdbClient.getImageUrl(movie.poster_path, "w500") ||
+                        "/placeholder-poster.svg"
+                      }
+                      alt={movie.title}
+                      width={400}
+                      height={600}
+                      className="relative w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder-poster.svg";
+                      }}
+                    />
+
+                    {/* Premium Glass Effect Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    {/* Enhanced Floating Rating Badge */}
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 text-white font-bold text-sm px-3 py-2 rounded-2xl shadow-2xl backdrop-blur-sm border-2 border-yellow-300/50 transform hover:scale-110 transition-all duration-300">
+                      <div className="flex items-center gap-1">
+                        <span className="text-yellow-800">⭐</span>
+                        <span className="font-black">
+                          {movie.vote_average.toFixed(1)}
+                        </span>
+                      </div>
+                      {/* Glow effect */}
+                      <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur-md opacity-60 -z-10"></div>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                {/* Meta Information */}
-                <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-lg">
-                  <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full">
-                    <span>⭐</span>
-                    <span className="font-bold text-yellow-400">
-                      {movie.vote_average.toFixed(1)}
-                    </span>
-                    <span className="text-slate-300">
-                      ({movie.vote_count.toLocaleString()})
-                    </span>
+              {/* Enhanced Movie Details Section */}
+              <div className="lg:col-span-8 xl:col-span-9 text-white">
+                <div className="space-y-8 max-w-5xl">
+                  {/* Enhanced Title Section */}
+                  <div className="space-y-4">
+                    <h1 className="text-xl sm:text-3xl lg:text-4xl xl:text-6xl font-black leading-tight">
+                      <span
+                        className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent drop-shadow-2xl"
+                        style={{
+                          textShadow: "0 0 40px rgba(255, 255, 255, 0.3)",
+                        }}
+                      >
+                        {movie.title}
+                      </span>
+                    </h1>
+
+                    {movie.tagline && (
+                      <p className="text-xl lg:text-2xl xl:text-3xl text-slate-300 italic font-light tracking-wide">
+                        &ldquo;{movie.tagline}&rdquo;
+                      </p>
+                    )}
                   </div>
-                  <div className="bg-black/50 px-4 py-2 rounded-full">
-                    <span>🕐 {formatRuntime(movie.runtime)}</span>
+
+                  {/* Compact Transparent Meta Information Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">🕐</div>
+                      <div className="font-semibold text-sm">
+                        {formatRuntime(movie.runtime)}
+                      </div>
+                      <div className="text-[10px] text-slate-400">Runtime</div>
+                    </div>
+
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">📅</div>
+                      <div className="font-semibold text-sm">
+                        {new Date(movie.release_date).getFullYear()}
+                      </div>
+                      <div className="text-[10px] text-slate-400">Release</div>
+                    </div>
+
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">👥</div>
+                      <div className="font-semibold text-sm">
+                        {movie.vote_count.toLocaleString()}
+                      </div>
+                      <div className="text-[10px] text-slate-400">Votes</div>
+                    </div>
+
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">🎬</div>
+                      <div
+                        className={`inline-block px-2 py-0.5 rounded-lg text-xs font-semibold ${
+                          movie.adult
+                            ? "bg-red-500/30 text-red-300 border border-red-500/30"
+                            : "bg-green-500/30 text-green-300 border border-green-500/30"
+                        }`}
+                      >
+                        {movie.adult ? "R" : "PG"}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">
+                        Rating
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-black/50 px-4 py-2 rounded-full">
-                    <span>📅 {new Date(movie.release_date).getFullYear()}</span>
+
+                  {/* Enhanced Genres */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-slate-300">
+                      Genres
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      {movie.genres.map((genre, index) => (
+                        <span
+                          key={genre.id}
+                          className="group relative bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 border border-purple-500/30 px-6 py-3 rounded-2xl text-white font-medium backdrop-blur-sm hover:scale-105 transition-all duration-300 cursor-pointer"
+                          style={{
+                            animationDelay: `${index * 100}ms`,
+                          }}
+                        >
+                          <span className="relative z-10">{genre.name}</span>
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="bg-black/50 px-4 py-2 rounded-full">
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${
-                        movie.adult ? "bg-red-600" : "bg-green-600"
+
+                  {/* Compact Transparent Overview */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-slate-300">
+                      Overview
+                    </h3>
+                    <p className="text-sm lg:text-base text-slate-200 leading-relaxed bg-black/30 backdrop-blur-md border border-white/10 p-4 rounded-xl transition-all duration-300 hover:bg-black/40">
+                      {movie.overview}
+                    </p>
+                  </div>
+
+                  {/* Enhanced Director Section */}
+                  {director && (
+                    <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-2xl">
+                      <p className="text-slate-300">
+                        <span className="font-semibold text-lg">
+                          Directed by:
+                        </span>{" "}
+                        <span className="text-white text-xl font-medium">
+                          {director.name}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Enhanced Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                    <button
+                      onClick={handleWatchlistToggle}
+                      className={`group relative overflow-hidden px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                        inWatchlist
+                          ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/25"
+                          : "bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white shadow-lg shadow-purple-500/25"
                       }`}
                     >
-                      {movie.adult ? "R" : "PG"}
-                    </span>
-                  </div>
-                </div>
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        {inWatchlist ? "✅" : "➕"}
+                        {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </button>
 
-                {/* Genres */}
-                <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-                  {movie.genres.map((genre) => (
-                    <span
-                      key={genre.id}
-                      className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 px-4 py-2 rounded-full text-orange-300 text-sm font-medium backdrop-blur-sm"
+                    <button
+                      onClick={handleFavoritesToggle}
+                      className={`group relative overflow-hidden px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                        inFavorites
+                          ? "bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg shadow-red-500/25"
+                          : "bg-gradient-to-r from-slate-600 to-slate-700 text-white border border-white/20 shadow-lg"
+                      }`}
                     >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Overview */}
-                <div className="max-w-3xl">
-                  <p className="text-lg lg:text-xl text-slate-200 leading-relaxed">
-                    {movie.overview}
-                  </p>
-                </div>
-
-                {/* Director */}
-                {director && (
-                  <div>
-                    <p className="text-slate-300">
-                      <span className="font-semibold">Directed by:</span>{" "}
-                      <span className="text-white">{director.name}</span>
-                    </p>
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        {inFavorites ? "❤️" : "�"}
+                        {inFavorites ? "Favorited" : "Add to Favorites"}
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </button>
                   </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <button
-                    onClick={handleWatchlistToggle}
-                    className={`${
-                      inWatchlist ? "btn-cinema" : "btn-cinema-outline"
-                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
-                  >
-                    {inWatchlist ? "✅" : "➕"}{" "}
-                    {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
-                  </button>
-                  <button
-                    onClick={handleFavoritesToggle}
-                    className={`${
-                      inFavorites
-                        ? "btn-glass bg-red-500/20 border-red-500/30"
-                        : "btn-glass"
-                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
-                  >
-                    {inFavorites ? "❤️" : "💝"}{" "}
-                    {inFavorites ? "Favorited" : "Add to Favorites"}
-                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Bottom Fade Effect */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent" />
       </section>
 
       {/* Movie Details Sections */}

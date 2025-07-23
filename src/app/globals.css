@@ -6,7 +6,7 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* CSS Variables for Premium Theming */
+/* Enhanced CSS Variables for Premium Theming */
 :root {
   --font-inter: "Inter", system-ui, -apple-system, sans-serif;
   --font-playfair: "Playfair Display", serif;
@@ -32,6 +32,39 @@
     rgba(255, 255, 255, 0.1) 0%,
     rgba(255, 255, 255, 0.05) 100%
   );
+}
+
+/* Premium Animations */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
 }
 
 /* Base Styles */

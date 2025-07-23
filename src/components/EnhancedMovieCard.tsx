@@ -125,12 +125,20 @@ export default function EnhancedMovieCard({
               )}
             </AnimatePresence>
 
-            {/* Rating Badge */}
-            <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-lg flex items-center gap-1">
-              <Star size={14} fill="currentColor" className="text-yellow-500" />
-              <span className="text-sm font-medium">
-                {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
-              </span>
+            {/* Enhanced Rating Badge */}
+            <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 text-black font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-lg backdrop-blur-sm border border-yellow-300/50 transform hover:scale-110 transition-all duration-300">
+              <div className="flex items-center gap-1">
+                <Star
+                  size={12}
+                  fill="currentColor"
+                  className="text-yellow-800"
+                />
+                <span className="font-black">
+                  {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
+                </span>
+              </div>
+              {/* Glow effect */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl blur-sm opacity-50 -z-10"></div>
             </div>
           </div>
 
@@ -150,7 +158,7 @@ export default function EnhancedMovieCard({
                   ? new Date(movie.release_date).getFullYear()
                   : "TBA"}
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-1 rounded-lg">
                 <Star
                   size={12}
                   fill="currentColor"

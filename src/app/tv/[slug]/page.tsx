@@ -9,6 +9,7 @@ import tmdbClient from "@/lib/tmdb-client";
 import { createTVShowSlug, createPersonSlug } from "@/lib/slug-utils";
 import { useUserStore } from "@/stores";
 import { useNotificationStore } from "@/stores";
+import { Heart, Play, Share2 } from "lucide-react";
 
 interface TVShowDetailPageProps {
   params: Promise<{
@@ -127,9 +128,9 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
 
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full">
-      {/* Hero Section with Backdrop */}
-      <section className="relative h-screen w-full overflow-hidden">
-        {/* Backdrop Image */}
+      {/* Enhanced Premium Hero Section */}
+      <section className="relative min-h-screen w-full overflow-hidden">
+        {/* Dynamic Background with Parallax Effect */}
         {tvShow.backdrop_path && (
           <div className="absolute inset-0">
             <Image
@@ -139,180 +140,279 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
               alt={tvShow.name}
               width={1920}
               height={1080}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover scale-110 hover:scale-105 transition-transform duration-[3s] ease-out"
               priority
             />
-            {/* Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/50" />
+            {/* Enhanced Multi-Layer Gradient Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/20 to-black/70" />
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-cyan-900/20" />
+
+            {/* Animated Overlay Effects */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-20 left-20 w-2 h-2 bg-purple-400/60 rounded-full animate-pulse" />
+              <div className="absolute top-40 right-32 w-1 h-1 bg-cyan-400/70 rounded-full animate-bounce" />
+              <div className="absolute bottom-40 left-1/4 w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-ping" />
+              <div className="absolute top-60 left-1/3 w-1 h-1 bg-pink-400/60 rounded-full animate-pulse" />
+            </div>
           </div>
         )}
 
-        {/* TV Show Information */}
-        <div className="relative z-10 h-full flex items-center px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
-            {/* Poster */}
-            <div className="lg:col-span-2">
-              <div className="aspect-[2/3] w-full max-w-md mx-auto lg:max-w-none relative overflow-hidden rounded-2xl shadow-2xl">
-                <Image
-                  src={
-                    tmdbClient.getImageUrl(
-                      tvShow.poster_path || null,
-                      "w500"
-                    ) || "/placeholder-poster.svg"
-                  }
-                  alt={tvShow.name}
-                  width={400}
-                  height={600}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/placeholder-poster.svg";
-                  }}
-                />
-                {/* 3D Hover Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 opacity-0 hover:opacity-100 transition-opacity duration-500" />
-              </div>
-            </div>
+        {/* Enhanced Content Container */}
+        <div className="relative z-10 min-h-screen flex items-center px-4 sm:px-6 lg:px-8 xl:px-12 py-12">
+          <div className="w-full max-w-8xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+              {/* Enhanced Poster Section */}
+              <div className="lg:col-span-4 xl:col-span-3">
+                <div className="group relative">
+                  <div className="aspect-[2/3] w-full max-w-sm mx-auto lg:max-w-none relative overflow-hidden rounded-3xl shadow-2xl transform hover:scale-105 transition-all duration-700 ease-out">
+                    {/* Glow Effect Behind Poster */}
+                    <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/30 via-cyan-500/30 to-blue-500/30 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-            {/* TV Show Details */}
-            <div className="lg:col-span-3 text-white text-center lg:text-left">
-              <div className="space-y-6">
-                {/* Title */}
-                <div>
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-display font-bold mb-4">
-                    <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                      {tvShow.name}
-                    </span>
-                  </h1>
-                  {tvShow.tagline && (
-                    <p className="text-xl lg:text-2xl text-slate-300 italic">
-                      &ldquo;{tvShow.tagline}&rdquo;
-                    </p>
+                    <Image
+                      src={
+                        tmdbClient.getImageUrl(
+                          tvShow.poster_path || null,
+                          "w500"
+                        ) || "/placeholder-poster.svg"
+                      }
+                      alt={tvShow.name}
+                      width={400}
+                      height={600}
+                      className="relative w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder-poster.svg";
+                      }}
+                    />
+
+                    {/* Premium Glass Effect Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    {/* Enhanced Floating Rating Badge */}
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 text-white font-bold text-sm px-3 py-2 rounded-2xl shadow-2xl backdrop-blur-sm border-2 border-yellow-300/50 transform hover:scale-110 transition-all duration-300">
+                      <div className="flex items-center gap-1">
+                        <span className="text-yellow-800">⭐</span>
+                        <span className="font-black">
+                          {tvShow.vote_average.toFixed(1)}
+                        </span>
+                      </div>
+                      {/* Glow effect */}
+                      <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur-md opacity-60 -z-10"></div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div
+                      className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-2xl text-white font-semibold text-sm shadow-xl backdrop-blur-sm border border-white/20 ${getStatusColor(
+                        tvShow.status
+                      )}`}
+                    >
+                      {tvShow.status}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced TV Show Details Section */}
+              <div className="lg:col-span-8 xl:col-span-9 text-white">
+                <div className="space-y-8 max-w-5xl">
+                  {/* Enhanced Title Section */}
+                  <div className="space-y-4">
+                    <h1 className="text-xl sm:text-3xl lg:text-4xl xl:text-6xl font-black leading-tight">
+                      <span
+                        className="bg-gradient-to-r from-purple-300 via-cyan-200 to-blue-300 bg-clip-text text-transparent drop-shadow-2xl"
+                        style={{
+                          textShadow: "0 0 40px rgba(168, 85, 247, 0.4)",
+                        }}
+                      >
+                        {tvShow.name}
+                      </span>
+                    </h1>
+
+                    {tvShow.tagline && (
+                      <p className="text-xl lg:text-2xl xl:text-3xl text-slate-300 italic font-light tracking-wide">
+                        &ldquo;{tvShow.tagline}&rdquo;
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Compact Transparent Meta Information Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">📺</div>
+                      <div className="font-semibold text-sm">
+                        {tvShow.number_of_seasons}
+                      </div>
+                      <div className="text-[10px] text-slate-400">Seasons</div>
+                    </div>
+
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">🎬</div>
+                      <div className="font-semibold text-sm">
+                        {tvShow.number_of_episodes}
+                      </div>
+                      <div className="text-[10px] text-slate-400">Episodes</div>
+                    </div>
+
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">🕐</div>
+                      <div className="font-semibold text-sm">
+                        {formatEpisodeRuntime(tvShow.episode_run_time)}
+                      </div>
+                      <div className="text-[10px] text-slate-400">Runtime</div>
+                    </div>
+
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
+                      <div className="text-lg mb-0.5">👥</div>
+                      <div className="font-semibold text-sm">
+                        {tvShow.vote_count.toLocaleString()}
+                      </div>
+                      <div className="text-[10px] text-slate-400">Votes</div>
+                    </div>
+                  </div>
+
+                  {/* Compact Show Dates */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-black/40">
+                      <div className="text-slate-400 text-xs mb-1">
+                        First Aired
+                      </div>
+                      <div className="text-sm font-semibold">
+                        {new Date(tvShow.first_air_date).toLocaleDateString()}
+                      </div>
+                    </div>
+
+                    {tvShow.last_air_date && (
+                      <div className="bg-black/30 backdrop-blur-md border border-white/10 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-black/40">
+                        <div className="text-slate-400 text-xs mb-1">
+                          Last Aired
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {new Date(tvShow.last_air_date).toLocaleDateString()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Compact Transparent Genres Grid */}
+                  {tvShow.genres.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-slate-300">
+                        Genres
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {tvShow.genres.map((genre, index) => (
+                          <span
+                            key={genre.id}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all duration-300 hover:scale-105 ${
+                              index % 3 === 0
+                                ? "bg-purple-600/20 border-purple-400/30 text-purple-300 hover:bg-purple-600/30"
+                                : index % 3 === 1
+                                ? "bg-cyan-600/20 border-cyan-400/30 text-cyan-300 hover:bg-cyan-600/30"
+                                : "bg-blue-600/20 border-blue-400/30 text-blue-300 hover:bg-blue-600/30"
+                            }`}
+                          >
+                            {genre.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {/* Meta Information */}
-                <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-lg">
-                  <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full">
-                    <span>⭐</span>
-                    <span className="font-bold text-yellow-400">
-                      {tvShow.vote_average.toFixed(1)}
-                    </span>
-                    <span className="text-slate-300">
-                      ({tvShow.vote_count.toLocaleString()})
-                    </span>
-                  </div>
-                  <div className="bg-black/50 px-4 py-2 rounded-full">
-                    <span>
-                      🕐 {formatEpisodeRuntime(tvShow.episode_run_time)}
-                    </span>
-                  </div>
-                  <div className="bg-black/50 px-4 py-2 rounded-full">
-                    <span>
-                      📅 {new Date(tvShow.first_air_date).getFullYear()}
-                    </span>
-                    {tvShow.last_air_date && tvShow.status === "Ended" && (
-                      <span>
-                        {" "}
-                        - {new Date(tvShow.last_air_date).getFullYear()}
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className={`px-4 py-2 rounded-full text-white text-sm font-medium ${getStatusColor(
-                      tvShow.status
-                    )}`}
-                  >
-                    {tvShow.status}
-                  </div>
-                </div>
-
-                {/* Series Info */}
-                <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-lg">
-                  <div className="bg-purple-600/20 border border-purple-400/30 px-4 py-2 rounded-full text-purple-300">
-                    🎬 {tvShow.number_of_seasons} Season
-                    {tvShow.number_of_seasons > 1 ? "s" : ""}
-                  </div>
-                  <div className="bg-pink-600/20 border border-pink-400/30 px-4 py-2 rounded-full text-pink-300">
-                    📺 {tvShow.number_of_episodes} Episodes
-                  </div>
-                </div>
-
-                {/* Genres */}
-                <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-                  {tvShow.genres.map((genre) => (
-                    <span
-                      key={genre.id}
-                      className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 px-4 py-2 rounded-full text-purple-300 text-sm font-medium backdrop-blur-sm"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Overview */}
-                <div className="max-w-3xl">
-                  <p className="text-lg lg:text-xl text-slate-200 leading-relaxed">
-                    {tvShow.overview}
-                  </p>
-                </div>
-
-                {/* Creators */}
-                {creators.length > 0 && (
-                  <div>
-                    <p className="text-slate-300">
-                      <span className="font-semibold">Created by:</span>{" "}
-                      <span className="text-white">
-                        {creators.map((creator) => creator.name).join(", ")}
-                      </span>
+                {/* Compact Transparent Description */}
+                {tvShow.overview && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-slate-300">
+                      Overview
+                    </h3>
+                    <p className="text-sm lg:text-base text-slate-200 leading-relaxed bg-black/30 backdrop-blur-md border border-white/10 p-4 rounded-xl transition-all duration-300 hover:bg-black/40">
+                      {tvShow.overview}
                     </p>
                   </div>
                 )}
 
-                {/* Networks */}
+                {/* Compact Transparent Creators */}
+                {creators.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-slate-300">
+                      Created By
+                    </h3>
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 p-3 rounded-xl transition-all duration-300 hover:bg-black/40">
+                      <p className="text-sm text-white font-medium">
+                        {creators.map((creator) => creator.name).join(", ")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Compact Transparent Networks */}
                 {tvShow.networks && tvShow.networks.length > 0 && (
-                  <div>
-                    <p className="text-slate-300">
-                      <span className="font-semibold">Network:</span>{" "}
-                      <span className="text-white">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-slate-300">
+                      Network
+                    </h3>
+                    <div className="bg-black/30 backdrop-blur-md border border-white/10 p-3 rounded-xl transition-all duration-300 hover:bg-black/40">
+                      <p className="text-sm text-white font-medium">
                         {tvShow.networks
                           .map((network) => network.name)
                           .join(", ")}
-                      </span>
-                    </p>
+                      </p>
+                    </div>
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                {/* Premium Action Buttons */}
+                <div className="flex flex-wrap gap-4 pt-4">
                   {trailer && (
                     <button
                       onClick={() => setSelectedVideo(trailer.key)}
-                      className="btn-cinema flex items-center justify-center gap-2 text-lg px-8 py-4"
+                      className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-purple-500/25"
                     >
-                      ▶️ Watch Trailer
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Play className="w-5 h-5" />
+                        Watch Trailer
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </button>
                   )}
+
                   <button
                     onClick={handleWatchlistToggle}
-                    className={`${
-                      inWatchlist ? "btn-cinema" : "btn-cinema-outline"
-                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
+                    className={`group relative overflow-hidden backdrop-blur-xl border transition-all duration-300 hover:scale-105 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl ${
+                      inWatchlist
+                        ? "bg-gradient-to-r from-green-600/20 to-green-700/20 border-green-400/30 hover:bg-green-600/30"
+                        : "bg-slate-800/80 hover:bg-slate-700/80 border-white/20 hover:border-white/30"
+                    }`}
                   >
-                    {inWatchlist ? "✅" : "➕"}{" "}
-                    {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Heart className="w-5 h-5" />
+                      {inWatchlist ? "In Watchlist" : "Add to List"}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </button>
+
                   <button
                     onClick={handleFavoritesToggle}
-                    className={`${
+                    className={`group relative overflow-hidden backdrop-blur-xl border transition-all duration-300 hover:scale-105 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl ${
                       inFavorites
-                        ? "btn-glass bg-red-500/20 border-red-500/30"
-                        : "btn-glass"
-                    } flex items-center justify-center gap-2 text-lg px-8 py-4 transition-all duration-300`}
+                        ? "bg-gradient-to-r from-red-600/20 to-red-700/20 border-red-400/30 hover:bg-red-600/30"
+                        : "bg-slate-800/80 hover:bg-slate-700/80 border-white/20 hover:border-white/30"
+                    }`}
                   >
-                    {inFavorites ? "❤️" : "💝"}{" "}
-                    {inFavorites ? "Favorited" : "Add to Favorites"}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Heart className="w-5 h-5" />
+                      {inFavorites ? "Favorited" : "Add to Favorites"}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </button>
+
+                  <button className="group relative overflow-hidden bg-slate-800/80 hover:bg-slate-700/80 backdrop-blur-xl border border-white/20 hover:border-white/30 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl transition-all duration-300 hover:scale-105">
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Share2 className="w-5 h-5" />
+                      Share
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </button>
                 </div>
               </div>

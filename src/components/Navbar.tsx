@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { TMDBClient } from "@/lib/tmdb-client";
-import { Movie } from "@/types";
+import { Movie, MultiSearchResult } from "@/types";
 import Image from "next/image";
 import ClerkAuthButton from "@/components/ui/ClerkAuthButton";
 
@@ -26,12 +26,12 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [searchResults, setSearchResults] = useState<MultiSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Search function
+  // Enhanced search function for all content types
   const performSearch = async (query: string) => {
     if (query.trim().length < 2) {
       setSearchResults([]);
@@ -41,7 +41,7 @@ export default function Navbar() {
 
     setIsSearching(true);
     try {
-      const results = await tmdbClient.searchMovies(query, 1);
+      const results = await tmdbClient.multiSearch(query, 1);
       setSearchResults(results.results.slice(0, 6)); // Show top 6 results
     } catch (error) {
       console.error("Search error:", error);
@@ -77,9 +77,66 @@ export default function Navbar() {
     }
   };
 
-  // Handle result click
-  const handleResultClick = (movieId: number) => {
-    router.push(`/movie/${movieId}`);
+  // Helper functions for handling different content types
+  const getTitle = (result: MultiSearchResult): string => {
+    if ("title" in result) return result.title; // Movie
+    if ("name" in result) return result.name; // TV Show or Person
+    return "Unknown";
+  };
+
+  const getYear = (result: MultiSearchResult): string => {
+    if ("release_date" in result && result.release_date) {
+      return new Date(result.release_date).getFullYear().toString();
+    }
+    if ("first_air_date" in result && result.first_air_date) {
+      return new Date(result.first_air_date).getFullYear().toString();
+    }
+    return "N/A";
+  };
+
+  const getPosterPath = (result: MultiSearchResult): string | null => {
+    if ("poster_path" in result) return result.poster_path || null;
+    if ("profile_path" in result) return result.profile_path || null;
+    return null;
+  };
+
+  const getRating = (result: MultiSearchResult): number => {
+    if ("vote_average" in result) return result.vote_average;
+    return 0;
+  };
+
+  const getMediaType = (result: MultiSearchResult): string => {
+    if ("media_type" in result) return result.media_type;
+    if ("title" in result) return "movie";
+    if ("name" in result && "known_for_department" in result) return "person";
+    if ("name" in result) return "tv";
+    return "unknown";
+  };
+
+  const getMediaIcon = (result: MultiSearchResult): string => {
+    const mediaType = getMediaType(result);
+    switch (mediaType) {
+      case "movie":
+        return "🎬";
+      case "tv":
+        return "📺";
+      case "person":
+        return "👤";
+      default:
+        return "❓";
+    }
+  };
+
+  // Handle result click with proper typing
+  const handleResultClick = (result: MultiSearchResult) => {
+    const mediaType = getMediaType(result);
+    if (mediaType === "movie") {
+      router.push(`/movie/${result.id}`);
+    } else if (mediaType === "tv") {
+      router.push(`/tv/${result.id}`);
+    } else if (mediaType === "person") {
+      router.push(`/person/${result.id}`);
+    }
     setIsSearchOpen(false);
     setSearchQuery("");
     setSearchResults([]);
@@ -112,36 +169,52 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Premium Backdrop Blur */}
-      <div className="fixed top-0 left-0 right-0 z-40 h-16 sm:h-20 lg:h-24 bg-gradient-to-b from-black/80 via-slate-900/60 to-transparent backdrop-blur-xl" />
+      {/* Enhanced Premium Backdrop with Dynamic Gradient */}
+      <div className="fixed top-0 left-0 right-0 z-40 h-16 sm:h-20 lg:h-24">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-slate-900/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20" />
+        <div className="absolute inset-0 backdrop-blur-xl" />
+        {/* Animated particles effect */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-2 h-2 bg-purple-400/30 rounded-full animate-pulse" />
+          <div className="absolute top-4 right-1/3 w-1 h-1 bg-pink-400/40 rounded-full animate-bounce" />
+          <div className="absolute top-2 left-2/3 w-1.5 h-1.5 bg-blue-400/30 rounded-full animate-ping" />
+        </div>
+      </div>
 
       <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${
           isScrolled
-            ? "bg-slate-900/90 backdrop-blur-2xl shadow-2xl border-b border-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20"
+            ? "bg-slate-900/95 backdrop-blur-3xl shadow-2xl border-b border-gradient-to-r from-purple-500/30 via-pink-500/20 to-blue-500/30"
             : "bg-transparent"
         }`}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
-            {/* Premium Logo - Responsive */}
+            {/* Enhanced Premium Logo */}
             <Link
               href="/"
               className="flex items-center space-x-2 sm:space-x-4 group"
             >
               <motion.div
-                whileHover={{ scale: 1.05, rotate: 2 }}
+                whileHover={{ scale: 1.08, rotate: 3 }}
                 whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
                 className="relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-300">
+                {/* Multiple glow layers for depth */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-2xl blur-md opacity-40 group-hover:opacity-70 transition-opacity duration-300" />
+
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-2xl flex items-center justify-center border border-white/20 group-hover:border-white/40 transition-all duration-300 shadow-2xl">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 relative">
-                    <svg viewBox="0 0 80 80" className="w-full h-full">
+                    <svg
+                      viewBox="0 0 80 80"
+                      className="w-full h-full drop-shadow-lg"
+                    >
                       <defs>
                         <linearGradient
                           id="clapperGradient"
@@ -150,10 +223,21 @@ export default function Navbar() {
                           x2="100%"
                           y2="100%"
                         >
-                          <stop offset="0%" stopColor="#8B5CF6" />
-                          <stop offset="50%" stopColor="#EC4899" />
-                          <stop offset="100%" stopColor="#3B82F6" />
+                          <stop offset="0%" stopColor="#A855F7" />
+                          <stop offset="30%" stopColor="#EC4899" />
+                          <stop offset="70%" stopColor="#3B82F6" />
+                          <stop offset="100%" stopColor="#06B6D4" />
                         </linearGradient>
+                        <filter id="glow">
+                          <feGaussianBlur
+                            stdDeviation="2"
+                            result="coloredBlur"
+                          />
+                          <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
                       </defs>
                       <rect
                         x="10"
@@ -161,24 +245,52 @@ export default function Navbar() {
                         width="50"
                         height="35"
                         fill="url(#clapperGradient)"
-                        rx="3"
+                        rx="4"
+                        filter="url(#glow)"
                       />
                       <rect
                         x="10"
                         y="30"
                         width="50"
-                        height="6"
+                        height="7"
                         fill="white"
-                        opacity="0.9"
+                        opacity="0.95"
                       />
                       <path
                         d="M 15 15 L 65 25 L 65 35 L 15 25 Z"
                         fill="url(#clapperGradient)"
+                        filter="url(#glow)"
                       />
-                      <rect x="18" y="17" width="6" height="5" fill="white" />
-                      <rect x="28" y="18" width="6" height="5" fill="black" />
-                      <rect x="38" y="19" width="6" height="5" fill="white" />
-                      <rect x="48" y="20" width="6" height="5" fill="black" />
+                      <rect
+                        x="18"
+                        y="17"
+                        width="6"
+                        height="5"
+                        fill="white"
+                        opacity="0.9"
+                      />
+                      <rect
+                        x="28"
+                        y="18"
+                        width="6"
+                        height="5"
+                        fill="rgba(0,0,0,0.8)"
+                      />
+                      <rect
+                        x="38"
+                        y="19"
+                        width="6"
+                        height="5"
+                        fill="white"
+                        opacity="0.9"
+                      />
+                      <rect
+                        x="48"
+                        y="20"
+                        width="6"
+                        height="5"
+                        fill="rgba(0,0,0,0.8)"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -189,153 +301,206 @@ export default function Navbar() {
                   className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-tight"
                   style={{
                     background:
-                      "linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #3B82F6 100%)",
+                      "linear-gradient(135deg, #A855F7 0%, #EC4899 25%, #3B82F6 50%, #06B6D4 75%, #A855F7 100%)",
+                    backgroundSize: "200% 200%",
                     backgroundClip: "text",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
-                    textShadow: "0 0 30px rgba(139, 92, 246, 0.3)",
+                    textShadow: "0 0 40px rgba(139, 92, 246, 0.4)",
+                    animation: "gradient-shift 4s ease-in-out infinite",
                   }}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.03 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   MOVIESENSE
                 </motion.span>
-                <span className="hidden sm:block text-xs lg:text-sm text-slate-400 font-medium tracking-wider uppercase">
+                <motion.span
+                  className="hidden sm:block text-xs lg:text-sm text-slate-400 font-medium tracking-wider uppercase"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
                   Your Movie Companion
-                </span>
+                </motion.span>
               </div>
             </Link>
 
-            {/* Premium Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-2">
+            {/* Enhanced Premium Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-1">
               {navItems.map((item, index) => (
                 <motion.div
                   key={item.href}
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  transition={{ delay: index * 0.1 + 0.2, duration: 0.6 }}
                 >
                   <Link
                     href={item.href}
-                    className="group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105"
+                    className="group relative px-5 py-3 rounded-2xl text-sm font-semibold transition-all duration-500 hover:scale-105"
                   >
                     <div
-                      className={`flex items-center space-x-2 relative z-10 ${
+                      className={`flex items-center space-x-2.5 relative z-10 ${
                         pathname === item.href
                           ? "text-white"
                           : "text-slate-300 group-hover:text-white"
                       }`}
                     >
-                      <span className="text-lg group-hover:scale-110 transition-transform duration-300">
+                      <motion.span
+                        className="text-lg group-hover:scale-125 transition-all duration-300"
+                        whileHover={{ rotate: [0, -10, 10, 0] }}
+                        transition={{ duration: 0.4 }}
+                      >
                         {item.icon}
-                      </span>
-                      <span>{item.label}</span>
+                      </motion.span>
+                      <span className="tracking-wide">{item.label}</span>
                     </div>
 
-                    {/* Active/Hover Background */}
+                    {/* Enhanced Active/Hover Background - Removed for cleaner look */}
                     <div
-                      className={`absolute inset-0 rounded-xl transition-all duration-300 ${
+                      className={`absolute inset-0 rounded-2xl transition-all duration-500 ${
                         pathname === item.href
-                          ? "bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 border border-white/10"
-                          : "bg-transparent group-hover:bg-white/5 group-hover:border group-hover:border-white/10"
+                          ? ""
+                          : "bg-transparent group-hover:bg-gradient-to-r group-hover:from-purple-500/5 group-hover:via-pink-500/5 group-hover:to-blue-500/5"
                       }`}
                     />
 
-                    {/* Premium Glow Effect */}
+                    {/* Premium Bottom Glow Line for Active State */}
                     {pathname === item.href && (
                       <motion.div
-                        className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-xl blur opacity-20"
-                        animate={{ opacity: [0.2, 0.4, 0.2] }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: "80%", opacity: 1 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                      >
+                        <div className="h-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full" />
+                        <motion.div
+                          className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full blur-sm opacity-60 -mt-1"
+                          animate={{
+                            opacity: [0.4, 0.8, 0.4],
+                            scaleX: [1, 1.1, 1],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        />
+                      </motion.div>
+                    )}
+
+                    {/* Enhanced Premium Glow Effect - Reduced for cleaner look */}
+                    {pathname === item.href && (
+                      <motion.div
+                        className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-2xl blur-lg opacity-50"
+                        animate={{
+                          opacity: [0.3, 0.6, 0.3],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
                       />
                     )}
+
+                    {/* Hover Glow Effect */}
+                    <motion.div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300" />
                   </Link>
                 </motion.div>
               ))}
             </div>
 
-            {/* Premium Right Side Actions - Responsive */}
+            {/* Enhanced Premium Right Side Actions */}
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Premium Search */}
+              {/* Enhanced Premium Search */}
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.08, rotate: 2 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
+                transition={{ type: "spring", stiffness: 400 }}
+                className="relative p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-black/90 border border-white/20 text-slate-300 hover:text-white hover:border-white/40 transition-all duration-300 backdrop-blur-sm shadow-xl group"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
-                <svg
+                <motion.svg
                   className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
-                </svg>
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-xl blur opacity-0 hover:opacity-30 transition-opacity duration-300" />
+                </motion.svg>
+
+                {/* Multi-layer glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-2xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+
+                {/* Search indicator */}
+                <motion.div
+                  className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
               </motion.button>
 
-              {/* Premium User Actions - Only show full buttons on XL screens */}
+              {/* Enhanced Premium User Actions - XL screens */}
               <div className="hidden xl:flex items-center space-x-3">
-                <ClerkAuthButton />
-
-                {/* <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium transition-all duration-300 overflow-hidden group shadow-lg hover:shadow-xl hover:shadow-purple-500/25"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 }}
                 >
-                  <span className="relative z-10 flex items-center space-x-2">
-                    <span>✨</span>
-                    <span>Premium</span>
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-blue-400 transition-all duration-300" />
-                </motion.button> */}
+                  <ClerkAuthButton />
+                </motion.div>
               </div>
 
-              {/* Compact Premium Button for medium screens */}
+              {/* Enhanced Compact Actions - Medium screens */}
               <div className="hidden md:flex xl:hidden items-center space-x-2">
-                <ClerkAuthButton />
-
-                {/* <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative p-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium transition-all duration-300 overflow-hidden group shadow-lg hover:shadow-xl hover:shadow-purple-500/25"
-                  title="Get Premium"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
                 >
-                  <span className="relative z-10 text-lg">✨</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 group-hover:from-purple-400 group-hover:via-pink-400 group-hover:to-blue-400 transition-all duration-300" />
-                </motion.button> */}
+                  <ClerkAuthButton />
+                </motion.div>
               </div>
 
-              {/* Mobile Menu Button */}
+              {/* Enhanced Mobile Menu Button */}
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.08, rotate: isMobileMenuOpen ? 0 : 5 }}
                 whileTap={{ scale: 0.95 }}
-                className="lg:hidden relative p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
+                transition={{ type: "spring", stiffness: 400 }}
+                className="lg:hidden relative p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-black/90 border border-white/20 text-slate-300 hover:text-white hover:border-white/40 transition-all duration-300 backdrop-blur-sm shadow-xl group"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
-                <svg
+                <motion.svg
                   className="w-5 h-5 sm:w-6 sm:h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  animate={{ rotate: isMobileMenuOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d={
                       isMobileMenuOpen
                         ? "M6 18L18 6M6 6l12 12"
                         : "M4 6h16M4 12h16M4 18h16"
                     }
                   />
-                </svg>
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-xl blur opacity-0 hover:opacity-30 transition-opacity duration-300" />
+                </motion.svg>
+
+                {/* Enhanced glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-2xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
               </motion.button>
             </div>
           </div>
@@ -405,63 +570,71 @@ export default function Navbar() {
                         </span>
                       </div>
                       <div className="max-h-96 overflow-y-auto">
-                        {searchResults.map((movie, index) => (
-                          <motion.div
-                            key={movie.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            onClick={() => handleResultClick(movie.id)}
-                            className="flex items-center space-x-4 px-4 py-3 hover:bg-white/5 cursor-pointer transition-all duration-200"
-                          >
-                            <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
-                              {movie.poster_path ? (
-                                <Image
-                                  src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                                  alt={movie.title}
-                                  width={48}
-                                  height={64}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-500">
-                                  🎬
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium truncate">
-                                {movie.title}
-                              </h4>
-                              <p className="text-slate-400 text-sm">
-                                {movie.release_date
-                                  ? new Date(movie.release_date).getFullYear()
-                                  : "N/A"}
-                              </p>
-                              <div className="flex items-center space-x-2 mt-1">
-                                <span className="text-yellow-400 text-xs">
-                                  ★
-                                </span>
-                                <span className="text-slate-400 text-xs">
-                                  {movie.vote_average.toFixed(1)}
-                                </span>
-                              </div>
-                            </div>
-                            <svg
-                              className="w-5 h-5 text-slate-500"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                        {searchResults.map((result, index) => {
+                          const posterPath = getPosterPath(result);
+                          const title = getTitle(result);
+                          const year = getYear(result);
+                          const rating = getRating(result);
+                          const mediaIcon = getMediaIcon(result);
+
+                          return (
+                            <motion.div
+                              key={result.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              onClick={() => handleResultClick(result)}
+                              className="flex items-center space-x-4 px-4 py-3 hover:bg-white/5 cursor-pointer transition-all duration-200"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </motion.div>
-                        ))}
+                              <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
+                                {posterPath ? (
+                                  <Image
+                                    src={`https://image.tmdb.org/t/p/w92${posterPath}`}
+                                    alt={title}
+                                    width={48}
+                                    height={64}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-slate-500 text-2xl">
+                                    {mediaIcon}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-white font-medium truncate">
+                                  {title}
+                                </h4>
+                                <p className="text-slate-400 text-sm">
+                                  {year} • {getMediaType(result)}
+                                </p>
+                                {rating > 0 && (
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <span className="text-yellow-400 text-xs">
+                                      ★
+                                    </span>
+                                    <span className="text-slate-400 text-xs">
+                                      {rating.toFixed(1)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <svg
+                                className="w-5 h-5 text-slate-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                            </motion.div>
+                          );
+                        })}
                       </div>
                       <div className="px-4 py-3 border-t border-white/10 bg-slate-800/50">
                         <button
