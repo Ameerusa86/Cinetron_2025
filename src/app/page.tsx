@@ -4,12 +4,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useTrendingMovies } from "@/hooks";
 import {
-  ParallaxScroll,
   ParticleEffects,
   FloatingMovieElements,
   InteractiveParticles,
 } from "@/components/3d-effects";
-import EnhancedMovieCard from "@/components/EnhancedMovieCard";
+import TrendingMovieCard from "@/components/TrendingMovieCard";
 import { AIFeaturesShowcase } from "@/components/sections/AIFeaturesShowcase";
 
 export default function HomePage() {
@@ -147,29 +146,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trending Section - Full Width Responsive with Parallax */}
-      <ParallaxScroll
-        speed={0.3}
-        className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 xl:px-12 w-full relative"
-      >
+      {/* Trending Section - Modern Card Layout */}
+      <section className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 xl:px-12 w-full relative bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800">
         {/* Particle Effects Background */}
         <ParticleEffects
-          count={200}
-          color="#ff6b35"
-          size={0.01}
-          speed={0.2}
-          className="opacity-10"
+          count={150}
+          color="#f97316"
+          size={0.015}
+          speed={0.15}
+          className="opacity-20"
         />
 
+        {/* Floating Movie Elements */}
+        <FloatingMovieElements elements={8} className="opacity-10" />
+
         <div className="w-full relative z-10">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12 sm:mb-16"
+          >
+            <motion.h2
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6"
+              style={{
+                background:
+                  "linear-gradient(135deg, #f97316 0%, #ec4899 50%, #8b5cf6 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
               🔥 Trending Now
-            </h2>
-            <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400">
-              Discover what everyone is watching with immersive 3D previews
-            </p>
-          </div>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="text-lg sm:text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto"
+            >
+              Discover the hottest movies everyone&apos;s talking about
+            </motion.p>
+          </motion.div>
 
           {isLoading && (
             <div className="flex justify-center items-center h-64">
@@ -187,21 +205,14 @@ export default function HomePage() {
           )}
 
           {trendingMovies && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6">
-              {trendingMovies.results.slice(0, 16).map((movie, index) => {
-                return (
-                  <EnhancedMovieCard
-                    key={movie.id}
-                    movie={movie}
-                    mode={index % 4 === 0 ? "trailer" : "standard"} // Show trailer option on every 4th card
-                    className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-orange-500/20"
-                  />
-                );
-              })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 sm:gap-6 lg:gap-8">
+              {trendingMovies.results.slice(0, 14).map((movie, index) => (
+                <TrendingMovieCard key={movie.id} movie={movie} index={index} />
+              ))}
             </div>
           )}
         </div>
-      </ParallaxScroll>
+      </section>
 
       {/* Features Section - Full Width Responsive */}
       <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 xl:px-12 bg-slate-50 dark:bg-slate-900/50 w-full">
