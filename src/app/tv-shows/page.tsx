@@ -25,10 +25,43 @@ export default function TVShowsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState("popularity.desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allShows, setAllShows] = useState<TVShow[]>([]);
 
-  const { data: popularShows, isLoading, error } = usePopularTVShows();
+  const {
+    data: popularShows,
+    isLoading,
+    error,
+  } = usePopularTVShows(currentPage);
 
-  const displayShows = popularShows?.results;
+  // Accumulate shows from all pages
+  React.useEffect(() => {
+    if (popularShows?.results) {
+      if (currentPage === 1) {
+        // First page: replace all shows
+        setAllShows(popularShows.results);
+      } else {
+        // Subsequent pages: append to existing shows
+        setAllShows((prev) => [...prev, ...popularShows.results]);
+      }
+    }
+  }, [popularShows, currentPage]);
+
+  // Reset when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+    setAllShows([]);
+  }, [selectedGenre, sortBy, searchQuery]);
+
+  const displayShows = allShows;
+
+  // Load more functionality
+  const handleLoadMore = () => {
+    setCurrentPage((prev) => prev + 1);
+  };
+
+  // Check if there are more pages to load
+  const canLoadMore = popularShows && currentPage < popularShows.total_pages;
 
   return (
     <div className="min-h-screen pt-20 lg:pt-28 w-full">
@@ -212,10 +245,14 @@ export default function TVShowsPage() {
           )}
 
           {/* Load More Button */}
-          {displayShows && displayShows.length > 0 && (
+          {displayShows && displayShows.length > 0 && canLoadMore && (
             <div className="text-center mt-12">
-              <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-3 rounded-xl text-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl">
-                Load More Shows
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoading}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-3 rounded-xl text-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Loading..." : "Load More Shows"}
               </button>
             </div>
           )}

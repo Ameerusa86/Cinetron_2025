@@ -205,12 +205,12 @@ export default function RootLayout({
 
                 {/* Main Content */}
                 <main className="relative z-10 w-full">{children}</main>
+                <SpeedInsights />
               </div>
             </Providers>
           </ClerkUserSyncProvider>
         </body>
       </html>
-      <SpeedInsights />
     </ClerkProvider>
   );
 }
