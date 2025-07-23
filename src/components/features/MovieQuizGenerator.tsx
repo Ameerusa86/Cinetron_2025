@@ -96,7 +96,7 @@ export default function MovieQuizGenerator() {
         return {
           id: index,
           question: `What genre best describes "${movie.title}"?`,
-          options: generateGenreOptions(movie.genre_ids || []),
+          options: generateGenreOptions(),
           correctAnswer: 0,
           movie,
           type,
@@ -145,7 +145,7 @@ export default function MovieQuizGenerator() {
     return shuffleArray(options);
   };
 
-  const generateGenreOptions = (_genreIds: number[]): string[] => {
+  const generateGenreOptions = (): string[] => {
     const genres = [
       "Action",
       "Comedy",
@@ -193,7 +193,7 @@ export default function MovieQuizGenerator() {
       setQuizState((prev) => {
         if (prev.timeLeft <= 1) {
           clearInterval(timer);
-          handleNextQuestion(-1); // Time's up, wrong answer
+          handleNextQuestion(); // Time's up, wrong answer
           return prev;
         }
         return { ...prev, timeLeft: prev.timeLeft - 1 };
@@ -213,11 +213,11 @@ export default function MovieQuizGenerator() {
       score: isCorrect ? prev.score + 1 : prev.score,
     }));
 
-    setTimeout(() => handleNextQuestion(selectedAnswer), 1000);
+    setTimeout(() => handleNextQuestion(), 1000);
   };
 
   // Move to next question or show results
-  const handleNextQuestion = (_answer: number) => {
+  const handleNextQuestion = () => {
     if (quizState.currentQuestion < quizState.questions.length - 1) {
       setQuizState((prev) => ({
         ...prev,

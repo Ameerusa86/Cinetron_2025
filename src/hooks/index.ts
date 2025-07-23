@@ -8,13 +8,7 @@ import {
   useNotificationStore,
   useUserStore,
 } from "@/stores";
-import type {
-  Movie,
-  MultiSearchResult,
-  TVShow,
-  MovieDetails,
-  TVShowDetails,
-} from "@/types";
+import type { Movie, MultiSearchResult } from "@/types";
 import { extractIdFromSlug } from "@/lib/slug-utils";
 
 // ======================
@@ -788,7 +782,7 @@ export const useMovieDetailsBySlug = (
         ]);
         addMovieDetails(movieId, data);
         return data;
-      } catch (error) {
+      } catch {
         throw new Error(`Invalid movie slug: ${slug}`);
       }
     },
@@ -818,7 +812,7 @@ export const useTVShowDetailsBySlug = (
           "reviews",
         ]);
         return data;
-      } catch (error) {
+      } catch {
         throw new Error(`Invalid TV show slug: ${slug}`);
       }
     },
@@ -846,7 +840,7 @@ export const usePersonDetailsBySlug = (
         const personId = extractIdFromSlug(slug);
         const data = await tmdbClient.getPersonDetails(personId);
         return data;
-      } catch (error) {
+      } catch {
         throw new Error(`Invalid person slug: ${slug}`);
       }
     },
@@ -870,7 +864,7 @@ export const usePersonMovieCredits = (
         const personId = extractIdFromSlug(slug);
         const data = await tmdbClient.getPersonMovieCredits(personId);
         return data;
-      } catch (error) {
+      } catch {
         throw new Error(`Invalid person slug: ${slug}`);
       }
     },
@@ -891,7 +885,7 @@ export const usePersonTVCredits = (slug: string, enabled: boolean = true) => {
         const personId = extractIdFromSlug(slug);
         const data = await tmdbClient.getPersonTVCredits(personId);
         return data;
-      } catch (error) {
+      } catch {
         throw new Error(`Invalid person slug: ${slug}`);
       }
     },
@@ -916,7 +910,7 @@ export const useSeasonDetails = (
         const tvId = extractIdFromSlug(tvShowSlug);
         const data = await tmdbClient.getSeasonDetails(tvId, seasonNumber);
         return data;
-      } catch (error) {
+      } catch {
         throw new Error(
           `Failed to fetch season ${seasonNumber} details for ${tvShowSlug}`
         );

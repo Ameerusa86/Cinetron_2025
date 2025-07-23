@@ -100,16 +100,8 @@ export default function DiscoverPage() {
   const [selectedSort, setSelectedSort] = useState("popularity");
   const [discoveryMode, setDiscoveryMode] = useState("mixed");
 
-  const {
-    data: movies,
-    isLoading: moviesLoading,
-    error: moviesError,
-  } = usePopularMovies();
-  const {
-    data: tvShows,
-    isLoading: tvLoading,
-    error: tvError,
-  } = usePopularTVShows();
+  const { data: movies, isLoading: moviesLoading } = usePopularMovies();
+  const { data: tvShows, isLoading: tvLoading } = usePopularTVShows();
 
   const selectedGenreInfo = genres.find((g) => g.id === selectedGenre);
 
