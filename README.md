@@ -13,7 +13,9 @@ Cinetron is a premium movie discovery application that allows users to explore t
 - 🎥 **Trending Movies**: Discover the latest trending movies
 - 📺 **Popular TV Shows**: Browse popular TV series
 - 🔍 **Universal Search**: Search movies, TV shows, and people
-- 🎨 **Premium UI**: Beautiful glassmorphism design with smooth animations
+- � **Interactive Games**: Movie quizzes, trivia, bingo, and prediction games
+- 🤖 **AI-Powered Features**: Smart recommendations using Google Gemini AI
+- �🎨 **Premium UI**: Beautiful glassmorphism design with smooth animations
 - 📱 **Responsive**: Works perfectly on desktop, tablet, and mobile
 - ⚡ **Fast Performance**: Optimized with Next.js 15 and React Query
 - 🌙 **Dark Theme**: Elegant dark mode interface
@@ -27,12 +29,14 @@ Cinetron is a premium movie discovery application that allows users to explore t
 - **React Query** - Data fetching and caching
 - **Zustand** - State management
 - **TMDB API** - Movie and TV show data
+- **Google Gemini AI** - AI-powered recommendations and features
 
 ## 📋 Requirements
 
 - Node.js 18 or higher
 - npm or yarn
 - TMDB API key ([Get one here](https://www.themoviedb.org/settings/api))
+- Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey)) - Optional for AI features
 
 ## 🚀 Getting Started
 
@@ -57,6 +61,7 @@ Cinetron is a premium movie discovery application that allows users to explore t
    NEXT_PUBLIC_TMDB_API_KEY=your_tmdb_api_key_here
    NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
    NEXT_PUBLIC_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
+   NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
 4. **Run the development server**
