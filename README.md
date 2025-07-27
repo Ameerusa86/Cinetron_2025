@@ -115,7 +115,7 @@ This project uses [The Movie Database (TMDB)](https://www.themoviedb.org/) API t
 - 🌐 **Portfolio**: [Portfolio](https://ameer-hasan-portfolio.vercel.app/)
 - 💼 **LinkedIn**: [LinkedIn](https://www.linkedin.com/in/ameerdev/)
 - 🐱 **GitHub**: [GitHub](https://github.com/Ameerusa86)
-- 📧 **Email**: [Send me your questions](ameer.hasan.dev@gmail.com)
+- 📧 **Email**: ameer.hasan.dev@gmail.com
 
 ## 🙏 Acknowledgments
 
