@@ -108,10 +108,6 @@ Remember to add your environment variables in the Vercel dashboard.
 
 This project uses [The Movie Database (TMDB)](https://www.themoviedb.org/) API to fetch movie and TV show data. You'll need to create a free account and get an API key to run the application.
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 👨‍💻 Developer
 
 **Ameer Hasan**
