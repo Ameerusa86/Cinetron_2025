@@ -116,10 +116,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Ameer Hasan**
 
-- 🌐 **Portfolio**: [ameerdev.com](https://ameerdev.com)
+- 🌐 **Portfolio**: (https://ameer-hasan-portfolio.vercel.app/)
 - 💼 **LinkedIn**: [linkedin.com/in/ameerdev](https://www.linkedin.com/in/ameerdev/)
 - 🐱 **GitHub**: [github.com/Ameerusa86](https://github.com/Ameerusa86)
-- 📧 **Email**: ameer@example.com
+- 📧 **Email**: ameer.hasan.dev@gmail.com
 
 ## 🙏 Acknowledgments
 
