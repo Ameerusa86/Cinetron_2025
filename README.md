@@ -2,8 +2,7 @@
 
 A modern movie discovery platform built with Next.js 15, featuring trending movies, TV shows, and an elegant user interface with smooth animations.
 
-![Cinetron Premium](<img width="1908" height="955" alt="image" src="https://github.com/user-attachments/assets/dc7ed80f-e577-443c-ad25-7ecd34e1c4f9" />
-)
+![Cinetron Premium](<img width="1908" height="955" alt="image" src="https://github.com/user-attachments/assets/dc7ed80f-e577-443c-ad25-7ecd34e1c4f9" />)
 
 ## 🌟 What is Cinetron?
 
