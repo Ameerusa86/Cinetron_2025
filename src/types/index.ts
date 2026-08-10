@@ -260,6 +260,28 @@ export interface TVShow {
   media_type: "tv";
 }
 
+// Watch Providers Types
+export interface WatchProvider {
+  logo_path: string;
+  provider_id: number;
+  provider_name: string;
+  display_priority: number;
+}
+
+export interface WatchProviderCountry {
+  link: string;
+  flatrate?: WatchProvider[];
+  rent?: WatchProvider[];
+  buy?: WatchProvider[];
+  free?: WatchProvider[];
+  ads?: WatchProvider[];
+}
+
+export interface WatchProvidersResponse {
+  id: number;
+  results: Record<string, WatchProviderCountry>;
+}
+
 // TV Show Details Type (extends TVShow with additional fields)
 export interface TVShowDetails extends Omit<TVShow, "genre_ids"> {
   genres: Genre[];
@@ -388,6 +410,17 @@ export interface User {
   watchlist: WatchlistItem[];
   favorites: number[];
   ratings: Record<number, number>;
+  customLists?: CustomList[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomList {
+  id: string;
+  name: string;
+  description: string;
+  movies: number[];
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 }

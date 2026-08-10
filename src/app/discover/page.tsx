@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePopularMovies, usePopularTVShows } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
+import { aiService, MoodAnalysis } from "@/lib/ai-services";
+import { Movie } from "@/types";
 
 const genres = [
   { id: 28, name: "Action", icon: "⚡", color: "from-red-500 to-orange-500" },
@@ -100,8 +102,30 @@ export default function DiscoverPage() {
   const [selectedSort, setSelectedSort] = useState("popularity");
   const [discoveryMode, setDiscoveryMode] = useState("mixed");
 
+  // AI Mood Search State
+  const [moodQuery, setMoodQuery] = useState("");
+  const [isSearchingMood, setIsSearchingMood] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState<Movie[]>([]);
+  const [moodAnalysis, setMoodAnalysis] = useState<MoodAnalysis | null>(null);
+
   const { data: movies, isLoading: moviesLoading } = usePopularMovies();
   const { data: tvShows, isLoading: tvLoading } = usePopularTVShows();
+
+  const handleMoodSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!moodQuery.trim()) return;
+
+    setIsSearchingMood(true);
+    try {
+      const result = await aiService.detectMoodAndRecommend(moodQuery);
+      setMoodAnalysis(result.analysis);
+      setAiRecommendations(result.recommendations);
+    } catch (error) {
+      console.error("Failed to search by mood:", error);
+    } finally {
+      setIsSearchingMood(false);
+    }
+  };
 
   const selectedGenreInfo = genres.find((g) => g.id === selectedGenre);
 
@@ -130,11 +154,10 @@ export default function DiscoverPage() {
               <button
                 key={mode.id}
                 onClick={() => setDiscoveryMode(mode.id)}
-                className={`group relative overflow-hidden px-8 py-4 lg:px-10 lg:py-5 rounded-2xl text-lg font-medium transition-all duration-500 ${
-                  discoveryMode === mode.id
+                className={`group relative overflow-hidden px-8 py-4 lg:px-10 lg:py-5 rounded-2xl text-lg font-medium transition-all duration-500 ${discoveryMode === mode.id
                     ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-xl shadow-emerald-500/25 scale-105"
                     : "bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 hover:scale-102"
-                }`}
+                  }`}
               >
                 <div className="flex flex-col items-center space-y-2">
                   <span className="text-2xl lg:text-3xl">{mode.icon}</span>
@@ -146,6 +169,35 @@ export default function DiscoverPage() {
                 )}
               </button>
             ))}
+          </div>
+
+          {/* AI Mood Search Bar */}
+          <div className="max-w-3xl mx-auto mt-8">
+            <form onSubmit={handleMoodSearch} className="relative">
+              <input
+                type="text"
+                value={moodQuery}
+                onChange={(e) => setMoodQuery(e.target.value)}
+                placeholder="How are you feeling today? e.g., 'I want a mind-bending sci-fi movie' or 'Feeling sad, need a good cry'"
+                className="w-full px-6 py-4 bg-slate-900/60 backdrop-blur-xl border border-emerald-500/30 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500/70 focus:bg-slate-900/80 transition-all duration-300 shadow-2xl"
+              />
+              <button
+                type="submit"
+                disabled={isSearchingMood || !moodQuery.trim()}
+                className="absolute right-2 top-2 bottom-2 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSearchingMood ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <span>✨</span> AI Search
+                  </>
+                )}
+              </button>
+            </form>
           </div>
         </div>
       </section>
@@ -171,11 +223,10 @@ export default function DiscoverPage() {
                       selectedGenre === genre.id ? null : genre.id
                     )
                   }
-                  className={`relative overflow-hidden p-4 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    selectedGenre === genre.id
+                  className={`relative overflow-hidden p-4 rounded-xl text-sm font-medium transition-all duration-300 ${selectedGenre === genre.id
                       ? `bg-gradient-to-r ${genre.color} text-white shadow-lg transform scale-105`
                       : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:scale-102 shadow-md hover:shadow-lg"
-                  }`}
+                    }`}
                 >
                   <div className="flex flex-col items-center space-y-2">
                     <span className="text-2xl">{genre.icon}</span>
@@ -201,11 +252,10 @@ export default function DiscoverPage() {
                   onClick={() =>
                     setSelectedYear(selectedYear === year.id ? null : year.id)
                   }
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    selectedYear === year.id
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${selectedYear === year.id
                       ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
                       : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   {year.name}
                 </button>
@@ -223,11 +273,10 @@ export default function DiscoverPage() {
                 <button
                   key={option.id}
                   onClick={() => setSelectedSort(option.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    selectedSort === option.id
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${selectedSort === option.id
                       ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                       : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   <span>{option.icon}</span>
                   <span>{option.name}</span>
@@ -281,6 +330,71 @@ export default function DiscoverPage() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-slate-900 dark:text-white mb-8 text-center">
             ✨ Discovered for You
           </h2>
+
+          {/* AI Recommendations Section */}
+          {aiRecommendations.length > 0 && (
+            <div className="mb-16 bg-emerald-900/10 border border-emerald-500/20 rounded-3xl p-6 lg:p-10">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 gap-6">
+                <div>
+                  <h3 className="text-2xl lg:text-3xl font-display font-bold text-emerald-500 dark:text-emerald-400 flex items-center gap-3">
+                    <span>✨</span> AI Recommendations
+                  </h3>
+                  {moodAnalysis && (
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                      Based on your mood: <strong className="text-white capitalize">{moodAnalysis.primaryMood}</strong>
+                      {" "}(Confidence: {(moodAnalysis.confidence * 100).toFixed(0)}%)
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setAiRecommendations([]);
+                    setMoodAnalysis(null);
+                    setMoodQuery("");
+                  }}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  Clear Results
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                {aiRecommendations.map((movie, index) => (
+                  <div
+                    key={movie.id}
+                    className="group cursor-pointer rounded-xl bg-black overflow-hidden shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 hover:scale-105 hover:z-10"
+                  >
+                    <div className="aspect-[2/3] relative">
+                      <div className="absolute top-3 left-3 z-10 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">
+                        AI Match
+                      </div>
+                      <Image
+                        src={
+                          tmdbClient.getImageUrl(movie.poster_path, "w500") ||
+                          "/placeholder-poster.svg"
+                        }
+                        alt={movie.title}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
+                        <h4 className="text-white font-bold text-sm line-clamp-2 mb-2">
+                          {movie.title}
+                        </h4>
+                        <div className="flex items-center gap-1 bg-black/80 px-2 py-1 rounded font-bold w-fit">
+                          <span className="text-emerald-500 text-xs">★</span>
+                          <span className="text-white text-xs">
+                            {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Movies Section */}
           {(discoveryMode === "movies" || discoveryMode === "mixed") && (

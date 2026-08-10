@@ -141,6 +141,7 @@ export default function MovieBingo() {
     useState<keyof typeof bingoThemes>("action");
   const [currentCard, setCurrentCard] = useState<BingoCard | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [activeTab, setActiveTab] = useState<"play" | "leaderboard">("play");
 
   const generateBingoCard = (theme: keyof typeof bingoThemes) => {
     const themeData = bingoThemes[theme];
@@ -232,7 +233,7 @@ export default function MovieBingo() {
         {/* Hero Section - Full Width */}
         <section className="relative py-20 px-4 sm:px-6 lg:px-8 xl:px-12 overflow-hidden w-full">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.3),transparent)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(168,85,247,0.3),transparent)]" />
 
           <div className="relative z-10 text-center w-full">
             <h1 className="text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-display font-bold text-white mb-6">
@@ -240,149 +241,218 @@ export default function MovieBingo() {
               <span className="text-white">Bingo</span>
             </h1>
             <p className="text-xl lg:text-2xl xl:text-3xl text-slate-300 mb-12 max-w-4xl mx-auto">
-              Make your movie nights more interactive! Check off tropes and
-              moments as they happen.
+              Play along while watching your favorite movies!
             </p>
-          </div>
-        </section>
 
-        {/* Content Section */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Object.entries(bingoThemes).map(([key, theme]) => (
-                <motion.div
-                  key={key}
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/20 cursor-pointer"
-                  onClick={() =>
-                    setSelectedTheme(key as keyof typeof bingoThemes)
-                  }
-                >
-                  <div className="text-center mb-4">
-                    <div className="text-4xl mb-2">
-                      {key === "action"
-                        ? "💥"
-                        : key === "horror"
-                        ? "👻"
-                        : key === "comedy"
-                        ? "😂"
-                        : "💕"}
-                    </div>
-                    <h3 className="text-xl font-bold text-white">
-                      {theme.name}
-                    </h3>
-                  </div>
-
-                  <div className="text-sm text-slate-400 mb-4">
-                    Sample items:
-                  </div>
-
-                  <ul className="text-sm text-slate-300 space-y-1">
-                    {theme.items.slice(0, 3).map((item, index) => (
-                      <li key={index}>• {item}</li>
-                    ))}
-                    <li>• And {theme.items.length - 3} more...</li>
-                  </ul>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="text-center mt-12">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => generateBingoCard(selectedTheme)}
-                className="px-12 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-xl rounded-2xl hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg"
+            <div className="flex justify-center gap-4 mt-8">
+              <button
+                onClick={() => setActiveTab("play")}
+                className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === "play"
+                    ? "bg-purple-600 text-white"
+                    : "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
+                  }`}
               >
-                Generate {bingoThemes[selectedTheme].name} Card
-              </motion.button>
+                Play Bingo
+              </button>
+              <button
+                onClick={() => setActiveTab("leaderboard")}
+                className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === "leaderboard"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
+                  }`}
+              >
+                Leaderboard
+              </button>
             </div>
           </div>
         </section>
+
+        {activeTab === "leaderboard" ? (
+          <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
+            <div className="max-w-4xl mx-auto bg-slate-800/50 backdrop-blur-xl rounded-2xl p-8 border border-blue-500/20">
+              <h2 className="text-3xl font-bold text-white mb-8 text-center">
+                🏆 Bingo Champions Leaderboard
+              </h2>
+              <div className="space-y-4">
+                {[
+                  { rank: 1, name: "BingoMaster99", score: 14500, bingos: 29 },
+                  { rank: 2, name: "MovieWatcher", score: 12300, bingos: 24 },
+                  { rank: 3, name: "CineBingo", score: 11200, bingos: 22 },
+                  { rank: 4, name: "PopcornKing", score: 9800, bingos: 19 },
+                  { rank: 5, name: "ScreenQueen", score: 8500, bingos: 17 },
+                ].map((player) => (
+                  <motion.div
+                    key={player.rank}
+                    whileHover={{ scale: 1.02 }}
+                    className={`flex items-center justify-between p-4 rounded-xl border-2 ${player.rank === 1
+                        ? "border-yellow-500 bg-yellow-500/20"
+                        : player.rank === 2
+                          ? "border-gray-400 bg-gray-400/20"
+                          : player.rank === 3
+                            ? "border-orange-500 bg-orange-500/20"
+                            : "border-slate-600 bg-slate-700/30"
+                      }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <span className="text-2xl font-bold text-white">
+                        #{player.rank}
+                      </span>
+                      <div>
+                        <h3 className="font-bold text-white">{player.name}</h3>
+                        <p className="text-slate-400 text-sm">
+                          {player.bingos} Bingos completed
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-purple-400">
+                        {player.score}
+                      </span>
+                      <p className="text-slate-300 text-sm">points</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {Object.entries(bingoThemes).map(([key, theme]) => (
+                  <motion.div
+                    key={key}
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/20 cursor-pointer"
+                    onClick={() =>
+                      setSelectedTheme(key as keyof typeof bingoThemes)
+                    }
+                  >
+                    <div className="text-center mb-4">
+                      <div className="text-4xl mb-2">
+                        {key === "action"
+                          ? "💥"
+                          : key === "horror"
+                            ? "👻"
+                            : key === "comedy"
+                              ? "😂"
+                              : "💕"}
+                      </div>
+                      <h3 className="text-xl font-bold text-white">
+                        {theme.name}
+                      </h3>
+                    </div>
+
+                    <div className="text-sm text-slate-400 mb-4">
+                      Sample items:
+                    </div>
+
+                    <ul className="text-sm text-slate-300 space-y-1">
+                      {theme.items.slice(0, 3).map((item, index) => (
+                        <li key={index}>• {item}</li>
+                      ))}
+                      <li>• And {theme.items.length - 3} more...</li>
+                    </ul>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="text-center mt-12">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => generateBingoCard(selectedTheme)}
+                  className="px-12 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-xl rounded-2xl hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg"
+                >
+                  Generate {bingoThemes[selectedTheme].name} Card
+                </motion.button>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full">
-      {/* Header Section */}
-      <section className="relative py-8 px-4 sm:px-6 lg:px-8 xl:px-12 overflow-hidden w-full bg-slate-900/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {currentCard?.name}
-          </h1>
-          <p className="text-slate-300 mb-4">
-            Click items as they happen in the movie!
-          </p>
 
-          {hasWon && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/50 rounded-xl p-4 mb-4"
-            >
-              <div className="text-2xl mb-2">🎉</div>
-              <div className="text-green-400 font-bold">BINGO!</div>
-              <div className="text-slate-300">
-                Completed: {completedLines.join(", ")}
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </section>
+return (
+  <div className="min-h-screen pt-20 lg:pt-28 w-full">
+    {/* Header Section */}
+    <section className="relative py-8 px-4 sm:px-6 lg:px-8 xl:px-12 overflow-hidden w-full bg-slate-900/50">
+      <div className="max-w-4xl mx-auto text-center">
+        <h1 className="text-3xl font-bold text-white mb-2">
+          {currentCard?.name}
+        </h1>
+        <p className="text-slate-300 mb-4">
+          Click items as they happen in the movie!
+        </p>
 
-      {/* Game Content Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="max-w-4xl mx-auto">
-          {/* Bingo Grid */}
-          <div className="grid grid-cols-5 gap-2 mb-8">
-            {currentCard?.cells.map((cell) => (
-              <motion.button
-                key={cell.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => toggleCell(cell.id)}
-                className={`aspect-square p-2 text-xs sm:text-sm font-medium rounded-xl border-2 transition-all duration-300 ${
-                  cell.completed
-                    ? "bg-gradient-to-br from-green-500/30 to-blue-500/30 border-green-500 text-green-300"
-                    : "bg-slate-800/50 border-slate-600 text-slate-300 hover:border-blue-500/50"
+        {hasWon && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/50 rounded-xl p-4 mb-4"
+          >
+            <div className="text-2xl mb-2">🎉</div>
+            <div className="text-green-400 font-bold">BINGO!</div>
+            <div className="text-slate-300">
+              Completed: {completedLines.join(", ")}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </section>
+
+    {/* Game Content Section */}
+    <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
+      <div className="max-w-4xl mx-auto">
+        {/* Bingo Grid */}
+        <div className="grid grid-cols-5 gap-2 mb-8">
+          {currentCard?.cells.map((cell) => (
+            <motion.button
+              key={cell.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => toggleCell(cell.id)}
+              className={`aspect-square p-2 text-xs sm:text-sm font-medium rounded-xl border-2 transition-all duration-300 ${cell.completed
+                  ? "bg-gradient-to-br from-green-500/30 to-blue-500/30 border-green-500 text-green-300"
+                  : "bg-slate-800/50 border-slate-600 text-slate-300 hover:border-blue-500/50"
                 }`}
-              >
-                {cell.text}
-              </motion.button>
-            ))}
-          </div>
-
-          {/* Controls */}
-          <div className="text-center space-x-4">
-            <button
-              onClick={() => setIsPlaying(false)}
-              className="px-6 py-3 bg-slate-700 text-slate-300 rounded-xl font-bold hover:bg-slate-600 transition-all duration-300"
             >
-              New Card
-            </button>
-
-            <button
-              onClick={() => {
-                if (currentCard) {
-                  const resetCells = currentCard.cells.map((cell) => ({
-                    ...cell,
-                    completed: cell.text === "FREE",
-                  }));
-                  setCurrentCard({
-                    ...currentCard,
-                    cells: resetCells,
-                  });
-                }
-              }}
-              className="px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-500 transition-all duration-300"
-            >
-              Reset
-            </button>
-          </div>
+              {cell.text}
+            </motion.button>
+          ))}
         </div>
-      </section>
-    </div>
-  );
+
+        {/* Controls */}
+        <div className="text-center space-x-4">
+          <button
+            onClick={() => setIsPlaying(false)}
+            className="px-6 py-3 bg-slate-700 text-slate-300 rounded-xl font-bold hover:bg-slate-600 transition-all duration-300"
+          >
+            New Card
+          </button>
+
+          <button
+            onClick={() => {
+              if (currentCard) {
+                const resetCells = currentCard.cells.map((cell) => ({
+                  ...cell,
+                  completed: cell.text === "FREE",
+                }));
+                setCurrentCard({
+                  ...currentCard,
+                  cells: resetCells,
+                });
+              }
+            }}
+            className="px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-500 transition-all duration-300"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+);
 }

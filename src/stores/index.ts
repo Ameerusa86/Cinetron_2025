@@ -15,6 +15,7 @@ import type {
   UserPreferences,
   WatchlistItem,
   Notification,
+  CustomList,
 } from "@/types";
 
 // ======================
@@ -310,6 +311,11 @@ export const useUserStore = create<{
     watching: number;
     planToWatch: number;
   };
+  createCustomList: (name: string, description: string, isPublic: boolean) => void;
+  updateCustomList: (id: string, updates: Partial<Omit<CustomList, "id" | "createdAt" | "movies">>) => void;
+  deleteCustomList: (id: string) => void;
+  addMovieToList: (listId: string, movieId: number) => void;
+  removeMovieFromList: (listId: string, movieId: number) => void;
 }>()(
   persist(
     (set, get) => ({
@@ -371,6 +377,7 @@ export const useUserStore = create<{
             watchlist: [],
             favorites: [],
             ratings: {},
+            customLists: [],
             preferences: {
               language: "en",
               country: "US",
@@ -537,6 +544,85 @@ export const useUserStore = create<{
         };
 
         return stats;
+      },
+      createCustomList: (name: string, description: string, isPublic: boolean) => {
+        const { user } = get();
+        if (user) {
+          const newList: CustomList = {
+            id: crypto.randomUUID(),
+            name,
+            description,
+            isPublic,
+            movies: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          set({
+            user: {
+              ...user,
+              customLists: [...(user.customLists || []), newList],
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        }
+      },
+      updateCustomList: (id: string, updates: Partial<Omit<CustomList, "id" | "createdAt" | "movies">>) => {
+        const { user } = get();
+        if (user && user.customLists) {
+          set({
+            user: {
+              ...user,
+              customLists: user.customLists.map((list) =>
+                list.id === id ? { ...list, ...updates, updatedAt: new Date().toISOString() } : list
+              ),
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        }
+      },
+      deleteCustomList: (id: string) => {
+        const { user } = get();
+        if (user && user.customLists) {
+          set({
+            user: {
+              ...user,
+              customLists: user.customLists.filter((list) => list.id !== id),
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        }
+      },
+      addMovieToList: (listId: string, movieId: number) => {
+        const { user } = get();
+        if (user && user.customLists) {
+          set({
+            user: {
+              ...user,
+              customLists: user.customLists.map((list) =>
+                list.id === listId && !list.movies.includes(movieId)
+                  ? { ...list, movies: [...list.movies, movieId], updatedAt: new Date().toISOString() }
+                  : list
+              ),
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        }
+      },
+      removeMovieFromList: (listId: string, movieId: number) => {
+        const { user } = get();
+        if (user && user.customLists) {
+          set({
+            user: {
+              ...user,
+              customLists: user.customLists.map((list) =>
+                list.id === listId
+                  ? { ...list, movies: list.movies.filter((id) => id !== movieId), updatedAt: new Date().toISOString() }
+                  : list
+              ),
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        }
       },
     }),
     {

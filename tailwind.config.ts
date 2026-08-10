@@ -99,37 +99,37 @@ const config: Config = {
       },
       colors: {
         primary: {
-          50: "#fff7ed",
-          100: "#ffedd5",
-          200: "#fed7aa",
-          300: "#fdba74",
-          400: "#fb923c",
-          500: "#f97316", // Orange-500
-          600: "#ea580c",
-          700: "#c2410c",
-          800: "#9a3412",
-          900: "#7c2d12",
-          950: "#431407",
+          50: "#fff0f2",
+          100: "#ffe0e5",
+          200: "#ffc1cc",
+          300: "#ffa2b2",
+          400: "#ff637e",
+          500: "#e50914", // Netflix Red
+          600: "#b30710",
+          700: "#80050b",
+          800: "#4d0307",
+          900: "#1a0102",
+          950: "#0d0001",
         },
         cinema: {
-          50: "#fef2f2",
-          100: "#fee2e2",
-          200: "#fecaca",
-          300: "#fca5a5",
-          400: "#f87171",
-          500: "#ef4444", // Red-500
-          600: "#dc2626",
-          700: "#b91c1c",
-          800: "#991b1b",
-          900: "#7f1d1d",
-          950: "#450a0a",
+          50: "#f8f8f8",
+          100: "#e8e8e8",
+          200: "#d3d3d3",
+          300: "#a6a6a6",
+          400: "#737373",
+          500: "#404040", 
+          600: "#262626",
+          700: "#171717",
+          800: "#141414", // Netflix Black
+          900: "#000000",
+          950: "#000000",
         },
       },
       gradientColorStops: {
-        "cinema-start": "#f97316", // Orange-500
-        "cinema-end": "#ef4444", // Red-500
-        "premium-start": "#8b5cf6", // Violet-500
-        "premium-end": "#ec4899", // Pink-500
+        "cinema-start": "#e50914", // Netflix Red
+        "cinema-end": "#b30710", // Darker Red
+        "premium-start": "#141414", // Netflix Black
+        "premium-end": "#000000", // Black
       },
       boxShadow: {
         glow: "0 0 20px rgba(244, 110, 12, 0.3)",
@@ -185,70 +185,68 @@ const config: Config = {
           background: "linear-gradient(135deg, #8b5cf6, #ec4899)",
         },
         ".btn-cinema": {
-          background: "linear-gradient(135deg, #f97316, #ef4444)",
+          background: "#e50914",
           color: "white",
           padding: "12px 24px",
-          "border-radius": "12px",
+          "border-radius": "4px",
           "font-weight": "600",
-          "box-shadow": "0 10px 20px rgba(244, 110, 12, 0.3)",
+          "box-shadow": "0 4px 10px rgba(229, 9, 20, 0.3)",
           transition: "all 0.3s ease",
           border: "none",
           cursor: "pointer",
         },
         ".btn-cinema:hover": {
-          transform: "translateY(-2px)",
-          "box-shadow": "0 15px 30px rgba(244, 110, 12, 0.4)",
+          background: "#b30710",
+          transform: "scale(1.05)",
+          "box-shadow": "0 6px 15px rgba(229, 9, 20, 0.4)",
         },
         ".btn-cinema-outline": {
-          background: "transparent",
-          color: "#f97316",
+          background: "rgba(109, 109, 110, 0.7)",
+          color: "white",
           padding: "12px 24px",
-          "border-radius": "12px",
+          "border-radius": "4px",
           "font-weight": "600",
-          border: "2px solid #f97316",
+          border: "none",
           transition: "all 0.3s ease",
           cursor: "pointer",
         },
         ".btn-cinema-outline:hover": {
-          background: "linear-gradient(135deg, #f97316, #ef4444)",
+          background: "rgba(109, 109, 110, 0.9)",
           color: "white",
-          transform: "translateY(-2px)",
-          "box-shadow": "0 10px 20px rgba(244, 110, 12, 0.3)",
+          transform: "scale(1.05)",
         },
         ".card-premium": {
-          background: "rgba(255, 255, 255, 0.1)",
-          "backdrop-filter": "blur(10px)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-          "border-radius": "16px",
-          "box-shadow": "0 10px 40px rgba(0, 0, 0, 0.1)",
+          background: "#141414",
+          border: "1px solid #262626",
+          "border-radius": "8px",
+          "box-shadow": "0 10px 40px rgba(0, 0, 0, 0.5)",
           transition: "all 0.3s ease",
         },
         ".card-premium:hover": {
           transform: "translateY(-5px)",
-          "box-shadow": "0 20px 60px rgba(0, 0, 0, 0.15)",
+          "box-shadow": "0 20px 60px rgba(0, 0, 0, 0.7)",
         },
         ".card-cinema": {
-          background: "rgba(249, 115, 22, 0.1)",
-          "backdrop-filter": "blur(10px)",
-          border: "1px solid rgba(249, 115, 22, 0.2)",
-          "border-radius": "16px",
-          "box-shadow": "0 10px 40px rgba(249, 115, 22, 0.1)",
+          background: "#141414",
+          border: "1px solid #262626",
+          "border-radius": "8px",
+          "box-shadow": "0 10px 40px rgba(0, 0, 0, 0.5)",
           transition: "all 0.3s ease",
         },
         ".card-cinema:hover": {
           transform: "translateY(-5px)",
-          "box-shadow": "0 20px 60px rgba(249, 115, 22, 0.2)",
-          "border-color": "rgba(249, 115, 22, 0.4)",
+          "box-shadow": "0 20px 60px rgba(0, 0, 0, 0.7)",
+          "border-color": "#404040",
         },
         ".shadow-glow": {
-          "box-shadow": "0 0 20px rgba(244, 110, 12, 0.3)",
+          "box-shadow": "0 0 20px rgba(229, 9, 20, 0.3)",
         },
         ".shadow-glow-lg": {
-          "box-shadow": "0 0 40px rgba(244, 110, 12, 0.4)",
+          "box-shadow": "0 0 40px rgba(229, 9, 20, 0.4)",
         },
         ".shadow-premium": {
           "box-shadow":
-            "0 10px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+            "0 10px 40px rgba(0, 0, 0, 0.5)",
         },
         ".perspective-1000": {
           perspective: "1000px",

@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -8,7 +8,7 @@ export default function ClerkAuthButton() {
   return (
     <>
       {/* When signed out */}
-      <SignedOut>
+      <Show when="signed-out">
         <div className="flex items-center space-x-2">
           <Link href="/sign-in">
             <motion.button
@@ -29,15 +29,14 @@ export default function ClerkAuthButton() {
             </motion.button>
           </Link>
         </div>
-      </SignedOut>
+      </Show>
 
       {/* When signed in */}
-      <SignedIn>
+      <Show when="signed-in">
         <div className="flex items-center">
           {/* Clerk User Button with Large Avatar */}
           <div className="clerk-avatar-large">
             <UserButton
-              afterSignOutUrl="/"
               userProfileUrl="/profile"
               appearance={{
                 elements: {
@@ -65,11 +64,10 @@ export default function ClerkAuthButton() {
                     "text-slate-300 hover:text-white",
                   userButtonPopoverFooter: "hidden",
                 },
-              }}
-            />
+              }} />
           </div>
         </div>
-      </SignedIn>
+      </Show>
     </>
   );
 }

@@ -9,6 +9,9 @@ import { useUserStore } from "@/stores";
 import { useNotificationStore } from "@/stores";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug, createPersonSlug } from "@/lib/slug-utils";
+import { aiService, ReviewSummary } from "@/lib/ai-services";
+import { MockReviews } from "@/components/features/MockReviews";
+import { WatchProviders } from "@/components/features/WatchProviders";
 
 interface MovieDetailPageProps {
   params: Promise<{
@@ -19,6 +22,10 @@ interface MovieDetailPageProps {
 export default function MovieDetailPage({ params }: MovieDetailPageProps) {
   const { slug } = React.use(params);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  
+  // AI Reviews State
+  const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   const { data: movie, isLoading, error } = useMovieDetailsBySlug(slug);
 
@@ -115,6 +122,18 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
       currency: "USD",
       notation: "compact",
     }).format(amount);
+  };
+
+  const handleSummarizeReviews = async () => {
+    setIsSummarizing(true);
+    try {
+      const summary = await aiService.summarizeReviews();
+      setReviewSummary(summary);
+    } catch (error) {
+      console.error("Failed to summarize reviews:", error);
+    } finally {
+      setIsSummarizing(false);
+    }
   };
 
   return (
@@ -335,6 +354,21 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                       </span>
                       <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </button>
+                    
+                    {videos.length > 0 && (
+                      <button
+                        onClick={() => setSelectedVideo(videos[0].key)}
+                        className="group relative overflow-hidden px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-600/25 border border-red-500/30"
+                      >
+                        <span className="relative z-10 flex items-center justify-center gap-3">
+                          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                          Play Trailer
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -529,6 +563,102 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* AI Review Summary Section */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12">
+          <div className="w-full max-w-4xl mx-auto bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 lg:p-10 shadow-2xl">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6">
+              <div>
+                <h2 className="text-3xl font-display font-bold text-white flex items-center gap-3">
+                  <span>✨</span> AI Review Analysis
+                </h2>
+                <p className="text-slate-400 mt-2">
+                  Get an instant, AI-generated summary of what critics and audiences are saying.
+                </p>
+              </div>
+              {!reviewSummary && (
+                <button
+                  onClick={handleSummarizeReviews}
+                  disabled={isSummarizing}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium rounded-xl transition-all duration-300 disabled:opacity-50 whitespace-nowrap shadow-lg hover:shadow-purple-500/25 flex items-center gap-2"
+                >
+                  {isSummarizing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    "Generate Summary"
+                  )}
+                </button>
+              )}
+            </div>
+
+            {reviewSummary && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex flex-wrap items-center gap-4 border-b border-white/10 pb-6">
+                  <div className={`px-4 py-2 rounded-full font-bold text-sm ${
+                    reviewSummary.overallSentiment === "positive" ? "bg-green-500/20 text-green-400 border border-green-500/30" :
+                    reviewSummary.overallSentiment === "negative" ? "bg-red-500/20 text-red-400 border border-red-500/30" :
+                    "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                  }`}>
+                    Overall: <span className="capitalize">{reviewSummary.overallSentiment}</span>
+                  </div>
+                  <div className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full font-bold text-sm">
+                    Trust Score: {(reviewSummary.trustScore * 100).toFixed(0)}%
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-green-400 flex items-center gap-2">
+                      <span>👍</span> Highlights
+                    </h3>
+                    <ul className="space-y-2">
+                      {reviewSummary.keyPoints.positive.map((point, i) => (
+                        <li key={i} className="text-slate-300 text-sm flex items-start gap-2">
+                          <span className="text-green-500 mt-1">•</span> {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
+                      <span>👎</span> Criticisms
+                    </h3>
+                    <ul className="space-y-2">
+                      {reviewSummary.keyPoints.negative.map((point, i) => (
+                        <li key={i} className="text-slate-300 text-sm flex items-start gap-2">
+                          <span className="text-red-500 mt-1">•</span> {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {reviewSummary.themes && reviewSummary.themes.length > 0 && (
+                  <div className="pt-6 border-t border-white/10">
+                    <h3 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Common Themes</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {reviewSummary.themes.map((theme, i) => (
+                        <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs">
+                          {theme}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* Watch Providers */}
+          <WatchProviders movieId={movie.id} />
+          
+          {/* Mock Community Reviews */}
+          <MockReviews movieId={movie.id} />
         </section>
 
         {/* Similar Movies */}

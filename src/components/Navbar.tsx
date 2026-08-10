@@ -170,16 +170,8 @@ export default function Navbar() {
   return (
     <>
       {/* Enhanced Premium Backdrop with Dynamic Gradient */}
-      <div className="fixed top-0 left-0 right-0 z-40 h-16 sm:h-20 lg:h-24">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-slate-900/70 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20" />
-        <div className="absolute inset-0 backdrop-blur-xl" />
-        {/* Animated particles effect */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-2 h-2 bg-purple-400/30 rounded-full animate-pulse" />
-          <div className="absolute top-4 right-1/3 w-1 h-1 bg-pink-400/40 rounded-full animate-bounce" />
-          <div className="absolute top-2 left-2/3 w-1.5 h-1.5 bg-blue-400/30 rounded-full animate-ping" />
-        </div>
+      <div className="fixed top-0 left-0 right-0 z-40 h-16 sm:h-20 lg:h-24 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-transparent" />
       </div>
 
       <motion.nav
@@ -188,7 +180,7 @@ export default function Navbar() {
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${
           isScrolled
-            ? "bg-slate-900/95 backdrop-blur-3xl shadow-2xl border-b border-gradient-to-r from-purple-500/30 via-pink-500/20 to-blue-500/30"
+            ? "bg-black/95 backdrop-blur-3xl shadow-2xl border-b border-[#262626]"
             : "bg-transparent"
         }`}
       >
@@ -205,11 +197,7 @@ export default function Navbar() {
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
                 className="relative"
               >
-                {/* Multiple glow layers for depth */}
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-2xl blur-md opacity-40 group-hover:opacity-70 transition-opacity duration-300" />
-
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-2xl flex items-center justify-center border border-white/20 group-hover:border-white/40 transition-all duration-300 shadow-2xl">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-primary-500 rounded flex items-center justify-center transition-all duration-300 shadow-xl">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 relative">
                     <svg
                       viewBox="0 0 80 80"
@@ -223,10 +211,8 @@ export default function Navbar() {
                           x2="100%"
                           y2="100%"
                         >
-                          <stop offset="0%" stopColor="#A855F7" />
-                          <stop offset="30%" stopColor="#EC4899" />
-                          <stop offset="70%" stopColor="#3B82F6" />
-                          <stop offset="100%" stopColor="#06B6D4" />
+                          <stop offset="0%" stopColor="#ffffff" />
+                          <stop offset="100%" stopColor="#e5e5e5" />
                         </linearGradient>
                         <filter id="glow">
                           <feGaussianBlur
@@ -298,21 +284,11 @@ export default function Navbar() {
 
               <div className="flex flex-col">
                 <motion.span
-                  className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-tight"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A855F7 0%, #EC4899 25%, #3B82F6 50%, #06B6D4 75%, #A855F7 100%)",
-                    backgroundSize: "200% 200%",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    textShadow: "0 0 40px rgba(139, 92, 246, 0.4)",
-                    animation: "gradient-shift 4s ease-in-out infinite",
-                  }}
+                  className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-tight text-primary-500"
                   whileHover={{ scale: 1.03 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  Cinetron
+                  CINETRON
                 </motion.span>
                 <motion.span
                   className="hidden sm:block text-xs lg:text-sm text-slate-400 font-medium tracking-wider uppercase"
@@ -355,56 +331,10 @@ export default function Navbar() {
                       <span className="tracking-wide">{item.label}</span>
                     </div>
 
-                    {/* Enhanced Active/Hover Background - Removed for cleaner look */}
-                    <div
-                      className={`absolute inset-0 rounded-2xl transition-all duration-500 ${
-                        pathname === item.href
-                          ? ""
-                          : "bg-transparent group-hover:bg-gradient-to-r group-hover:from-purple-500/5 group-hover:via-pink-500/5 group-hover:to-blue-500/5"
-                      }`}
-                    />
-
-                    {/* Premium Bottom Glow Line for Active State */}
-                    {pathname === item.href && (
-                      <motion.div
-                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: "80%", opacity: 1 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                      >
-                        <div className="h-0.5 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full" />
-                        <motion.div
-                          className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full blur-sm opacity-60 -mt-1"
-                          animate={{
-                            opacity: [0.4, 0.8, 0.4],
-                            scaleX: [1, 1.1, 1],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        />
-                      </motion.div>
+                    {/* Hover Effect */}
+                    {pathname !== item.href && (
+                      <motion.div className="absolute inset-0 rounded-2xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     )}
-
-                    {/* Enhanced Premium Glow Effect - Reduced for cleaner look */}
-                    {pathname === item.href && (
-                      <motion.div
-                        className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-2xl blur-lg opacity-50"
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
-                    )}
-
-                    {/* Hover Glow Effect */}
-                    <motion.div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300" />
                   </Link>
                 </motion.div>
               ))}
@@ -417,7 +347,7 @@ export default function Navbar() {
                 whileHover={{ scale: 1.08, rotate: 2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400 }}
-                className="relative p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-black/90 border border-white/20 text-slate-300 hover:text-white hover:border-white/40 transition-all duration-300 backdrop-blur-sm shadow-xl group"
+                className="relative p-3 sm:p-3.5 rounded-2xl bg-[#141414] border border-[#262626] text-slate-300 hover:text-white transition-all duration-300 shadow-xl group"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
                 <motion.svg
@@ -435,17 +365,6 @@ export default function Navbar() {
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </motion.svg>
-
-                {/* Multi-layer glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-2xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
-
-                {/* Search indicator */}
-                <motion.div
-                  className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
               </motion.button>
 
               {/* Enhanced Premium User Actions - XL screens */}

@@ -282,6 +282,22 @@ export const useMovieRecommendations = (
 };
 
 /**
+ * Hook to fetch movie watch providers
+ */
+export const useMovieWatchProviders = (
+  movieId: number,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["movie-watch-providers", movieId],
+    queryFn: () => tmdbClient.getMovieWatchProviders(movieId),
+    enabled: enabled && !!movieId,
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+  });
+};
+
+/**
  * Hook to fetch genres
  */
 export const useGenres = () => {

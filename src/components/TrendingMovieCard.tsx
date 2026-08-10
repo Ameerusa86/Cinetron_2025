@@ -53,9 +53,9 @@ export default function TrendingMovieCard({
       onClick={handleCardClick}
     >
       <motion.div
-        whileHover={{ y: -8, scale: 1.02 }}
+        whileHover={{ scale: 1.05, zIndex: 10 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="relative bg-slate-900/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300"
+        className="relative bg-black rounded overflow-hidden transition-all duration-300 shadow-lg group-hover:shadow-black"
       >
         {/* Movie Poster */}
         <div className="relative aspect-[2/3] overflow-hidden">
@@ -89,45 +89,26 @@ export default function TrendingMovieCard({
                   ? new Date(movie.release_date).getFullYear()
                   : "TBA"}
               </span>
-              <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-400/20 via-amber-500/20 to-orange-500/20 border border-yellow-300/30 px-2.5 py-1 rounded-full backdrop-blur-sm">
-                <span className="text-yellow-400 text-sm">⭐</span>
-                <span className="text-white font-bold text-sm">
+              <div className="flex items-center gap-1 bg-black/80 px-2 rounded font-bold">
+                <span className="text-primary-500 text-sm">★</span>
+                <span className="text-white text-sm">
                   {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
                 </span>
               </div>
             </div>
           </motion.div>
 
-          {/* Enhanced Rating Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 + 0.3 }}
-            className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 text-black font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-lg backdrop-blur-sm border border-yellow-300/50 transform hover:scale-110 transition-all duration-300"
-          >
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-800 text-sm">⭐</span>
-              <span className="font-black">
-                {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
-              </span>
-            </div>
-            {/* Glow effect */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl blur-sm opacity-50 -z-10"></div>
-          </motion.div>
+          {movie.vote_average && movie.vote_average > 7.5 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 + 0.3 }}
+              className="absolute top-2 right-2 bg-primary-500 text-white font-bold text-xs px-2 py-1 rounded shadow-lg"
+            >
+              TOP RATED
+            </motion.div>
+          )}
         </div>
-
-        {/* Premium Glow Effect */}
-        <motion.div
-          className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 via-purple-500/20 to-blue-500/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
-          animate={{
-            opacity: isHovered ? [0.5, 1, 0.5] : 0,
-          }}
-          transition={{
-            duration: 2,
-            repeat: isHovered ? Infinity : 0,
-            ease: "easeInOut",
-          }}
-        />
       </motion.div>
     </motion.div>
   );

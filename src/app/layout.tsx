@@ -132,61 +132,60 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          {/* Preconnect to external domains for performance */}
-          <link rel="preconnect" href="https://image.tmdb.org" />
-          <link rel="preconnect" href="https://api.themoviedb.org" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Preconnect to external domains for performance */}
+        <link rel="preconnect" href="https://image.tmdb.org" />
+        <link rel="preconnect" href="https://api.themoviedb.org" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
 
-          {/* Favicon and App Icons */}
-          <link rel="icon" href="/favicon.ico" sizes="32x32" />
-          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-          <link rel="manifest" href="/manifest.json" />
+        {/* Favicon and App Icons */}
+        <link rel="icon" href="/favicon.ico" sizes="32x32" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
 
-          {/* PWA meta tags */}
-          <meta name="application-name" content="Cinetron" />
-          <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta
-            name="apple-mobile-web-app-status-bar-style"
-            content="default"
-          />
-          <meta name="apple-mobile-web-app-title" content="Cinetron" />
-          <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="msapplication-config" content="/browserconfig.xml" />
-          <meta name="msapplication-TileColor" content="#f46e0c" />
+        {/* PWA meta tags */}
+        <meta name="application-name" content="Cinetron" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="default"
+        />
+        <meta name="apple-mobile-web-app-title" content="Cinetron" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <meta name="msapplication-TileColor" content="#f46e0c" />
 
-          {/* Preload critical resources */}
-          <link
-            rel="preload"
-            href="/hero-background.jpg"
-            as="image"
-            type="image/jpeg"
-          />
+        {/* Preload critical resources */}
+        <link
+          rel="preload"
+          href="/hero-background.jpg"
+          as="image"
+          type="image/jpeg"
+        />
 
-          {/* Theme initialization script - prevents flash of wrong theme */}
-          <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        </head>
-        <body
-          className={`
-          ${inter.variable} 
-          ${playfairDisplay.variable} 
-          ${firaCode.variable} 
-          font-sans antialiased min-h-screen
-          bg-gradient-to-br from-slate-50 via-white to-slate-100 
-          dark:from-slate-950 dark:via-slate-900 dark:to-slate-950
-          text-slate-900 dark:text-slate-100
-          selection:bg-orange-500/20 selection:text-orange-900 dark:selection:text-orange-100
-        `}
-          suppressHydrationWarning
-        >
+        {/* Theme initialization script - prevents flash of wrong theme */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body
+        className={`
+        ${inter.variable} 
+        ${playfairDisplay.variable} 
+        ${firaCode.variable} 
+        font-sans antialiased min-h-screen
+        bg-gradient-to-br from-slate-50 via-white to-slate-100 
+        dark:from-slate-950 dark:via-slate-900 dark:to-slate-950
+        text-slate-900 dark:text-slate-100
+        selection:bg-orange-500/20 selection:text-orange-900 dark:selection:text-orange-100
+      `}
+        suppressHydrationWarning
+      ><ClerkProvider>
           <ClerkUserSyncProvider>
             <Providers>
               {/* Full Screen Container */}
@@ -209,8 +208,7 @@ export default function RootLayout({
               </div>
             </Providers>
           </ClerkUserSyncProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider></body>
+    </html>
   );
 }

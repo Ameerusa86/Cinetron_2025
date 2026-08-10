@@ -14,8 +14,8 @@ import type {
   Genre,
   MultiSearchResult,
   TMDBResponse,
-  PersonResponse,
   MultiSearchResponse,
+  WatchProvidersResponse,
 } from "@/types";
 
 class TMDBClient {
@@ -308,6 +308,16 @@ class TMDBClient {
     return response.data;
   }
 
+  /**
+   * Get watch providers
+   */
+  async getMovieWatchProviders(movieId: number): Promise<WatchProvidersResponse> {
+    const response = await this.api.get<WatchProvidersResponse>(
+      `/movie/${movieId}/watch/providers`
+    );
+    return response.data;
+  }
+
   // ======================
   // SEARCH
   // ======================
@@ -362,7 +372,7 @@ class TMDBClient {
       include_adult?: boolean;
       language?: string;
     }
-  ): Promise<PersonResponse> {
+  ): Promise<TMDBResponse<Person>> {
     const response = await this.api.get<TMDBResponse<Person>>(
       "/search/person",
       {

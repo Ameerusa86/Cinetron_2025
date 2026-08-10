@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { Show, RedirectToSignIn } from "@clerk/nextjs";
 import { ReactNode } from "react";
 
 interface ProtectedRouteProps {
@@ -15,8 +15,8 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   return (
     <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut>{fallback || <RedirectToSignIn />}</SignedOut>
+      <Show when="signed-in">{children}</Show>
+      <Show when="signed-out">{fallback || <RedirectToSignIn />}</Show>
     </>
   );
 }
