@@ -1,6 +1,6 @@
 # 🎬 Cinetron Premium
 
-A modern movie discovery platform built with Next.js 15, featuring trending movies, TV shows, and an elegant user interface with smooth animations.
+A modern movie discovery platform built with Next.js 16, featuring trending movies, TV shows, and an elegant user interface with Shadcn UI and smooth animations.
 
 ![Cinetron Premium](./public/screenshots/homepage.png)
 
@@ -17,14 +17,16 @@ Cinetron is a premium movie discovery application that allows users to explore t
 - 🤖 **AI-Powered Features**: Smart recommendations using Google Gemini AI
 - �🎨 **Premium UI**: Beautiful glassmorphism design with smooth animations
 - 📱 **Responsive**: Works perfectly on desktop, tablet, and mobile
-- ⚡ **Fast Performance**: Optimized with Next.js 15 and React Query
-- 🌙 **Dark Theme**: Elegant dark mode interface
+- ⚡ **Fast Performance**: Optimized with Next.js 16 (Turbopack) and React Query
+- 🌙 **Dark Theme**: Elegant dark mode interface with Shadcn UI and Tailwind CSS v4
 
 ## 🛠️ Built With
 
-- **Next.js 15** - React framework with App Router
+- **Next.js 16** - React framework with App Router
+- **React 19** - Modern UI rendering
 - **TypeScript** - Type-safe JavaScript
-- **Tailwind CSS** - Utility-first CSS framework
+- **Tailwind CSS v4** - Utility-first CSS framework
+- **Shadcn UI** - Accessible and customizable UI components
 - **Framer Motion** - Smooth animations
 - **React Query** - Data fetching and caching
 - **Zustand** - State management
