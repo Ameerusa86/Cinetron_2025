@@ -436,7 +436,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                   <Link
                     key={season.id}
                     href={`/tv/${slug}/season/${season.season_number}`}
-                    className="card-premium group cursor-pointer hover:scale-105 transition-all duration-300"
+                    className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer hover:scale-105 transition-all duration-300"
                   >
                     <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                       <Image
@@ -481,7 +481,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                       </p>
                       {season.air_date && (
                         <p className="text-xs text-slate-500 dark:text-slate-500">
-                          Aired: {new Date(season.air_date).getFullYear()}
+                          Aired: {season.air_date ? new Date(season.air_date).getFullYear() : "N/A"}
                         </p>
                       )}
                       <p className="text-sm text-slate-600 dark:text-slate-400 mt-3 line-clamp-3">
@@ -606,7 +606,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
               📊 Show Statistics
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">📺</div>
                 <div className="text-2xl font-bold text-purple-600 mb-1">
                   {tvShow.number_of_episodes}
@@ -616,7 +616,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                 </div>
               </div>
 
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">🎬</div>
                 <div className="text-2xl font-bold text-pink-600 mb-1">
                   {tvShow.number_of_seasons}
@@ -626,7 +626,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                 </div>
               </div>
 
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">⭐</div>
                 <div className="text-2xl font-bold text-yellow-600 mb-1">
                   {tvShow.vote_average.toFixed(1)}/10
@@ -636,7 +636,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                 </div>
               </div>
 
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">🌍</div>
                 <div className="text-2xl font-bold text-blue-600 mb-1">
                   {tvShow.popularity.toFixed(0)}
@@ -692,7 +692,7 @@ export default function TVShowDetailPage({ params }: TVShowDetailPageProps) {
                           <span>⭐ {similarShow.vote_average.toFixed(1)}</span>
                           <span>•</span>
                           <span>
-                            {new Date(similarShow.first_air_date).getFullYear()}
+                            {similarShow.first_air_date ? new Date(similarShow.first_air_date).getFullYear() : "N/A"}
                           </span>
                         </div>
                       </div>

@@ -255,7 +255,7 @@ export function MoodDetector() {
                             <span>⭐ {movie.vote_average.toFixed(1)}</span>
                             <span>•</span>
                             <span>
-                              {new Date(movie.release_date).getFullYear()}
+                              {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
                             </span>
                           </div>
                         </div>

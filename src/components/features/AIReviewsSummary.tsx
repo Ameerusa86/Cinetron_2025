@@ -13,6 +13,7 @@ import {
   Search,
 } from "lucide-react";
 import { aiService, ReviewSummary } from "@/lib/ai-services";
+import { Button } from "@/components/ui/button";
 
 export function AIReviewsSummary() {
   const [movieTitle, setMovieTitle] = useState("");
@@ -85,7 +86,7 @@ export function AIReviewsSummary() {
             className="w-full p-4 pr-16 rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
             onKeyPress={(e) => e.key === "Enter" && handleAnalyzeReviews()}
           />
-          <button
+          <Button
             onClick={handleAnalyzeReviews}
             disabled={!movieTitle.trim() || isAnalyzing}
             className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all duration-300 ${
@@ -104,7 +105,7 @@ export function AIReviewsSummary() {
             ) : (
               <Search className="w-5 h-5" />
             )}
-          </button>
+          </Button>
         </div>
 
         {/* Popular Movies Quick Select */}
@@ -121,13 +122,13 @@ export function AIReviewsSummary() {
               "Avengers: Endgame",
               "Joker",
             ].map((movie) => (
-              <button
+              <Button
                 key={movie}
                 onClick={() => setMovieTitle(movie)}
                 className="px-3 py-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300"
               >
                 {movie}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -170,12 +171,12 @@ export function AIReviewsSummary() {
             Analysis Failed
           </h3>
           <p className="text-slate-600 dark:text-slate-400 mb-4">{error}</p>
-          <button
+          <Button
             onClick={handleAnalyzeReviews}
-            className="btn-cinema px-6 py-3"
+            className="px-6 py-3"
           >
             Try Again
-          </button>
+          </Button>
         </motion.div>
       )}
 

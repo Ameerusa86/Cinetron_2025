@@ -248,7 +248,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                     <div className="bg-black/30 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl text-center transition-all duration-300 hover:bg-black/40">
                       <div className="text-lg mb-0.5">📅</div>
                       <div className="font-semibold text-sm">
-                        {new Date(movie.release_date).getFullYear()}
+                        {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
                       </div>
                       <div className="text-[10px] text-slate-400">Release</div>
                     </div>
@@ -506,8 +506,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                       </h3>
                       <p className="text-slate-200 text-xs capitalize opacity-90">
                         {video.type} •{" "}
-                        {video.published_at &&
-                          new Date(video.published_at).getFullYear()}
+                        {video.published_at ? new Date(video.published_at).getFullYear() : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -524,7 +523,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
               📊 Movie Statistics
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">💰</div>
                 <div className="text-2xl font-bold text-green-600 mb-1">
                   {formatCurrency(movie.budget)}
@@ -532,7 +531,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                 <div className="text-slate-600 dark:text-slate-400">Budget</div>
               </div>
 
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">💎</div>
                 <div className="text-2xl font-bold text-blue-600 mb-1">
                   {formatCurrency(movie.revenue)}
@@ -542,7 +541,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                 </div>
               </div>
 
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">⭐</div>
                 <div className="text-2xl font-bold text-yellow-600 mb-1">
                   {movie.vote_average.toFixed(1)}/10
@@ -552,7 +551,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                 </div>
               </div>
 
-              <div className="card-cinema p-6 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 text-center">
                 <div className="text-3xl mb-3">🌍</div>
                 <div className="text-2xl font-bold text-purple-600 mb-1">
                   {movie.popularity.toFixed(0)}
@@ -704,7 +703,7 @@ export default function MovieDetailPage({ params }: MovieDetailPageProps) {
                           <span>⭐ {similarMovie.vote_average.toFixed(1)}</span>
                           <span>•</span>
                           <span>
-                            {new Date(similarMovie.release_date).getFullYear()}
+                            {similarMovie.release_date ? new Date(similarMovie.release_date).getFullYear() : "N/A"}
                           </span>
                         </div>
                       </div>

@@ -15,6 +15,7 @@ import Link from "next/link";
 import { aiService, VisualSearchResult } from "@/lib/ai-services";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug } from "@/lib/slug-utils";
+import { Button } from "@/components/ui/button";
 
 export function VisualSearch() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -133,21 +134,21 @@ export function VisualSearch() {
               </div>
 
               <div className="flex items-center justify-center gap-4">
-                <button
+                <Button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <Upload className="w-5 h-5" />
                   Browse Files
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <Camera className="w-5 h-5" />
                   Take Photo
-                </button>
+                </Button>
               </div>
 
               <div className="text-sm text-slate-500 dark:text-slate-400">
@@ -167,12 +168,12 @@ export function VisualSearch() {
               />
 
               {/* Clear button */}
-              <button
+              <Button
                 onClick={clearImage}
                 className="absolute top-4 right-4 p-2 bg-red-500/80 backdrop-blur-sm text-white rounded-full shadow-lg hover:bg-red-500 transition-all duration-300"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
 
               {/* Analysis overlay */}
               {isAnalyzing && (
@@ -312,7 +313,7 @@ export function VisualSearch() {
                         <span>{result.movie.vote_average.toFixed(1)}</span>
                       </div>
                       <div>
-                        {new Date(result.movie.release_date).getFullYear()}
+                        {result.movie.release_date ? new Date(result.movie.release_date).getFullYear() : "N/A"}
                       </div>
                     </div>
                   </div>
@@ -323,9 +324,9 @@ export function VisualSearch() {
 
           {/* Try Again Button */}
           <div className="text-center">
-            <button onClick={clearImage} className="btn-glass px-6 py-3">
+            <Button onClick={clearImage} className="px-6 py-3" variant="secondary">
               Try Another Image
-            </button>
+            </Button>
           </div>
         </motion.div>
       )}

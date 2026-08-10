@@ -3,6 +3,7 @@
 import React from "react";
 import { useModalStore } from "@/stores";
 import ThemeSelector from "../ui/ThemeSelector";
+import { Button } from "@/components/ui/button";
 
 export default function SettingsModal() {
   const { settingsModal, setSettingsModal } = useModalStore();
@@ -23,7 +24,7 @@ export default function SettingsModal() {
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-800">
             <h2 className="text-2xl font-bold text-white">Settings</h2>
-            <button
+            <Button
               onClick={() => setSettingsModal(false)}
               className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
@@ -40,7 +41,7 @@ export default function SettingsModal() {
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
 
           {/* Content */}
@@ -144,18 +145,18 @@ export default function SettingsModal() {
 
           {/* Footer */}
           <div className="flex items-center justify-end space-x-3 p-6 border-t border-slate-800">
-            <button
+            <Button
               onClick={() => setSettingsModal(false)}
               className="px-6 py-2 text-slate-400 hover:text-white transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setSettingsModal(false)}
               className="btn-cinema px-6 py-2"
             >
               Save Changes
-            </button>
+            </Button>
           </div>
         </div>
       </div>

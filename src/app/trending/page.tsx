@@ -130,7 +130,7 @@ export default function TrendingPage() {
                   {trendingMovies.results.slice(0, 16).map((movie) => (
                     <div
                       key={movie.id}
-                      className="card-premium group cursor-pointer relative overflow-hidden"
+                      className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer relative overflow-hidden"
                       onClick={() => router.push(`/movie/${movie.id}`)}
                     >
                       {/* Trending Badge */}
@@ -164,7 +164,7 @@ export default function TrendingPage() {
                               <span>{movie.vote_average.toFixed(1)}</span>
                             </div>
                             <span>
-                              {new Date(movie.release_date).getFullYear()}
+                              {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
                             </span>
                           </div>
                         </div>
@@ -210,7 +210,7 @@ export default function TrendingPage() {
                   {trendingTVShows.results.slice(0, 16).map((show) => (
                     <div
                       key={show.id}
-                      className="card-premium group cursor-pointer relative overflow-hidden"
+                      className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer relative overflow-hidden"
                       onClick={() => router.push(`/tv/${show.id}`)}
                     >
                       {/* Trending Badge */}
@@ -246,7 +246,7 @@ export default function TrendingPage() {
                               <span>{show.vote_average.toFixed(1)}</span>
                             </div>
                             <span>
-                              {new Date(show.first_air_date).getFullYear()}
+                              {show.first_air_date ? new Date(show.first_air_date).getFullYear() : "N/A"}
                             </span>
                           </div>
                         </div>
@@ -264,7 +264,7 @@ export default function TrendingPage() {
               📊 Trending Statistics
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-              <div className="card-cinema p-6 sm:p-8 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 sm:p-8 text-center">
                 <div className="text-4xl sm:text-5xl mb-4">🎬</div>
                 <h3 className="text-2xl sm:text-3xl font-display font-bold mb-2 text-gradient-cinema">
                   {trendingMovies?.results?.length || 0}
@@ -274,7 +274,7 @@ export default function TrendingPage() {
                 </p>
               </div>
 
-              <div className="card-cinema p-6 sm:p-8 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 sm:p-8 text-center">
                 <div className="text-4xl sm:text-5xl mb-4">📺</div>
                 <h3 className="text-2xl sm:text-3xl font-display font-bold mb-2 text-gradient-cinema">
                   {trendingTVShows?.results?.length || 0}
@@ -284,7 +284,7 @@ export default function TrendingPage() {
                 </p>
               </div>
 
-              <div className="card-cinema p-6 sm:p-8 text-center">
+              <div className="rounded-xl border bg-card/80 backdrop-blur-sm text-card-foreground shadow hover:shadow-lg transition-all p-6 sm:p-8 text-center">
                 <div className="text-4xl sm:text-5xl mb-4">🔥</div>
                 <h3 className="text-2xl sm:text-3xl font-display font-bold mb-2 text-gradient-cinema">
                   Live

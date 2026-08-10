@@ -15,6 +15,7 @@ import {
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug } from "@/lib/slug-utils";
 import type { Movie } from "@/types";
+import { Button } from "@/components/ui/button";
 
 export default function MoviesPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -194,7 +195,7 @@ export default function MoviesPage() {
           <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
             {/* Genre Filter */}
             <div className="flex flex-wrap gap-3">
-              <button
+              <Button
                 onClick={() => setSelectedGenre(null)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                   selectedGenre === null
@@ -203,9 +204,9 @@ export default function MoviesPage() {
                 }`}
               >
                 All Genres
-              </button>
+              </Button>
               {genres.map((genre) => (
-                <button
+                <Button
                   key={genre.id}
                   onClick={() => setSelectedGenre(genre.id)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${
@@ -216,7 +217,7 @@ export default function MoviesPage() {
                 >
                   <span>{getGenreIcon(genre.id)}</span>
                   <span>{genre.name}</span>
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -288,7 +289,7 @@ export default function MoviesPage() {
                 <Link
                   key={movie.id}
                   href={`/movie/${createMovieSlug(movie.title, movie.id)}`}
-                  className="card-premium group cursor-pointer"
+                  className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                 >
                   <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
                     <Image
@@ -316,7 +317,7 @@ export default function MoviesPage() {
                           {movie.vote_average.toFixed(1)}
                         </span>
                         <span>
-                          {new Date(movie.release_date).getFullYear()}
+                          {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
                         </span>
                       </div>
                       <p className="text-slate-300 text-sm line-clamp-3">
@@ -340,13 +341,13 @@ export default function MoviesPage() {
           {/* Load More Button */}
           {!isLoading && displayMovies && displayMovies.length > 0 && (
             <div className="text-center mt-12">
-              <button
+              <Button
                 onClick={handleLoadMore}
                 disabled={isLoading}
-                className="btn-cinema-outline px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed" variant="outline"
               >
                 {isLoading ? "Loading..." : "Load More Movies"}
-              </button>
+              </Button>
             </div>
           )}
         </div>

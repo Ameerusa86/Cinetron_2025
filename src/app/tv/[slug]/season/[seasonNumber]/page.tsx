@@ -100,7 +100,7 @@ export default function SeasonDetailPage({ params }: SeasonDetailPageProps) {
                   </div>
                   {season.air_date && (
                     <div className="bg-black/50 px-4 py-2 rounded-full">
-                      <span>📅 {new Date(season.air_date).getFullYear()}</span>
+                      <span>📅 {season.air_date ? new Date(season.air_date).getFullYear() : "N/A"}</span>
                     </div>
                   )}
                 </div>
@@ -129,7 +129,7 @@ export default function SeasonDetailPage({ params }: SeasonDetailPageProps) {
             {season.episodes.map((episode) => (
               <div
                 key={episode.id}
-                className="card-premium group hover:shadow-2xl transition-all duration-300"
+                className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group hover:shadow-2xl transition-all duration-300"
               >
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   {/* Episode Still */}

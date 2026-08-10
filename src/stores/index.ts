@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { toast } from "sonner";
 import type {
   Theme,
   ThemeState,
@@ -656,6 +657,17 @@ export const useNotificationStore = create<{
       createdAt: new Date().toISOString(),
       read: false,
     };
+
+    // Trigger Shadcn Sonner toast based on type
+    if (notification.type === "success") {
+      toast.success(notification.title, { description: notification.message });
+    } else if (notification.type === "error") {
+      toast.error(notification.title, { description: notification.message });
+    } else if (notification.type === "warning") {
+      toast.warning(notification.title, { description: notification.message });
+    } else {
+      toast(notification.title, { description: notification.message });
+    }
 
     set((state) => ({
       notifications: [newNotification, ...state.notifications],

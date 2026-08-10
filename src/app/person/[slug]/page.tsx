@@ -11,6 +11,7 @@ import {
 } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug, createTVShowSlug } from "@/lib/slug-utils";
+import { Button } from "@/components/ui/button";
 
 interface PersonDetailPageProps {
   params: Promise<{
@@ -309,7 +310,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
           {/* Tabs */}
           <div className="flex justify-center mb-8">
             <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-1 flex">
-              <button
+              <Button
                 onClick={() => setActiveTab("movies")}
                 className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
                   activeTab === "movies"
@@ -323,8 +324,8 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                     ({movieCredits.cast.length + movieCredits.crew.length})
                   </span>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setActiveTab("tv")}
                 className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
                   activeTab === "tv"
@@ -338,7 +339,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                     ({tvCredits.cast.length + tvCredits.crew.length})
                   </span>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -359,7 +360,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                           movie.title,
                           movie.id
                         )}`}
-                        className="card-premium group cursor-pointer"
+                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image
@@ -421,7 +422,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                           movie.title,
                           movie.id
                         )}`}
-                        className="card-premium group cursor-pointer"
+                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image
@@ -485,7 +486,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                       <Link
                         key={show.credit_id}
                         href={`/tv/${createTVShowSlug(show.name, show.id)}`}
-                        className="card-premium group cursor-pointer"
+                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image
@@ -549,7 +550,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                       <Link
                         key={show.credit_id}
                         href={`/tv/${createTVShowSlug(show.name, show.id)}`}
-                        className="card-premium group cursor-pointer"
+                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                       >
                         <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
                           <Image

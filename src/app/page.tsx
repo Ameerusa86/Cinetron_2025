@@ -10,6 +10,7 @@ import {
 } from "@/components/3d-effects";
 import TrendingMovieCard from "@/components/TrendingMovieCard";
 import { AIFeaturesShowcase } from "@/components/sections/AIFeaturesShowcase";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const { data: trendingMovies, isLoading, error } = useTrendingMovies();
@@ -45,12 +46,12 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-            <button className="btn-cinema text-base sm:text-lg px-8 sm:px-12 py-3 sm:py-4 w-full sm:w-auto">
+            <Button className="text-base sm:text-lg px-8 sm:px-12 py-3 sm:py-4 w-full sm:w-auto">
               🎬 Explore Movies
-            </button>
-            <button className="btn-cinema-outline text-base sm:text-lg px-8 sm:px-12 py-3 sm:py-4 w-full sm:w-auto">
+            </Button>
+            <Button className="text-base sm:text-lg px-8 sm:px-12 py-3 sm:py-4 w-full sm:w-auto" variant="outline">
               ✨ Try Premium Features
-            </button>
+            </Button>
           </div>
         </div>
 

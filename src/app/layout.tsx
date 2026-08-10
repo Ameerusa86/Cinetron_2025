@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import Navbar from "@/components/Navbar";
 import SettingsModal from "@/components/modals/SettingsModal";
-import NotificationToast from "@/components/ui/NotificationToast";
+import { Toaster } from "@/components/ui/sonner";
 import { themeScript } from "@/lib/theme-script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -200,7 +200,7 @@ export default function RootLayout({
                 <SettingsModal />
 
                 {/* Notifications */}
-                <NotificationToast />
+                <Toaster />
 
                 {/* Main Content */}
                 <main className="relative z-10 w-full">{children}</main>

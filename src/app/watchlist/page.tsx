@@ -11,6 +11,7 @@ import { WatchlistItem } from "@/types";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ProfileBreadcrumb } from "@/components/ui/Breadcrumb";
 import { User, Plus, Tv, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function WatchlistContent() {
   const { user, updateWatchlistItem, removeFromWatchlist } = useUserStore();
@@ -382,13 +383,13 @@ function WatchlistContent() {
                     </div>
 
                     {/* Quick Remove Button */}
-                    <button
+                    <Button
                       onClick={() => handleRemove(watchlistItem.id)}
                       className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-colors duration-200"
                       title="Remove from watchlist"
                     >
                       ❌
-                    </button>
+                    </Button>
 
                     {/* Priority Indicator */}
                     <div

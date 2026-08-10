@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { AIDemo } from "@/components/demo/AIDemo";
+import { Button } from "@/components/ui/button";
 
 const aiFeatures = [
   {

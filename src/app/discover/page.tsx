@@ -427,7 +427,7 @@ export default function DiscoverPage() {
                   {movies.results.slice(0, 16).map((movie, index) => (
                     <div
                       key={movie.id}
-                      className="card-premium group cursor-pointer"
+                      className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                     >
                       <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
                         {/* Discovery Rank Badge */}
@@ -460,7 +460,7 @@ export default function DiscoverPage() {
                               <span>{movie.vote_average.toFixed(1)}</span>
                             </div>
                             <span>
-                              {new Date(movie.release_date).getFullYear()}
+                              {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
                             </span>
                           </div>
                         </div>
@@ -503,7 +503,7 @@ export default function DiscoverPage() {
                   {tvShows.results.slice(0, 16).map((show, index) => (
                     <div
                       key={show.id}
-                      className="card-premium group cursor-pointer"
+                      className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                     >
                       <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
                         {/* Discovery Rank Badge */}
@@ -538,7 +538,7 @@ export default function DiscoverPage() {
                               <span>{show.vote_average.toFixed(1)}</span>
                             </div>
                             <span>
-                              {new Date(show.first_air_date).getFullYear()}
+                              {show.first_air_date ? new Date(show.first_air_date).getFullYear() : "N/A"}
                             </span>
                           </div>
                         </div>

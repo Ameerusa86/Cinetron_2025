@@ -186,7 +186,7 @@ export default function TVShowsPage() {
                 <Link
                   key={show.id}
                   href={`/tv/${createTVShowSlug(show.name, show.id)}`}
-                  className="card-premium group cursor-pointer"
+                  className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
                 >
                   <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
                     <Image
@@ -216,7 +216,7 @@ export default function TVShowsPage() {
                           {show.vote_average.toFixed(1)}
                         </span>
                         <span>
-                          {new Date(show.first_air_date).getFullYear()}
+                          {show.first_air_date ? new Date(show.first_air_date).getFullYear() : "N/A"}
                         </span>
                       </div>
                       <p className="text-slate-300 text-sm line-clamp-3">

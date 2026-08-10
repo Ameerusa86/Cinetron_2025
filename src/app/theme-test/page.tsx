@@ -3,6 +3,7 @@
 import React from "react";
 import ThemeSelector, { QuickThemeToggle } from "@/components/ui/ThemeSelector";
 import { useThemeStore } from "@/stores";
+import { Button } from "@/components/ui/button";
 
 export default function ThemeTestPage() {
   const { theme, isDark } = useThemeStore();
@@ -110,14 +111,14 @@ export default function ThemeTestPage() {
             Button Styles
           </h3>
           <div className="flex flex-wrap gap-4">
-            <button className="btn-cinema">Cinema Button</button>
-            <button className="btn-cinema-outline">Cinema Outline</button>
-            <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+            <Button className="">Cinema Button</Button>
+            <Button className="" variant="outline">Cinema Outline</Button>
+            <Button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
               Primary Button
-            </button>
-            <button className="px-6 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-lg transition-colors">
+            </Button>
+            <Button className="px-6 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-lg transition-colors">
               Secondary Button
-            </button>
+            </Button>
           </div>
         </div>
 

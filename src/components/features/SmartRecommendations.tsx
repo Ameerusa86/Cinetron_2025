@@ -8,6 +8,7 @@ import Link from "next/link";
 import { aiService, AIRecommendation } from "@/lib/ai-services";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug } from "@/lib/slug-utils";
+import { Button } from "@/components/ui/button";
 
 export function SmartRecommendations() {
   const [recommendations, setRecommendations] = useState<AIRecommendation[]>(
@@ -86,9 +87,9 @@ export function SmartRecommendations() {
           Oops! Something went wrong
         </h3>
         <p className="text-slate-600 dark:text-slate-400 mb-4">{error}</p>
-        <button onClick={fetchRecommendations} className="btn-cinema px-6 py-3">
+        <Button onClick={fetchRecommendations} className="px-6 py-3">
           Try Again
-        </button>
+        </Button>
       </div>
     );
   }
@@ -106,14 +107,14 @@ export function SmartRecommendations() {
             viewing patterns
           </p>
         </div>
-        <button
+        <Button
           onClick={fetchRecommendations}
           disabled={isLoading}
-          className="btn-glass flex items-center gap-2 px-4 py-2 text-sm"
+          className="flex items-center gap-2 px-4 py-2 text-sm" variant="secondary"
         >
           <Brain className="w-4 h-4" />
           Refresh AI
-        </button>
+        </Button>
       </div>
 
       {/* Recommendations Grid */}
@@ -222,9 +223,11 @@ export function SmartRecommendations() {
                       </span>
                     </div>
                     <div>
-                      {new Date(
+                      {
                         recommendation.movie.release_date
-                      ).getFullYear()}
+                       ? new Date(
+                        recommendation.movie.release_date
+                      ).getFullYear() : "N/A"}
                     </div>
                   </div>
                 </div>
