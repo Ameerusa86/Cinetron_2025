@@ -1,8 +1,167 @@
 // Gemini AI Service for Enhanced Movie Features
-import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { Movie } from "@/types";
 import { parseAIError } from "@/types/errors";
 import tmdbClient from "@/lib/tmdb-client";
+
+const GEMINI_MODEL = "gemini-3.8-flash";
+
+const RECOMMENDATION_ANALYSIS_SCHEMA = {
+  type: "object",
+  properties: {
+    analysis: {
+      type: "object",
+      properties: {
+        genres: { type: "array", items: { type: "string" } },
+        themes: { type: "array", items: { type: "string" } },
+        tones: { type: "array", items: { type: "string" } },
+        confidence: { type: "number" },
+      },
+      required: ["genres", "themes", "tones", "confidence"],
+    },
+    reasoning: { type: "array", items: { type: "string" } },
+    recommendationStrategy: { type: "string" },
+  },
+  required: ["analysis", "reasoning", "recommendationStrategy"],
+};
+
+const MOOD_ANALYSIS_SCHEMA = {
+  type: "object",
+  properties: {
+    detectedMood: { type: "string" },
+    confidence: { type: "number" },
+    genres: { type: "array", items: { type: "string" } },
+    themes: { type: "array", items: { type: "string" } },
+    movieCharacteristics: {
+      type: "object",
+      properties: {
+        tone: {
+          type: "string",
+          enum: ["light", "serious", "thrilling", "romantic", "adventurous"],
+        },
+        pacing: { type: "string", enum: ["fast", "moderate", "slow"] },
+        complexity: { type: "string", enum: ["simple", "moderate", "complex"] },
+      },
+      required: ["tone", "pacing", "complexity"],
+    },
+    reasoning: { type: "array", items: { type: "string" } },
+    avoidGenres: { type: "array", items: { type: "string" } },
+  },
+  required: ["detectedMood", "confidence", "genres", "themes", "reasoning"],
+};
+
+const REVIEW_SUMMARY_SCHEMA = {
+  type: "object",
+  properties: {
+    overallSentiment: {
+      type: "string",
+      enum: ["positive", "negative", "mixed"],
+    },
+    summary: { type: "string" },
+    keyPoints: {
+      type: "object",
+      properties: {
+        strengths: { type: "array", items: { type: "string" } },
+        weaknesses: { type: "array", items: { type: "string" } },
+        themes: { type: "array", items: { type: "string" } },
+      },
+      required: ["strengths", "weaknesses", "themes"],
+    },
+    sentimentBreakdown: {
+      type: "object",
+      properties: {
+        positive: { type: "number" },
+        negative: { type: "number" },
+        neutral: { type: "number" },
+      },
+      required: ["positive", "negative", "neutral"],
+    },
+    trustScore: { type: "number" },
+    recommendationTone: {
+      type: "string",
+      enum: ["enthusiastic", "cautious", "balanced"],
+    },
+  },
+  required: ["overallSentiment", "summary", "keyPoints", "trustScore"],
+};
+
+const COLLECTIONS_SCHEMA = {
+  type: "object",
+  properties: {
+    collections: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          description: { type: "string" },
+          criteria: {
+            type: "object",
+            properties: {
+              genres: { type: "array", items: { type: "string" } },
+              themes: { type: "array", items: { type: "string" } },
+              timeRange: { type: "string" },
+              minRating: { type: "number" },
+            },
+          },
+          tone: { type: "string" },
+          uniqueAspect: { type: "string" },
+        },
+        required: ["name", "description", "criteria"],
+      },
+    },
+  },
+  required: ["collections"],
+};
+
+const IMAGE_ANALYSIS_SCHEMA = {
+  type: "object",
+  properties: {
+    isAnime: { type: "boolean" },
+    detectedTitle: { type: ["string", "null"] },
+    characters: { type: "array", items: { type: "string" } },
+    genre: {
+      type: "string",
+      enum: ["anime", "live-action", "animation", "unknown"],
+    },
+    artStyle: { type: "string" },
+    confidence: { type: "number" },
+    visualElements: { type: "array", items: { type: "string" } },
+    similarTitles: { type: "array", items: { type: "string" } },
+    description: { type: "string" },
+    keywords: { type: "array", items: { type: "string" } },
+  },
+  required: [
+    "isAnime",
+    "detectedTitle",
+    "genre",
+    "confidence",
+    "description",
+    "keywords",
+  ],
+};
+
+const TRIVIA_QUESTIONS_SCHEMA = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      id: { type: "string" },
+      question: { type: "string" },
+      options: { type: "array", items: { type: "string" } },
+      correctAnswer: { type: "integer" },
+      category: { type: "string" },
+      difficulty: { type: "string" },
+      points: { type: "integer" },
+      explanation: { type: "string" },
+    },
+    required: ["question", "options", "correctAnswer", "explanation"],
+  },
+};
+
+type InteractionInputPart =
+  | { type: "text"; text: string }
+  | { type: "image"; data: string; mime_type: string };
 
 interface MovieContext {
   title: string;
@@ -47,32 +206,20 @@ interface AICollection {
 }
 
 export class GeminiAIService {
-  private genAI: GoogleGenerativeAI;
-  private model: GenerativeModel;
+  private client: GoogleGenAI | null;
   private static instance: GeminiAIService;
 
   private constructor() {
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
-    if (!apiKey) {
+    if (!apiKey || apiKey === "dummy-key") {
       console.warn(
-        "⚠️ Gemini API key not found. AI features will use mock responses."
+        "⚠️ Gemini API key not found. AI features will use fallback responses."
       );
-      // Initialize with a dummy key for development
-      this.genAI = new GoogleGenerativeAI("dummy-key");
+      this.client = null;
     } else {
-      this.genAI = new GoogleGenerativeAI(apiKey);
+      this.client = new GoogleGenAI({ apiKey });
     }
-
-    this.model = this.genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024,
-      },
-    });
   }
 
   public static getInstance(): GeminiAIService {
@@ -80,6 +227,31 @@ export class GeminiAIService {
       GeminiAIService.instance = new GeminiAIService();
     }
     return GeminiAIService.instance;
+  }
+
+  private async runInteraction(
+    input: string | InteractionInputPart[],
+    schema: Record<string, unknown>
+  ): Promise<string> {
+    if (!this.client) {
+      throw new Error("Missing Gemini API key");
+    }
+
+    const interaction = await this.client.interactions.create({
+      model: GEMINI_MODEL,
+      input,
+      generation_config: {
+        thinking_level: "low",
+      },
+      response_format: {
+        type: "text",
+        mime_type: "application/json",
+        schema,
+      },
+      store: false,
+    });
+
+    return interaction.output_text ?? "";
   }
 
   /**
@@ -94,6 +266,10 @@ export class GeminiAIService {
     analysis: AnalysisResult;
   }> {
     try {
+      if (!this.client) {
+        return this.fallbackRecommendations();
+      }
+
       // Get movie context for AI analysis
       const movieContext = userHistory
         .map((movie) => this.movieToContext(movie))
@@ -128,9 +304,11 @@ export class GeminiAIService {
         }
       `;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const aiAnalysis = this.parseJSONResponse(response.text());
+      const responseText = await this.runInteraction(
+        prompt,
+        RECOMMENDATION_ANALYSIS_SCHEMA
+      );
+      const aiAnalysis = this.parseJSONResponse(responseText);
 
       // Get movies based on AI analysis
       const movies = await this.fetchRecommendedMovies();
@@ -168,6 +346,10 @@ export class GeminiAIService {
     reasoning: string[];
   }> {
     try {
+      if (!this.client) {
+        return this.fallbackMoodAnalysis(moodInput);
+      }
+
       const prompt = `
         Analyze this mood/emotional input and recommend appropriate movie types:
         
@@ -196,9 +378,11 @@ export class GeminiAIService {
         }
       `;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const analysis = this.parseJSONResponse(response.text());
+      const responseText = await this.runInteraction(
+        prompt,
+        MOOD_ANALYSIS_SCHEMA
+      );
+      const analysis = this.parseJSONResponse(responseText);
 
       // Fetch movies based on mood analysis
       const movies = await this.fetchMoodBasedMovies();
@@ -238,6 +422,10 @@ export class GeminiAIService {
     trustScore: number;
   }> {
     try {
+      if (!this.client) {
+        return this.fallbackReviewSummary(movieTitle);
+      }
+
       const reviewText = reviews.slice(0, 10).join("\n\n---\n\n");
 
       const prompt = `
@@ -272,9 +460,11 @@ export class GeminiAIService {
         }
       `;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const analysis = this.parseJSONResponse(response.text());
+      const responseText = await this.runInteraction(
+        prompt,
+        REVIEW_SUMMARY_SCHEMA
+      );
+      const analysis = this.parseJSONResponse(responseText);
 
       return {
         summary: this.isReviewAnalysisValid(analysis)
@@ -320,6 +510,10 @@ export class GeminiAIService {
     }>;
   }> {
     try {
+      if (!this.client) {
+        return this.fallbackCollections(theme);
+      }
+
       const prompt = `
         Create intelligent movie collections based on the theme: "${theme}"
         
@@ -350,9 +544,11 @@ export class GeminiAIService {
         }
       `;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const aiCollections = this.parseJSONResponse(response.text());
+      const responseText = await this.runInteraction(
+        prompt,
+        COLLECTIONS_SCHEMA
+      );
+      const aiCollections = this.parseJSONResponse(responseText);
 
       // Fetch movies for each collection
       const collectionsArray = Array.isArray(aiCollections.collections)
@@ -397,8 +593,7 @@ export class GeminiAIService {
 
     try {
       // Check if we have a valid API key first
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-      if (!apiKey || apiKey === "dummy-key") {
+      if (!this.client) {
         console.log("⚠️ No valid Gemini API key, using enhanced fallback");
         return await this.enhancedImageFallback(imageFile);
       }
@@ -414,15 +609,8 @@ export class GeminiAIService {
       console.log("🔄 Converting image to base64...");
       const base64Image = await this.fileToBase64(imageFile);
 
-      // Use Gemini 1.5 Flash model which supports vision
-      console.log("🤖 Using Gemini 1.5 Flash for image analysis...");
-      const visionModel = this.genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 1024,
-        },
-      });
+      // Use Gemini 3.8 Flash model which supports multimodal image analysis
+      console.log("🤖 Using Gemini 3.8 Flash for image analysis...");
 
       const prompt = `
         Analyze this image carefully and determine if it shows content from a movie, TV show, or anime. 
@@ -453,18 +641,17 @@ export class GeminiAIService {
         }
       `;
 
-      const result = await visionModel.generateContent([
-        prompt,
-        {
-          inlineData: {
+      const responseText = await this.runInteraction(
+        [
+          { type: "text", text: prompt },
+          {
+            type: "image",
             data: base64Image,
-            mimeType: imageFile.type,
+            mime_type: imageFile.type || "image/jpeg",
           },
-        },
-      ]);
-
-      const response = await result.response;
-      const responseText = response.text();
+        ],
+        IMAGE_ANALYSIS_SCHEMA
+      );
       console.log("🤖 Gemini response:", responseText);
 
       const analysis = this.parseJSONResponse(responseText);
@@ -1145,12 +1332,11 @@ export async function generateTriviaQuestions(
   try {
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
-    if (!apiKey) {
+    if (!apiKey || apiKey === "dummy-key") {
       throw parseAIError(new Error("Missing API key"));
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const client = new GoogleGenAI({ apiKey });
 
     const difficultyPrompt = {
       easy: "basic knowledge that most movie fans would know",
@@ -1195,9 +1381,21 @@ Return the response in this exact JSON format:
   }
 ]`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const interaction = await client.interactions.create({
+      model: GEMINI_MODEL,
+      input: prompt,
+      generation_config: {
+        thinking_level: "low",
+      },
+      response_format: {
+        type: "text",
+        mime_type: "application/json",
+        schema: TRIVIA_QUESTIONS_SCHEMA,
+      },
+      store: false,
+    });
+
+    const text = interaction.output_text ?? "";
 
     // Clean up the response to extract JSON
     const jsonMatch = text.match(/\[[\s\S]*\]/);
