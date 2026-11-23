@@ -1,21 +1,21 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { motion } from "framer-motion";
-import {
-  Upload,
-  Camera,
-  Image as ImageIcon,
-  Search,
-  Zap,
-  X,
-} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  Upload,
+  ScanSearch,
+  X,
+  Loader2,
+  Star,
+  Clock,
+  Film,
+} from "lucide-react";
 import { aiService, VisualSearchResult } from "@/lib/ai-services";
 import tmdbClient from "@/lib/tmdb-client";
 import { createMovieSlug } from "@/lib/slug-utils";
-import { Button } from "@/components/ui/button";
+import { useNotificationStore } from "@/stores";
 
 export function VisualSearch() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -23,25 +23,34 @@ export function VisualSearch() {
   const [results, setResults] = useState<VisualSearchResult[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addNotification } = useNotificationStore();
 
   const handleImageUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file.");
+      addNotification({
+        type: "error",
+        title: "Unsupported File",
+        message: "Please upload a valid PNG, JPG, or WebP image.",
+        read: false,
+      });
       return;
     }
 
-    // Create preview URL
     const previewUrl = URL.createObjectURL(file);
     setSelectedImage(previewUrl);
-
-    // Start AI analysis
     setIsAnalyzing(true);
+
     try {
       const searchResults = await aiService.searchByImage();
       setResults(searchResults);
     } catch (error) {
       console.error("Visual search error:", error);
-      alert("Failed to analyze image. Please try again.");
+      addNotification({
+        type: "error",
+        title: "Analysis Failed",
+        message: "Unable to analyze this image right now. Please try again.",
+        read: false,
+      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -61,305 +70,171 @@ export function VisualSearch() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
-    const files = e.dataTransfer.files;
-    if (files && files[0]) {
-      handleImageUpload(files[0]);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files[0]) {
-      handleImageUpload(files[0]);
-    }
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleImageUpload(file);
   };
 
   const clearImage = () => {
-    if (selectedImage) {
-      URL.revokeObjectURL(selectedImage);
-    }
+    if (selectedImage) URL.revokeObjectURL(selectedImage);
     setSelectedImage(null);
     setResults([]);
     setIsAnalyzing(false);
   };
 
   return (
-    <div>
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-          📷 Visual Search
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-xl font-bold text-foreground">
+          Visual Scene Search
         </h2>
-        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Upload a movie scene screenshot and our AI will identify the movie for
-          you
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Upload a frame, still, or movie poster to identify matching films.
         </p>
       </div>
 
-      {/* Upload Area */}
-      <div className="max-w-2xl mx-auto mb-8">
+      {/* Upload Dropzone */}
+      <div className="max-w-2xl">
         {!selectedImage ? (
           <div
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
+            onClick={() => fileInputRef.current?.click()}
+            className={`cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-colors ${
               dragActive
-                ? "border-purple-500 bg-purple-500/10"
-                : "border-slate-300 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500"
+                ? "border-primary bg-primary/10"
+                : "border-border bg-secondary/30 hover:border-primary/50 hover:bg-secondary/50"
             }`}
           >
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleFileSelect}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(file);
+              }}
               className="hidden"
             />
-
-            <div className="space-y-4">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center">
-                <ImageIcon className="w-10 h-10 text-white" />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                  Upload Movie Scene
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Drag and drop an image here, or click to browse
-                </p>
-              </div>
-
-              <div className="flex items-center justify-center gap-4">
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                  <Upload className="w-5 h-5" />
-                  Browse Files
-                </Button>
-
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                  <Camera className="w-5 h-5" />
-                  Take Photo
-                </Button>
-              </div>
-
-              <div className="text-sm text-slate-500 dark:text-slate-400">
-                Supported formats: JPG, PNG, GIF (Max 10MB)
-              </div>
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card text-primary">
+              <Upload className="h-5 w-5" />
             </div>
+            <p className="text-sm font-semibold text-foreground">
+              Drop a movie frame here or click to browse
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Supports PNG, JPG, and WebP screenshots
+            </p>
           </div>
         ) : (
-          <div className="relative">
-            <div className="aspect-video relative rounded-2xl overflow-hidden shadow-xl bg-slate-100 dark:bg-slate-800">
-              <Image
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-secondary">
+            <div className="relative aspect-video w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={selectedImage}
-                alt="Uploaded scene"
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 50vw"
+                alt="Uploaded movie scene"
+                className="h-full w-full object-contain bg-black"
               />
-
-              {/* Clear button */}
-              <Button
-                onClick={clearImage}
-                className="absolute top-4 right-4 p-2 bg-red-500/80 backdrop-blur-sm text-white rounded-full shadow-lg hover:bg-red-500 transition-all duration-300"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-
-              {/* Analysis overlay */}
-              {isAnalyzing && (
-                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="w-16 h-16 mx-auto mb-4 p-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl"
-                    >
-                      <Search className="w-8 h-8" />
-                    </motion.div>
-                    <h3 className="text-xl font-semibold mb-2">
-                      Analyzing image...
-                    </h3>
-                    <p className="text-slate-300">
-                      AI is scanning the scene for movie matches
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
+            <button
+              type="button"
+              onClick={clearImage}
+              aria-label="Remove image"
+              className="absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/80 text-white hover:bg-primary transition-colors cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {isAnalyzing && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/75 backdrop-blur-sm text-white">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                <p className="text-sm font-semibold">Analyzing scene...</p>
+                <p className="text-xs text-zinc-300 mt-0.5">
+                  Comparing visual signatures
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Search Results */}
-      {results.length > 0 && !isAnalyzing && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white text-center">
-            🎯 Visual Search Results
-          </h3>
+      {/* Match Results */}
+      {!isAnalyzing && results.length > 0 && (
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+            <ScanSearch className="h-3.5 w-3.5" />
+            <span>Identified Matches ({results.length})</span>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {results.map((result, index) => (
-              <motion.div
-                key={result.movie.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-700"
-              >
-                <div className="flex gap-4">
-                  {/* Movie Poster */}
-                  <Link
-                    href={`/movie/${createMovieSlug(
-                      result.movie.title,
-                      result.movie.id
-                    )}`}
-                    className="flex-shrink-0 group"
-                  >
-                    <div className="w-24 h-36 relative overflow-hidden rounded-lg shadow-md group-hover:shadow-lg transition-shadow duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {results.map((res, idx) => {
+              const poster = tmdbClient.getImageUrl(
+                res.movie.poster_path,
+                "w342"
+              );
+              return (
+                <Link
+                  key={`${res.movie.id}-${idx}`}
+                  href={`/movie/${createMovieSlug(res.movie.title, res.movie.id)}`}
+                  className="group flex gap-4 rounded-xl border border-border bg-secondary/40 p-4 hover:border-foreground/20 transition-all"
+                >
+                  <div className="relative h-32 w-22 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
+                    {poster ? (
                       <Image
-                        src={
-                          tmdbClient.getImageUrl(
-                            result.movie.poster_path,
-                            "w300"
-                          ) || "/placeholder-poster.svg"
-                        }
-                        alt={result.movie.title}
+                        src={poster}
+                        alt={res.movie.title}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="96px"
+                        sizes="88px"
+                        className="object-cover"
                       />
-                    </div>
-                  </Link>
-
-                  {/* Movie Details */}
-                  <div className="flex-1 min-w-0">
-                    {/* Title and Confidence */}
-                    <div className="flex items-start justify-between mb-3">
-                      <Link
-                        href={`/movie/${createMovieSlug(
-                          result.movie.title,
-                          result.movie.id
-                        )}`}
-                        className="group"
-                      >
-                        <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-200 line-clamp-2">
-                          {result.movie.title}
-                        </h3>
-                      </Link>
-                      <div className="flex-shrink-0 ml-2 p-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg">
-                        <Zap className="w-4 h-4" />
-                      </div>
-                    </div>
-
-                    {/* Confidence Score */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Match Confidence:
-                      </span>
-                      <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${result.confidence * 100}%` }}
-                          transition={{ duration: 1, delay: index * 0.1 }}
-                          className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
-                        />
-                      </div>
-                      <span className="text-sm font-bold text-green-600">
-                        {(result.confidence * 100).toFixed(0)}%
-                      </span>
-                    </div>
-
-                    {/* Match Details */}
-                    {result.matchedScene && (
-                      <div className="mb-3 p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                        <div className="text-sm">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">
-                            Matched Scene:
-                          </span>
-                          <span className="ml-2 text-slate-600 dark:text-slate-400">
-                            {result.matchedScene}
-                          </span>
-                        </div>
-                        {result.timestamp && (
-                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            Timestamp: {result.timestamp}
-                          </div>
-                        )}
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                        <Film className="h-6 w-6 opacity-40" />
                       </div>
                     )}
-
-                    {/* Movie Stats */}
-                    <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <span className="text-yellow-500">⭐</span>
-                        <span>{result.movie.vote_average.toFixed(1)}</span>
-                      </div>
-                      <div>
-                        {result.movie.release_date ? new Date(result.movie.release_date).getFullYear() : "N/A"}
-                      </div>
-                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
 
-          {/* Try Again Button */}
-          <div className="text-center">
-            <Button onClick={clearImage} className="px-6 py-3" variant="secondary">
-              Try Another Image
-            </Button>
-          </div>
-        </motion.div>
-      )}
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                        {res.movie.title}
+                      </h3>
+                      <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-semibold text-emerald-400 shrink-0">
+                        {Math.round(res.confidence * 100)}%
+                      </span>
+                    </div>
 
-      {/* Tips */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-8 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl border border-blue-500/20"
-      >
-        <h4 className="font-semibold text-slate-900 dark:text-white mb-3">
-          💡 Tips for better results:
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-            <span>Use clear, high-quality images</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
-            <span>Include recognizable characters or scenes</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            <span>Avoid heavily filtered or edited images</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-            <span>Screenshots work better than promotional images</span>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-mono">
+                      {res.movie.vote_average > 0 && (
+                        <span className="inline-flex items-center gap-1 text-foreground">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          {res.movie.vote_average.toFixed(1)}
+                        </span>
+                      )}
+                      {res.timestamp && (
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {res.timestamp}
+                        </span>
+                      )}
+                    </div>
+
+                    {res.matchedScene && (
+                      <p className="text-xs text-muted-foreground">
+                        Scene context:{" "}
+                        <span className="text-foreground">
+                          {res.matchedScene}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
-      </motion.div>
+      )}
     </div>
   );
 }

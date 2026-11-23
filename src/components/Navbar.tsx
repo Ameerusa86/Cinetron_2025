@@ -1,24 +1,54 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { TMDBClient } from "@/lib/tmdb-client";
-import { Movie, MultiSearchResult } from "@/types";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Film,
+  Tv,
+  Flame,
+  Compass,
+  Gamepad2,
+  Sparkles,
+  Search,
+  Bookmark,
+  Settings,
+  Menu,
+  X,
+  ArrowRight,
+  Star,
+  User,
+  Loader2,
+  Sun,
+  Moon,
+  Clock,
+  Home,
+} from "lucide-react";
+import tmdbClient from "@/lib/tmdb-client";
+import {
+  createMovieSlug,
+  createPersonSlug,
+  createTVShowSlug,
+} from "@/lib/slug-utils";
+import { MultiSearchResult } from "@/types";
 import ClerkAuthButton from "@/components/ui/ClerkAuthButton";
-
-const tmdbClient = new TMDBClient();
+import {
+  useModalStore,
+  useSearchStore,
+  useThemeStore,
+  useUserStore,
+} from "@/stores";
 
 const navItems = [
-  { href: "/", label: "Home", icon: "🏠" },
-  { href: "/movies", label: "Movies", icon: "🎬" },
-  { href: "/tv-shows", label: "TV Shows", icon: "📺" },
-  { href: "/trending", label: "Trending", icon: "🔥" },
-  { href: "/discover", label: "Discover", icon: "🔍" },
-  { href: "/games", label: "Games", icon: "🎮" },
-  { href: "/ai", label: "AI Features", icon: "🤖" },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/movies", label: "Movies", icon: Film },
+  { href: "/tv-shows", label: "TV Shows", icon: Tv },
+  { href: "/trending", label: "Trending", icon: Flame },
+  { href: "/discover", label: "Discover", icon: Compass },
+  { href: "/games", label: "Games", icon: Gamepad2 },
+  { href: "/ai", label: "AI Studio", icon: Sparkles },
 ];
 
 export default function Navbar() {
@@ -28,600 +58,501 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<MultiSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const pathname = usePathname();
   const router = useRouter();
+  const { setSettingsModal } = useModalStore();
+  const { isDark, toggleTheme } = useThemeStore();
+  const { user } = useUserStore();
+  const { history, addToHistory } = useSearchStore();
 
-  // Enhanced search function for all content types
-  const performSearch = async (query: string) => {
-    if (query.trim().length < 2) {
+  const watchlistCount = user?.watchlist?.length || 0;
+
+  // Scroll listener
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 16);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Keyboard shortcuts (Cmd/Ctrl+K to open search, Escape to close)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      } else if (e.key === "Escape") {
+        setIsSearchOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Focus input when search modal opens
+  useEffect(() => {
+    if (isSearchOpen) {
+      setTimeout(() => inputRef.current?.focus(), 40);
+    } else {
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  }, [isSearchOpen]);
+
+  // Close mobile menu on navigation
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Debounced live search
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
       setSearchResults([]);
       setIsSearching(false);
       return;
     }
 
+    let cancelled = false;
     setIsSearching(true);
-    try {
-      const results = await tmdbClient.multiSearch(query, 1);
-      setSearchResults(results.results.slice(0, 6)); // Show top 6 results
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
-  // Handle search input change with debouncing
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-  };
+    const timer = setTimeout(async () => {
+      try {
+        const res = await tmdbClient.multiSearch(trimmed, 1);
+        if (!cancelled) {
+          setSearchResults(res.results.slice(0, 6));
+        }
+      } catch {
+        if (!cancelled) setSearchResults([]);
+      } finally {
+        if (!cancelled) setIsSearching(false);
+      }
+    }, 260);
 
-  // Debounced search effect
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      performSearch(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [searchQuery]);
 
-  // Handle search submit
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setIsSearchOpen(false);
-      setSearchQuery("");
-      setSearchResults([]);
-    }
-  };
-
-  // Helper functions for handling different content types
-  const getTitle = (result: MultiSearchResult): string => {
-    if ("title" in result) return result.title; // Movie
-    if ("name" in result) return result.name; // TV Show or Person
-    return "Unknown";
-  };
-
-  const getYear = (result: MultiSearchResult): string => {
-    if ("release_date" in result && result.release_date) {
-      return new Date(result.release_date).getFullYear().toString();
-    }
-    if ("first_air_date" in result && result.first_air_date) {
-      return new Date(result.first_air_date).getFullYear().toString();
-    }
-    return "N/A";
-  };
-
-  const getPosterPath = (result: MultiSearchResult): string | null => {
-    if ("poster_path" in result) return result.poster_path || null;
-    if ("profile_path" in result) return result.profile_path || null;
-    return null;
-  };
-
-  const getRating = (result: MultiSearchResult): number => {
-    if ("vote_average" in result) return result.vote_average;
-    return 0;
-  };
-
-  const getMediaType = (result: MultiSearchResult): string => {
-    if ("media_type" in result) return result.media_type;
-    if ("title" in result) return "movie";
-    if ("name" in result && "known_for_department" in result) return "person";
-    if ("name" in result) return "tv";
-    return "unknown";
-  };
-
-  const getMediaIcon = (result: MultiSearchResult): string => {
-    const mediaType = getMediaType(result);
-    switch (mediaType) {
-      case "movie":
-        return "🎬";
-      case "tv":
-        return "📺";
-      case "person":
-        return "👤";
-      default:
-        return "❓";
-    }
-  };
-
-  // Handle result click with proper typing
-  const handleResultClick = (result: MultiSearchResult) => {
-    const mediaType = getMediaType(result);
-    if (mediaType === "movie") {
-      router.push(`/movie/${result.id}`);
-    } else if (mediaType === "tv") {
-      router.push(`/tv/${result.id}`);
-    } else if (mediaType === "person") {
-      router.push(`/person/${result.id}`);
-    }
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+    addToHistory(trimmed);
     setIsSearchOpen(false);
-    setSearchQuery("");
-    setSearchResults([]);
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
-  // Close search on escape
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsSearchOpen(false);
-        setSearchQuery("");
-        setSearchResults([]);
-      }
-    };
-
-    if (isSearchOpen) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
+  const getResultMeta = (result: MultiSearchResult) => {
+    if ("title" in result) {
+      return {
+        type: "movie" as const,
+        label: "Movie",
+        title: result.title,
+        year: result.release_date?.slice(0, 4) || "",
+        image: result.poster_path,
+        rating: result.vote_average,
+        href: `/movie/${createMovieSlug(result.title, result.id)}`,
+      };
     }
-  }, [isSearchOpen]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+    if ("known_for_department" in result) {
+      return {
+        type: "person" as const,
+        label: result.known_for_department || "Person",
+        title: result.name,
+        year: "",
+        image: result.profile_path || null,
+        rating: 0,
+        href: `/person/${createPersonSlug(result.name, result.id)}`,
+      };
+    }
+    return {
+      type: "tv" as const,
+      label: "TV Series",
+      title: result.name,
+      year: result.first_air_date?.slice(0, 4) || "",
+      image: result.poster_path || null,
+      rating: result.vote_average,
+      href: `/tv/${createTVShowSlug(result.name, result.id)}`,
     };
+  };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const isRouteActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <>
-      {/* Enhanced Premium Backdrop with Dynamic Gradient */}
-      <div className="fixed top-0 left-0 right-0 z-40 h-16 sm:h-20 lg:h-24 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-transparent" />
-      </div>
-
-      <motion.nav
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           isScrolled
-            ? "bg-black/95 backdrop-blur-3xl shadow-2xl border-b border-[#262626]"
-            : "bg-transparent"
+            ? "bg-background/90 backdrop-blur-xl border-b border-border shadow-sm"
+            : "bg-gradient-to-b from-background/90 via-background/50 to-transparent border-b border-transparent"
         }`}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
-            {/* Enhanced Premium Logo */}
+        <div className="container-cinema">
+          <div className="flex h-16 items-center justify-between gap-4">
+            {/* Brand Wordmark */}
             <Link
               href="/"
-              className="flex items-center space-x-2 sm:space-x-4 group"
+              className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none"
             >
-              <motion.div
-                whileHover={{ scale: 1.08, rotate: 3 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                className="relative"
-              >
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-primary-500 rounded flex items-center justify-center transition-all duration-300 shadow-xl">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 relative">
-                    <svg
-                      viewBox="0 0 80 80"
-                      className="w-full h-full drop-shadow-lg"
-                    >
-                      <defs>
-                        <linearGradient
-                          id="clapperGradient"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="#ffffff" />
-                          <stop offset="100%" stopColor="#e5e5e5" />
-                        </linearGradient>
-                        <filter id="glow">
-                          <feGaussianBlur
-                            stdDeviation="2"
-                            result="coloredBlur"
-                          />
-                          <feMerge>
-                            <feMergeNode in="coloredBlur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
-                      </defs>
-                      <rect
-                        x="10"
-                        y="30"
-                        width="50"
-                        height="35"
-                        fill="url(#clapperGradient)"
-                        rx="4"
-                        filter="url(#glow)"
-                      />
-                      <rect
-                        x="10"
-                        y="30"
-                        width="50"
-                        height="7"
-                        fill="white"
-                        opacity="0.95"
-                      />
-                      <path
-                        d="M 15 15 L 65 25 L 65 35 L 15 25 Z"
-                        fill="url(#clapperGradient)"
-                        filter="url(#glow)"
-                      />
-                      <rect
-                        x="18"
-                        y="17"
-                        width="6"
-                        height="5"
-                        fill="white"
-                        opacity="0.9"
-                      />
-                      <rect
-                        x="28"
-                        y="18"
-                        width="6"
-                        height="5"
-                        fill="rgba(0,0,0,0.8)"
-                      />
-                      <rect
-                        x="38"
-                        y="19"
-                        width="6"
-                        height="5"
-                        fill="white"
-                        opacity="0.9"
-                      />
-                      <rect
-                        x="48"
-                        y="20"
-                        width="6"
-                        height="5"
-                        fill="rgba(0,0,0,0.8)"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </motion.div>
-
-              <div className="flex flex-col">
-                <motion.span
-                  className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-tight text-primary-500"
-                  whileHover={{ scale: 1.03 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  CINETRON
-                </motion.span>
-                <motion.span
-                  className="hidden sm:block text-xs lg:text-sm text-slate-400 font-medium tracking-wider uppercase"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  Your Movie Companion
-                </motion.span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white shadow-sm shadow-primary/30 transition-transform duration-200 group-hover:scale-105">
+                <Film className="h-4 w-4" strokeWidth={2.25} />
               </div>
+              <span className="text-base font-bold tracking-[0.14em] uppercase text-foreground">
+                CINETRON
+              </span>
             </Link>
 
-            {/* Enhanced Premium Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {navItems.map((item, index) => (
-                <motion.div
-                  key={item.href}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 + 0.2, duration: 0.6 }}
-                >
+            {/* Desktop Navigation */}
+            <nav
+              aria-label="Primary navigation"
+              className="hidden lg:flex items-center gap-1"
+            >
+              {navItems.map((item) => {
+                const active = isRouteActive(item.href);
+                return (
                   <Link
+                    key={item.href}
                     href={item.href}
-                    className="group relative px-5 py-3 rounded-2xl text-sm font-semibold transition-all duration-500 hover:scale-105"
+                    className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      active
+                        ? "text-foreground bg-secondary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                    }`}
                   >
-                    <div
-                      className={`flex items-center space-x-2.5 relative z-10 ${
-                        pathname === item.href
-                          ? "text-white"
-                          : "text-slate-300 group-hover:text-white"
-                      }`}
-                    >
+                    <span>{item.label}</span>
+                    {active && (
                       <motion.span
-                        className="text-lg group-hover:scale-125 transition-all duration-300"
-                        whileHover={{ rotate: [0, -10, 10, 0] }}
-                        transition={{ duration: 0.4 }}
-                      >
-                        {item.icon}
-                      </motion.span>
-                      <span className="tracking-wide">{item.label}</span>
-                    </div>
-
-                    {/* Hover Effect */}
-                    {pathname !== item.href && (
-                      <motion.div className="absolute inset-0 rounded-2xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        layoutId="navbar-active-indicator"
+                        className="absolute bottom-0.5 left-3.5 right-3.5 h-0.5 rounded-full bg-primary"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
                     )}
                   </Link>
-                </motion.div>
-              ))}
-            </div>
+                );
+              })}
+            </nav>
 
-            {/* Enhanced Premium Right Side Actions */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Enhanced Premium Search */}
-              <motion.button
-                whileHover={{ scale: 1.08, rotate: 2 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400 }}
-                className="relative p-3 sm:p-3.5 rounded-2xl bg-[#141414] border border-[#262626] text-slate-300 hover:text-white transition-all duration-300 shadow-xl group"
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
+            {/* Right Actions */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Command Search Button */}
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search movies, TV shows, and people"
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-secondary/70 px-2.5 sm:px-3 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors cursor-pointer"
               >
-                <motion.svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </motion.svg>
-              </motion.button>
+                <Search className="h-4 w-4" />
+                <span className="hidden xl:inline text-xs">Search...</span>
+                <kbd className="hidden xl:inline-flex items-center rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                  ⌘K
+                </kbd>
+              </button>
 
-              {/* Enhanced Premium User Actions - XL screens */}
-              <div className="hidden xl:flex items-center space-x-3">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <ClerkAuthButton />
-                </motion.div>
+              {/* Watchlist Link */}
+              <Link
+                href="/watchlist"
+                aria-label="Watchlist"
+                className={`relative inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+                  pathname === "/watchlist"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border bg-secondary/70 text-muted-foreground hover:text-foreground hover:border-foreground/20"
+                }`}
+              >
+                <Bookmark className="h-4 w-4" />
+                {watchlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-[10px] font-bold text-white">
+                    {watchlistCount > 99 ? "99+" : watchlistCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Quick Theme Toggle */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/70 text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors cursor-pointer"
+              >
+                {isDark ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </button>
+
+              {/* Settings Modal Trigger */}
+              <button
+                type="button"
+                onClick={() => setSettingsModal(true)}
+                aria-label="Open settings"
+                className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/70 text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors cursor-pointer"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+
+              {/* Auth */}
+              <div className="hidden md:flex items-center pl-1">
+                <ClerkAuthButton />
               </div>
 
-              {/* Enhanced Compact Actions - Medium screens */}
-              <div className="hidden md:flex xl:hidden items-center space-x-2">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <ClerkAuthButton />
-                </motion.div>
-              </div>
-
-              {/* Enhanced Mobile Menu Button */}
-              <motion.button
-                whileHover={{ scale: 1.08, rotate: isMobileMenuOpen ? 0 : 5 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400 }}
-                className="lg:hidden relative p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-black/90 border border-white/20 text-slate-300 hover:text-white hover:border-white/40 transition-all duration-300 backdrop-blur-sm shadow-xl group"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              {/* Mobile Menu Button */}
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+                aria-label="Toggle menu"
+                aria-expanded={isMobileMenuOpen}
+                className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/70 text-foreground hover:border-foreground/20 transition-colors cursor-pointer"
               >
-                <motion.svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  animate={{ rotate: isMobileMenuOpen ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d={
-                      isMobileMenuOpen
-                        ? "M6 18L18 6M6 6l12 12"
-                        : "M4 6h16M4 12h16M4 18h16"
-                    }
-                  />
-                </motion.svg>
-
-                {/* Enhanced glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-2xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
-              </motion.button>
+                {isMobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </button>
             </div>
           </div>
+        </div>
 
-          {/* Premium Search Bar */}
-          <AnimatePresence>
-            {isSearchOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="py-4 border-t border-white/10"
-              >
-                <div className="relative max-w-2xl mx-auto">
-                  <form onSubmit={handleSearchSubmit}>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      placeholder="Search for movies, shows, actors..."
-                      className="w-full px-6 py-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-purple-500/50 focus:bg-slate-800/70 transition-all duration-300"
-                      autoFocus
-                    />
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                      {isSearching && (
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            ease: "linear",
-                          }}
-                          className="w-4 h-4"
-                        >
-                          <svg
-                            className="w-4 h-4 text-purple-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
-                        </motion.div>
-                      )}
-                      <kbd className="px-3 py-1 bg-slate-700/50 border border-slate-600 rounded-lg text-xs text-slate-400">
-                        Enter
-                      </kbd>
-                    </div>
-                  </form>
-
-                  {/* Search Results */}
-                  {searchResults.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
-                    >
-                      <div className="px-4 py-2 border-b border-white/10">
-                        <span className="text-sm text-slate-400 font-medium">
-                          Search Results ({searchResults.length})
-                        </span>
-                      </div>
-                      <div className="max-h-96 overflow-y-auto">
-                        {searchResults.map((result, index) => {
-                          const posterPath = getPosterPath(result);
-                          const title = getTitle(result);
-                          const year = getYear(result);
-                          const rating = getRating(result);
-                          const mediaIcon = getMediaIcon(result);
-
-                          return (
-                            <motion.div
-                              key={result.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.05 }}
-                              onClick={() => handleResultClick(result)}
-                              className="flex items-center space-x-4 px-4 py-3 hover:bg-white/5 cursor-pointer transition-all duration-200"
-                            >
-                              <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
-                                {posterPath ? (
-                                  <Image
-                                    src={`https://image.tmdb.org/t/p/w92${posterPath}`}
-                                    alt={title}
-                                    width={48}
-                                    height={64}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-slate-500 text-2xl">
-                                    {mediaIcon}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-white font-medium truncate">
-                                  {title}
-                                </h4>
-                                <p className="text-slate-400 text-sm">
-                                  {year} • {getMediaType(result)}
-                                </p>
-                                {rating > 0 && (
-                                  <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-yellow-400 text-xs">
-                                      ★
-                                    </span>
-                                    <span className="text-slate-400 text-xs">
-                                      {rating.toFixed(1)}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <svg
-                                className="w-5 h-5 text-slate-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 5l7 7-7 7"
-                                />
-                              </svg>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                      <div className="px-4 py-3 border-t border-white/10 bg-slate-800/50">
-                        <button
-                          onClick={handleSearchSubmit}
-                          className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-                        >
-                          View all results for &ldquo;{searchQuery}&rdquo;
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Premium Mobile Menu */}
-          <AnimatePresence>
-            {isMobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, y: -20 }}
-                animate={{ opacity: 1, height: "auto", y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="lg:hidden absolute top-full left-0 right-0 bg-gradient-to-b from-slate-900/98 to-slate-800/98 backdrop-blur-2xl border-t border-white/10 shadow-2xl"
-              >
-                <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-2">
-                  {navItems.map((item, index) => (
-                    <motion.div
+        {/* Mobile Drawer */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden overflow-hidden border-t border-border bg-background/95 backdrop-blur-xl"
+            >
+              <div className="container-cinema py-4 space-y-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isRouteActive(item.href);
+                  return (
+                    <Link
                       key={item.href}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1, duration: 0.3 }}
+                      href={item.href}
+                      className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
+                        active
+                          ? "bg-primary/10 text-primary border border-primary/20"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      }`}
                     >
-                      <Link
-                        href={item.href}
-                        className={`flex items-center space-x-3 sm:space-x-4 px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-300 group ${
-                          pathname === item.href
-                            ? "bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 text-white border border-white/10"
-                            : "text-slate-300 hover:text-white hover:bg-white/5"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-300">
-                          {item.icon}
-                        </span>
-                        <span className="font-medium text-base sm:text-lg">
-                          {item.label}
-                        </span>
-                      </Link>
-                    </motion.div>
-                  ))}
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
 
-                  {/* Mobile Actions - More compact */}
-                  <div className="flex flex-col space-y-3 pt-6 border-t border-white/10">
-                    <div className="w-full">
-                      <ClerkAuthButton />
-                    </div>
-                    <button className="w-full py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg text-sm">
-                      ✨ Get Premium
+                <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={toggleTheme}
+                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground cursor-pointer"
+                    >
+                      {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                      {isDark ? "Light" : "Dark"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setSettingsModal(true);
+                      }}
+                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground cursor-pointer"
+                    >
+                      <Settings className="h-3.5 w-3.5" />
+                      Settings
                     </button>
                   </div>
+                  <ClerkAuthButton />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.nav>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {/* Command Search Palette Modal */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setIsSearchOpen(false)}
+            className="fixed inset-0 z-50 flex items-start justify-center bg-black/75 backdrop-blur-sm px-4 pt-20 sm:pt-28"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -10 }}
+              transition={{ duration: 0.18 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl"
+            >
+              {/* Search Form */}
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center gap-3 border-b border-border px-4 py-3.5"
+              >
+                <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search movies, TV series, actors, directors..."
+                  className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                {isSearching && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
+                )}
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="rounded-md p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <kbd className="hidden sm:inline-flex rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                  ESC
+                </kbd>
+              </form>
+
+              {/* Results or Recent Searches */}
+              <div className="max-h-[60vh] overflow-y-auto">
+                {searchQuery.trim().length < 2 ? (
+                  <div className="p-4">
+                    {history.length > 0 ? (
+                      <div>
+                        <p className="mb-2.5 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Recent Searches
+                        </p>
+                        <div className="flex flex-wrap gap-2 px-2">
+                          {history.map((term) => (
+                            <button
+                              key={term}
+                              type="button"
+                              onClick={() => {
+                                setIsSearchOpen(false);
+                                router.push(`/search?q=${encodeURIComponent(term)}`);
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-3 py-1.5 text-xs font-medium text-foreground hover:border-foreground/20 transition-colors cursor-pointer"
+                            >
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              {term}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-sm text-muted-foreground">
+                        Start typing to search across thousands of films, series,
+                        and filmmakers.
+                      </div>
+                    )}
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div>
+                    <div className="divide-y divide-border">
+                      {searchResults.map((item) => {
+                        const meta = getResultMeta(item);
+                        const imgUrl = tmdbClient.getImageUrl(meta.image, "w92");
+                        return (
+                          <button
+                            key={`${meta.type}-${item.id}`}
+                            type="button"
+                            onClick={() => {
+                              addToHistory(searchQuery.trim());
+                              setIsSearchOpen(false);
+                              router.push(meta.href);
+                            }}
+                            className="flex w-full items-center gap-3.5 px-4 py-3 text-left hover:bg-secondary/70 transition-colors cursor-pointer"
+                          >
+                            <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md bg-secondary border border-border">
+                              {imgUrl ? (
+                                <Image
+                                  src={imgUrl}
+                                  alt={meta.title}
+                                  fill
+                                  sizes="40px"
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                                  {meta.type === "movie" ? (
+                                    <Film className="h-4 w-4" />
+                                  ) : meta.type === "tv" ? (
+                                    <Tv className="h-4 w-4" />
+                                  ) : (
+                                    <User className="h-4 w-4" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-foreground">
+                                {meta.title}
+                              </p>
+                              <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                                <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                                  {meta.label}
+                                </span>
+                                {meta.year && (
+                                  <span className="font-mono">{meta.year}</span>
+                                )}
+                                {meta.rating > 0 && (
+                                  <span className="inline-flex items-center gap-1">
+                                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                    <span className="font-mono">
+                                      {meta.rating.toFixed(1)}
+                                    </span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="border-t border-border bg-secondary/40 px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={handleSearchSubmit}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline cursor-pointer"
+                      >
+                        <span>
+                          View all results for &ldquo;{searchQuery.trim()}&rdquo;
+                        </span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : !isSearching ? (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    No matches found for &ldquo;{searchQuery.trim()}&rdquo;.
+                  </div>
+                ) : null}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

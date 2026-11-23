@@ -4,9 +4,18 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  Tv,
+  Calendar,
+  Clock,
+  Star,
+  User,
+  Home,
+} from "lucide-react";
 import { useSeasonDetails, useTVShowDetailsBySlug } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
 import { createPersonSlug } from "@/lib/slug-utils";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 interface SeasonDetailPageProps {
   params: Promise<{
@@ -39,280 +48,293 @@ export default function SeasonDetailPage({ params }: SeasonDetailPageProps) {
     notFound();
   }
 
-  const formatEpisodeRuntime = (runtime: number | null) => {
-    if (!runtime) return "Unknown";
-    return `${runtime}min`;
-  };
+  const posterUrl = tmdbClient.getImageUrl(
+    season.poster_path || tvShow.poster_path || null,
+    "w500"
+  );
 
   return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full">
+    <div className="min-h-screen w-full">
       {/* Season Header */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12 bg-gradient-to-br from-purple-900/20 via-slate-900/10 to-blue-900/20">
-        <div className="max-w-7xl mx-auto">
-          {/* Breadcrumb */}
-          <nav className="mb-8">
-            <Link
-              href={`/tv/${slug}`}
-              className="text-purple-400 hover:text-purple-300 transition-colors duration-200"
-            >
-              ← Back to {tvShow.name}
-            </Link>
-          </nav>
+      <section className="relative border-b border-border bg-card/40 pt-24 pb-12 lg:pt-28">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(229,9,20,0.1),transparent_70%)]"
+        />
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12 items-start">
-            {/* Season Poster */}
-            <div className="lg:col-span-1">
-              <div className="aspect-[2/3] relative overflow-hidden rounded-2xl shadow-2xl">
-                <Image
-                  src={
-                    tmdbClient.getImageUrl(season.poster_path, "w500") ||
-                    "/placeholder-poster.svg"
-                  }
-                  alt={season.name}
-                  width={400}
-                  height={600}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/placeholder-poster.svg";
-                  }}
-                />
-              </div>
-            </div>
+        <div className="container-cinema relative z-10">
+          <Breadcrumb
+            items={[
+              { label: "Home", href: "/", icon: Home },
+              { label: "TV Shows", href: "/tv-shows", icon: Tv },
+              { label: tvShow.name, href: `/tv/${slug}` },
+              { label: season.name },
+            ]}
+          />
 
-            {/* Season Info */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Poster */}
             <div className="lg:col-span-3">
-              <div className="space-y-6">
-                {/* Title */}
-                <div>
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-gradient-premium mb-4">
-                    {season.name}
-                  </h1>
-                  <p className="text-xl text-slate-300">
-                    {tvShow.name} • Season {season.season_number}
-                  </p>
-                </div>
-
-                {/* Meta Information */}
-                <div className="flex flex-wrap gap-4 text-lg">
-                  <div className="bg-black/50 px-4 py-2 rounded-full">
-                    <span>📺 {season.episode_count} Episodes</span>
-                  </div>
-                  {season.air_date && (
-                    <div className="bg-black/50 px-4 py-2 rounded-full">
-                      <span>📅 {season.air_date ? new Date(season.air_date).getFullYear() : "N/A"}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Overview */}
-                {season.overview && (
-                  <div className="max-w-4xl">
-                    <p className="text-lg lg:text-xl text-slate-200 leading-relaxed">
-                      {season.overview}
-                    </p>
+              <div className="relative aspect-[2/3] w-52 lg:w-full mx-auto lg:mx-0 overflow-hidden rounded-2xl border border-border bg-secondary shadow-xl">
+                {posterUrl ? (
+                  <Image
+                    src={posterUrl}
+                    alt={season.name}
+                    fill
+                    sizes="(max-width: 1024px) 208px, 25vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <Tv className="h-10 w-10 opacity-40" />
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Episodes Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white mb-8">
-            📋 Episodes
-          </h2>
-          <div className="space-y-6">
-            {season.episodes.map((episode) => (
-              <div
-                key={episode.id}
-                className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group hover:shadow-2xl transition-all duration-300"
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  {/* Episode Still */}
-                  <div className="lg:col-span-1">
-                    <div className="aspect-video relative overflow-hidden rounded-xl">
-                      <Image
-                        src={
-                          tmdbClient.getImageUrl(episode.still_path, "w300") ||
-                          "/placeholder-episode.svg"
-                        }
-                        alt={episode.name}
-                        width={300}
-                        height={169}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/placeholder-episode.svg";
-                        }}
-                      />
-                      {/* Episode Number Badge */}
-                      <div className="absolute top-2 left-2 bg-purple-600 text-white text-sm font-bold px-2 py-1 rounded">
-                        E{episode.episode_number}
-                      </div>
-                    </div>
-                  </div>
+            {/* Info */}
+            <div className="lg:col-span-9 space-y-5">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 font-mono font-semibold text-primary">
+                  SEASON {String(season.season_number).padStart(2, "0")}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-1 font-mono text-foreground">
+                  <Tv className="h-3.5 w-3.5 text-muted-foreground" />
+                  {season.episodes?.length || season.episode_count} Episodes
+                </span>
+                {season.air_date && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-1 font-mono text-foreground">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    {season.air_date.slice(0, 4)}
+                  </span>
+                )}
+              </div>
 
-                  {/* Episode Info */}
-                  <div className="lg:col-span-3 p-4">
-                    <div className="space-y-4">
-                      {/* Title and Meta */}
-                      <div>
-                        <h3 className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                          {episode.name}
-                        </h3>
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-400">
-                          <span>Episode {episode.episode_number}</span>
-                          <span>•</span>
-                          <span>{formatEpisodeRuntime(episode.runtime)}</span>
-                          {episode.air_date && (
-                            <>
-                              <span>•</span>
-                              <span>
-                                {new Date(
-                                  episode.air_date
-                                ).toLocaleDateString()}
-                              </span>
-                            </>
-                          )}
-                          {episode.vote_average > 0 && (
-                            <>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                ⭐ {episode.vote_average.toFixed(1)}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
+                  {season.name}
+                </h1>
+                <p className="mt-1.5 text-base text-muted-foreground">
+                  <Link
+                    href={`/tv/${slug}`}
+                    className="font-medium text-foreground hover:text-primary transition-colors"
+                  >
+                    {tvShow.name}
+                  </Link>
+                </p>
+              </div>
 
-                      {/* Overview */}
-                      {episode.overview && (
-                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-3">
-                          {episode.overview}
-                        </p>
-                      )}
+              {season.overview && (
+                <p className="max-w-3xl text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  {season.overview}
+                </p>
+              )}
 
-                      {/* Guest Stars */}
-                      {episode.guest_stars &&
-                        episode.guest_stars.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">
-                              Guest Stars:
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {episode.guest_stars.slice(0, 4).map((guest) => (
-                                <Link
-                                  key={guest.id}
-                                  href={`/person/${createPersonSlug(
-                                    guest.name,
-                                    guest.id
-                                  )}`}
-                                  className="inline-flex items-center gap-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-full px-3 py-1 text-xs transition-colors duration-200"
-                                >
-                                  {guest.profile_path && (
-                                    <Image
-                                      src={
-                                        tmdbClient.getImageUrl(
-                                          guest.profile_path,
-                                          "w45"
-                                        ) || "/placeholder-avatar.svg"
-                                      }
-                                      alt={guest.name}
-                                      width={16}
-                                      height={16}
-                                      className="w-4 h-4 rounded-full object-cover"
-                                    />
-                                  )}
-                                  <span>{guest.name}</span>
-                                  <span className="text-slate-500 dark:text-slate-400">
-                                    as {guest.character}
-                                  </span>
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                    </div>
+              {/* Quick Season Switcher */}
+              {tvShow.seasons && tvShow.seasons.filter((s) => s.season_number > 0).length > 1 && (
+                <div className="pt-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Jump to Season
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {tvShow.seasons
+                      .filter((s) => s.season_number > 0)
+                      .map((s) => (
+                        <Link
+                          key={s.id}
+                          href={`/tv/${slug}/season/${s.season_number}`}
+                          className={`rounded-lg px-3 py-1.5 font-mono text-xs font-semibold border transition-colors ${
+                            s.season_number === seasonNum
+                              ? "border-primary bg-primary text-white"
+                              : "border-border bg-card text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          S{String(s.season_number).padStart(2, "0")}
+                        </Link>
+                      ))}
                   </div>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Season Cast */}
-      {season.credits?.cast && season.credits.cast.length > 0 && (
-        <section className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12 bg-slate-50 dark:bg-slate-900/50">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white mb-8">
-              🎭 Season Cast
+      {/* Episodes List */}
+      <section className="py-12">
+        <div className="container-cinema space-y-12">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Episodes
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
-              {season.credits.cast.slice(0, 16).map((person) => (
-                <Link
-                  key={person.id}
-                  href={`/person/${createPersonSlug(person.name, person.id)}`}
-                  className="group text-center hover:scale-105 transition-transform duration-300"
-                >
-                  <div className="aspect-square relative overflow-hidden rounded-full mb-3 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                    <Image
-                      src={
-                        tmdbClient.getImageUrl(
-                          person.profile_path || null,
-                          "w300"
-                        ) || "/placeholder-avatar.svg"
-                      }
-                      alt={person.name}
-                      width={200}
-                      height={200}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/placeholder-avatar.svg";
-                      }}
-                    />
-                  </div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm line-clamp-2 mb-1">
-                    {person.name}
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
-                    {person.character}
-                  </p>
-                </Link>
-              ))}
+            <div className="space-y-4">
+              {season.episodes.map((episode) => {
+                const stillUrl = tmdbClient.getImageUrl(
+                  episode.still_path,
+                  "w500"
+                );
+                return (
+                  <article
+                    key={episode.id}
+                    className="surface-card overflow-hidden grid grid-cols-1 md:grid-cols-12"
+                  >
+                    {/* Still Frame */}
+                    <div className="md:col-span-4 lg:col-span-3 relative aspect-video md:aspect-auto md:min-h-[168px] bg-secondary">
+                      {stillUrl ? (
+                        <Image
+                          src={stillUrl}
+                          alt={episode.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 25vw"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                          <Tv className="h-7 w-7 opacity-40" />
+                        </div>
+                      )}
+                      <div className="absolute top-2.5 left-2.5 rounded-md bg-black/80 px-2 py-0.5 font-mono text-xs font-bold text-white backdrop-blur-md">
+                        E{String(episode.episode_number).padStart(2, "0")}
+                      </div>
+                    </div>
+
+                    {/* Episode Content */}
+                    <div className="md:col-span-8 lg:col-span-9 p-5 flex flex-col justify-between gap-3">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <h3 className="text-base sm:text-lg font-bold text-foreground">
+                            {episode.episode_number}. {episode.name}
+                          </h3>
+                          {episode.vote_average > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 font-mono text-xs font-semibold text-amber-400 shrink-0">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                              {episode.vote_average.toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-mono">
+                          {episode.runtime && (
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              {episode.runtime}m
+                            </span>
+                          )}
+                          {episode.air_date && (
+                            <span className="inline-flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              {new Date(episode.air_date).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
+                            </span>
+                          )}
+                        </div>
+
+                        {episode.overview && (
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                            {episode.overview}
+                          </p>
+                        )}
+                      </div>
+
+                      {episode.guest_stars && episode.guest_stars.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Guest:
+                          </span>
+                          {episode.guest_stars.slice(0, 4).map((guest) => (
+                            <Link
+                              key={`${episode.id}-${guest.id}`}
+                              href={`/person/${createPersonSlug(
+                                guest.name,
+                                guest.id
+                              )}`}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/70 px-2.5 py-1 text-xs text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+                            >
+                              <span>{guest.name}</span>
+                              {guest.character && (
+                                <span className="text-muted-foreground">
+                                  · {guest.character}
+                                </span>
+                              )}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
-        </section>
-      )}
+
+          {/* Season Cast */}
+          {season.credits?.cast && season.credits.cast.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-6">
+                Season Cast
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {season.credits.cast.slice(0, 12).map((person) => {
+                  const avatar = tmdbClient.getImageUrl(
+                    person.profile_path || null,
+                    "w300"
+                  );
+                  return (
+                    <Link
+                      key={person.credit_id || person.id}
+                      href={`/person/${createPersonSlug(person.name, person.id)}`}
+                      className="group surface-card-interactive overflow-hidden"
+                    >
+                      <div className="relative aspect-[3/4] w-full bg-secondary overflow-hidden">
+                        {avatar ? (
+                          <Image
+                            src={avatar}
+                            alt={person.name}
+                            fill
+                            sizes="(max-width: 640px) 50vw, 18vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                            <User className="h-8 w-8 opacity-40" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <h3 className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                          {person.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                          {person.character}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
 
-// Loading skeleton component
 function SeasonDetailSkeleton() {
   return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full animate-pulse">
-      <div className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
-            <div className="lg:col-span-1">
-              <div className="aspect-[2/3] bg-slate-300 dark:bg-slate-700 rounded-2xl" />
-            </div>
-            <div className="lg:col-span-3 space-y-6">
-              <div className="h-12 bg-slate-300 dark:bg-slate-700 rounded-lg w-3/4" />
-              <div className="h-6 bg-slate-300 dark:bg-slate-700 rounded-lg w-1/2" />
-              <div className="space-y-3">
-                <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-full" />
-                <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-full" />
-                <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-2/3" />
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen pt-28 pb-16 container-cinema">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-3 aspect-[2/3] rounded-2xl bg-secondary skeleton-shimmer" />
+        <div className="lg:col-span-9 space-y-4">
+          <div className="h-10 w-1/2 rounded-xl bg-secondary skeleton-shimmer" />
+          <div className="h-4 w-full rounded bg-secondary skeleton-shimmer" />
+          <div className="h-4 w-3/4 rounded bg-secondary skeleton-shimmer" />
         </div>
       </div>
     </div>

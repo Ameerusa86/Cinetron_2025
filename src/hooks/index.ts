@@ -1,50 +1,72 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useCallback } from "react";
 import { useInView } from "react-intersection-observer";
-import tmdbClient from "@/lib/tmdb-client";
+import tmdbClient, {
+  type DiscoverMoviesOptions,
+  type DiscoverTVOptions,
+} from "@/lib/tmdb-client";
 import {
   useCacheStore,
   useSearchStore,
   useNotificationStore,
   useUserStore,
 } from "@/stores";
-import type { Movie, MultiSearchResult } from "@/types";
+import type { Movie, MultiSearchResult, WatchlistItem } from "@/types";
 import { extractIdFromSlug } from "@/lib/slug-utils";
 
 // ======================
 // TMDB API HOOKS
 // ======================
 
-/**
- * Hook to fetch trending movies
- */
-export const useTrendingMovies = (timeWindow: "day" | "week" = "day") => {
+export const useTrendingMovies = (
+  timeWindow: "day" | "week" = "day",
+  enabled: boolean = true
+) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `trending-${timeWindow}`;
 
   return useQuery({
     queryKey: ["trending-movies", timeWindow],
     queryFn: async () => {
-      // Check cache first
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
-      // Fetch from API
+      if (cached) return cached;
       const data = await tmdbClient.getTrendingMovies(timeWindow);
       addMovies(cacheKey, data);
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to fetch popular movies
- */
-export const usePopularMovies = (page: number = 1) => {
+export const useTrendingTVShows = (
+  timeWindow: "day" | "week" = "day",
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["trending-tv", timeWindow],
+    queryFn: () => tmdbClient.getTrendingTVShows(timeWindow),
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  });
+};
+
+export const useTrendingPeople = (
+  timeWindow: "day" | "week" = "day",
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["trending-people", timeWindow],
+    queryFn: () => tmdbClient.getTrendingPeople(timeWindow),
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  });
+};
+
+export const usePopularMovies = (page: number = 1, enabled: boolean = true) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `popular-${page}`;
 
@@ -52,23 +74,18 @@ export const usePopularMovies = (page: number = 1) => {
     queryKey: ["popular-movies", page],
     queryFn: async () => {
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.getPopularMovies(page);
       addMovies(cacheKey, data);
       return data;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    enabled,
+    staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to fetch top rated movies
- */
-export const useTopRatedMovies = (page: number = 1) => {
+export const useTopRatedMovies = (page: number = 1, enabled: boolean = true) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `top-rated-${page}`;
 
@@ -76,23 +93,18 @@ export const useTopRatedMovies = (page: number = 1) => {
     queryKey: ["top-rated-movies", page],
     queryFn: async () => {
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.getTopRatedMovies(page);
       addMovies(cacheKey, data);
       return data;
     },
-    staleTime: 1000 * 60 * 15, // 15 minutes (top rated changes less frequently)
-    gcTime: 1000 * 60 * 60, // 1 hour
+    enabled,
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
   });
 };
 
-/**
- * Hook to fetch upcoming movies
- */
-export const useUpcomingMovies = (page: number = 1) => {
+export const useUpcomingMovies = (page: number = 1, enabled: boolean = true) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `upcoming-${page}`;
 
@@ -100,23 +112,21 @@ export const useUpcomingMovies = (page: number = 1) => {
     queryKey: ["upcoming-movies", page],
     queryFn: async () => {
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.getUpcomingMovies(page);
       addMovies(cacheKey, data);
       return data;
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    enabled,
+    staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60,
   });
 };
 
-/**
- * Hook to fetch now playing movies
- */
-export const useNowPlayingMovies = (page: number = 1) => {
+export const useNowPlayingMovies = (
+  page: number = 1,
+  enabled: boolean = true
+) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `now-playing-${page}`;
 
@@ -124,23 +134,22 @@ export const useNowPlayingMovies = (page: number = 1) => {
     queryKey: ["now-playing-movies", page],
     queryFn: async () => {
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.getNowPlayingMovies(page);
       addMovies(cacheKey, data);
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes (now playing changes frequently)
+    enabled,
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to search movies
- */
-export const useSearchMovies = (query: string, page: number = 1) => {
+export const useSearchMovies = (
+  query: string,
+  page: number = 1,
+  enabled: boolean = true
+) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `search-${query}-${page}`;
 
@@ -150,40 +159,104 @@ export const useSearchMovies = (query: string, page: number = 1) => {
       if (!query.trim()) {
         return { results: [], total_pages: 0, total_results: 0, page: 1 };
       }
-
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.searchMovies(query, page);
       addMovies(cacheKey, data);
       return data;
     },
-    enabled: !!query.trim(),
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    enabled: enabled && !!query.trim(),
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
   });
 };
 
-/**
- * Hook to fetch popular TV shows
- */
-export const usePopularTVShows = (page: number = 1) => {
+export const useSearchTVShows = (
+  query: string,
+  page: number = 1,
+  enabled: boolean = true
+) => {
   return useQuery({
-    queryKey: ["popular-tv-shows", page],
+    queryKey: ["search-tv-shows", query, page],
     queryFn: async () => {
-      const data = await tmdbClient.getPopularTVShows(page);
-      return data;
+      if (!query.trim()) {
+        return { results: [], total_pages: 0, total_results: 0, page: 1 };
+      }
+      return tmdbClient.searchTVShows(query, page);
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    enabled: enabled && !!query.trim(),
+    staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to fetch movie details
- */
+export const useMultiSearch = (
+  query: string,
+  page: number = 1,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["multi-search", query, page],
+    queryFn: async () => {
+      if (!query.trim()) {
+        return { results: [], total_pages: 0, total_results: 0, page: 1 };
+      }
+      return tmdbClient.multiSearch(query, page);
+    },
+    enabled: enabled && !!query.trim(),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+  });
+};
+
+export const usePopularTVShows = (
+  page: number = 1,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["popular-tv-shows", page],
+    queryFn: () => tmdbClient.getPopularTVShows(page),
+    enabled,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+  });
+};
+
+export const useTopRatedTVShows = (
+  page: number = 1,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["top-rated-tv-shows", page],
+    queryFn: () => tmdbClient.getTopRatedTVShows(page),
+    enabled,
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
+  });
+};
+
+export const useDiscoverTVShows = (
+  options: DiscoverTVOptions = {},
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["discover-tv-shows", options],
+    queryFn: () => tmdbClient.discoverTVShows(options),
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  });
+};
+
+export const useTVGenres = () => {
+  return useQuery({
+    queryKey: ["tv-genres"],
+    queryFn: () => tmdbClient.getTVGenres(),
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+};
+
 export const useMovieDetails = (movieId: number, enabled: boolean = true) => {
   const { getMovieDetails, addMovieDetails } = useCacheStore();
 
@@ -191,40 +264,32 @@ export const useMovieDetails = (movieId: number, enabled: boolean = true) => {
     queryKey: ["movie-details", movieId],
     queryFn: async () => {
       const cached = getMovieDetails(movieId);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.getMovieDetails(movieId, [
         "credits",
         "videos",
         "similar",
+        "reviews",
       ]);
       addMovieDetails(movieId, data);
       return data;
     },
     enabled: enabled && !!movieId,
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
   });
 };
 
-/**
- * Hook to fetch movie credits
- */
 export const useMovieCredits = (movieId: number, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["movie-credits", movieId],
     queryFn: () => tmdbClient.getMovieCredits(movieId),
     enabled: enabled && !!movieId,
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60,
   });
 };
 
-/**
- * Hook to fetch movie videos
- */
 export const useMovieVideos = (movieId: number, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["movie-videos", movieId],
@@ -235,9 +300,6 @@ export const useMovieVideos = (movieId: number, enabled: boolean = true) => {
   });
 };
 
-/**
- * Hook to fetch movie reviews
- */
 export const useMovieReviews = (
   movieId: number,
   page: number = 1,
@@ -252,9 +314,20 @@ export const useMovieReviews = (
   });
 };
 
-/**
- * Hook to fetch similar movies
- */
+export const useTVReviews = (
+  tvId: number,
+  page: number = 1,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["tv-reviews", tvId, page],
+    queryFn: () => tmdbClient.getTVReviews(tvId, page),
+    enabled: enabled && !!tvId,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+  });
+};
+
 export const useSimilarMovies = (movieId: number, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["similar-movies", movieId],
@@ -265,9 +338,6 @@ export const useSimilarMovies = (movieId: number, enabled: boolean = true) => {
   });
 };
 
-/**
- * Hook to fetch movie recommendations
- */
 export const useMovieRecommendations = (
   movieId: number,
   enabled: boolean = true
@@ -281,9 +351,6 @@ export const useMovieRecommendations = (
   });
 };
 
-/**
- * Hook to fetch movie watch providers
- */
 export const useMovieWatchProviders = (
   movieId: number,
   enabled: boolean = true
@@ -292,14 +359,21 @@ export const useMovieWatchProviders = (
     queryKey: ["movie-watch-providers", movieId],
     queryFn: () => tmdbClient.getMovieWatchProviders(movieId),
     enabled: enabled && !!movieId,
-    staleTime: 1000 * 60 * 60, // 1 hour
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 };
 
-/**
- * Hook to fetch genres
- */
+export const useTVWatchProviders = (tvId: number, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ["tv-watch-providers", tvId],
+    queryFn: () => tmdbClient.getTVWatchProviders(tvId),
+    enabled: enabled && !!tvId,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+};
+
 export const useGenres = () => {
   const { getGenres, addGenres } = useCacheStore();
 
@@ -307,24 +381,19 @@ export const useGenres = () => {
     queryKey: ["genres"],
     queryFn: async () => {
       const cached = getGenres();
-      if (cached) {
-        return { genres: cached };
-      }
-
+      if (cached) return { genres: cached };
       const data = await tmdbClient.getMovieGenres();
       addGenres(data.genres);
       return data;
     },
-    staleTime: 1000 * 60 * 60, // 1 hour
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 };
 
-/**
- * Hook to discover movies with filters
- */
 export const useDiscoverMovies = (
-  options: Parameters<typeof tmdbClient.discoverMovies>[0] = {}
+  options: DiscoverMoviesOptions = {},
+  enabled: boolean = true
 ) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `discover-${JSON.stringify(options)}`;
@@ -333,23 +402,22 @@ export const useDiscoverMovies = (
     queryKey: ["discover-movies", options],
     queryFn: async () => {
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.discoverMovies(options);
       addMovies(cacheKey, data);
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to fetch movies by genre
- */
-export const useMoviesByGenre = (genreId: number, page: number = 1) => {
+export const useMoviesByGenre = (
+  genreId: number,
+  page: number = 1,
+  enabled: boolean = true
+) => {
   const { getMovies, addMovies } = useCacheStore();
   const cacheKey = `genre-${genreId}-${page}`;
 
@@ -357,17 +425,14 @@ export const useMoviesByGenre = (genreId: number, page: number = 1) => {
     queryKey: ["movies-by-genre", genreId, page],
     queryFn: async () => {
       const cached = getMovies(cacheKey);
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       const data = await tmdbClient.getMoviesByGenre(genreId, page);
       addMovies(cacheKey, data);
       return data;
     },
-    enabled: genreId > 0,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
+    enabled: enabled && genreId > 0,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
@@ -375,9 +440,6 @@ export const useMoviesByGenre = (genreId: number, page: number = 1) => {
 // SEARCH HOOKS
 // ======================
 
-/**
- * Hook for searching movies, people, and TV shows
- */
 export const useSearch = () => {
   const {
     query,
@@ -408,6 +470,9 @@ export const useSearch = () => {
         if (filters.mediaType === "movie") {
           const response = await tmdbClient.searchMovies(searchQuery);
           results = response.results;
+        } else if (filters.mediaType === "tv") {
+          const response = await tmdbClient.searchTVShows(searchQuery);
+          results = response.results;
         } else if (filters.mediaType === "person") {
           const response = await tmdbClient.searchPeople(searchQuery);
           results = response.results;
@@ -416,7 +481,6 @@ export const useSearch = () => {
           results = response.results;
         }
 
-        // Apply additional filters
         if (filters.genre) {
           results = results.filter(
             (item) =>
@@ -424,13 +488,12 @@ export const useSearch = () => {
           );
         }
 
-        // Sort results
         results.sort((a, b) => {
           const sortBy = filters.sortBy;
           const sortOrder = filters.sortOrder;
 
-          let aValue: number = 0;
-          let bValue: number = 0;
+          let aValue = 0;
+          let bValue = 0;
 
           if (sortBy === "popularity") {
             aValue = a.popularity;
@@ -479,12 +542,9 @@ export const useSearch = () => {
 };
 
 // ======================
-// INFINITE SCROLL HOOKS
+// INFINITE SCROLL & UTILITY HOOKS
 // ======================
 
-/**
- * Hook for infinite scrolling with intersection observer
- */
 export const useInfiniteScroll = (
   fetchMore: () => void,
   hasMore: boolean,
@@ -505,13 +565,6 @@ export const useInfiniteScroll = (
   return { ref, inView };
 };
 
-// ======================
-// UTILITY HOOKS
-// ======================
-
-/**
- * Hook to debounce a value
- */
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -520,31 +573,22 @@ export const useDebounce = <T>(value: T, delay: number): T => {
       setDebouncedValue(value);
     }, delay);
 
-    return () => {
-      clearTimeout(handler);
-    };
+    return () => clearTimeout(handler);
   }, [value, delay]);
 
   return debouncedValue;
 };
 
-/**
- * Hook for local storage with SSR safety
- */
 export const useLocalStorage = <T>(
   key: string,
   initialValue: T
 ): [T, (value: T) => void] => {
   const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") {
-      return initialValue;
-    }
-
+    if (typeof window === "undefined") return initialValue;
     try {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+    } catch {
       return initialValue;
     }
   });
@@ -556,8 +600,8 @@ export const useLocalStorage = <T>(
         if (typeof window !== "undefined") {
           window.localStorage.setItem(key, JSON.stringify(value));
         }
-      } catch (error) {
-        console.warn(`Error setting localStorage key "${key}":`, error);
+      } catch {
+        // Ignore storage quota errors
       }
     },
     [key]
@@ -566,9 +610,6 @@ export const useLocalStorage = <T>(
   return [storedValue, setValue];
 };
 
-/**
- * Hook for managing user interactions with movies
- */
 export const useMovieActions = () => {
   const {
     addToWatchlist,
@@ -606,7 +647,6 @@ export const useMovieActions = () => {
         });
       }
 
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["user-watchlist"] });
     },
     [
@@ -636,13 +676,12 @@ export const useMovieActions = () => {
           type: "success",
           title: "Added to Favorites",
           message: `"${movie.title}" has been added to your favorites.`,
-          actionText: "View Favorites",
-          actionUrl: "/favorites",
+          actionText: "View Profile",
+          actionUrl: "/profile",
           read: false,
         });
       }
 
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["user-favorites"] });
     },
     [
@@ -660,11 +699,10 @@ export const useMovieActions = () => {
       addNotification({
         type: "success",
         title: "Rating Saved",
-        message: `You rated "${movie.title}" ${rating}/10 stars.`,
+        message: `You rated "${movie.title}" ${rating}/10.`,
         read: false,
       });
 
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["user-ratings"] });
     },
     [rateMovie, addNotification, queryClient]
@@ -680,26 +718,13 @@ export const useMovieActions = () => {
   };
 };
 
-/**
- * Hook for voice commands (placeholder for future implementation)
- */
 export const useVoiceCommands = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript] = useState("");
   const [error] = useState<string | null>(null);
 
-  // TODO: Implement Web Speech API
-  const startListening = useCallback(() => {
-    setIsListening(true);
-    // Implementation placeholder
-    console.log("🎤 Voice recognition would start here");
-  }, []);
-
-  const stopListening = useCallback(() => {
-    setIsListening(false);
-    // Implementation placeholder
-    console.log("🎤 Voice recognition would stop here");
-  }, []);
+  const startListening = useCallback(() => setIsListening(true), []);
+  const stopListening = useCallback(() => setIsListening(false), []);
 
   return {
     isListening,
@@ -710,9 +735,6 @@ export const useVoiceCommands = () => {
   };
 };
 
-/**
- * Hook for checking online status
- */
 export const useOnlineStatus = () => {
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
@@ -720,10 +742,8 @@ export const useOnlineStatus = () => {
 
   useEffect(() => {
     const updateNetworkStatus = () => setIsOnline(navigator.onLine);
-
     window.addEventListener("online", updateNetworkStatus);
     window.addEventListener("offline", updateNetworkStatus);
-
     return () => {
       window.removeEventListener("online", updateNetworkStatus);
       window.removeEventListener("offline", updateNetworkStatus);
@@ -733,9 +753,6 @@ export const useOnlineStatus = () => {
   return isOnline;
 };
 
-/**
- * Hook for viewport size
- */
 export const useViewport = () => {
   const [viewport, setViewport] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
@@ -744,25 +761,17 @@ export const useViewport = () => {
 
   useEffect(() => {
     const updateViewport = () => {
-      setViewport({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
     };
-
     window.addEventListener("resize", updateViewport);
     return () => window.removeEventListener("resize", updateViewport);
   }, []);
 
-  const isMobile = viewport.width < 768;
-  const isTablet = viewport.width >= 768 && viewport.width < 1024;
-  const isDesktop = viewport.width >= 1024;
-
   return {
     ...viewport,
-    isMobile,
-    isTablet,
-    isDesktop,
+    isMobile: viewport.width < 768,
+    isTablet: viewport.width >= 768 && viewport.width < 1024,
+    isDesktop: viewport.width >= 1024,
   };
 };
 
@@ -770,9 +779,6 @@ export const useViewport = () => {
 // SLUG-BASED HOOKS
 // ======================
 
-/**
- * Hook to fetch movie details by slug
- */
 export const useMovieDetailsBySlug = (
   slug: string,
   enabled: boolean = true
@@ -780,37 +786,30 @@ export const useMovieDetailsBySlug = (
   return useQuery({
     queryKey: ["movie-details-by-slug", slug],
     queryFn: async () => {
-      try {
-        const movieId = extractIdFromSlug(slug);
-        const { getMovieDetails, addMovieDetails } = useCacheStore.getState();
+      const movieId = extractIdFromSlug(slug);
+      const { getMovieDetails, addMovieDetails } = useCacheStore.getState();
 
-        const cached = getMovieDetails(movieId);
-        if (cached) {
-          return cached;
-        }
-
-        const data = await tmdbClient.getMovieDetails(movieId, [
-          "credits",
-          "videos",
-          "similar",
-          "recommendations",
-          "reviews",
-        ]);
-        addMovieDetails(movieId, data);
-        return data;
-      } catch {
-        throw new Error(`Invalid movie slug: ${slug}`);
+      const cached = getMovieDetails(movieId);
+      if (cached && cached.credits && cached.videos) {
+        return cached;
       }
+
+      const data = await tmdbClient.getMovieDetails(movieId, [
+        "credits",
+        "videos",
+        "similar",
+        "recommendations",
+        "reviews",
+      ]);
+      addMovieDetails(movieId, data);
+      return data;
     },
     enabled: enabled && !!slug,
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
   });
 };
 
-/**
- * Hook to fetch TV show details by slug
- */
 export const useTVShowDetailsBySlug = (
   slug: string,
   enabled: boolean = true
@@ -818,33 +817,21 @@ export const useTVShowDetailsBySlug = (
   return useQuery({
     queryKey: ["tv-show-details-by-slug", slug],
     queryFn: async () => {
-      try {
-        const tvShowId = extractIdFromSlug(slug);
-        const data = await tmdbClient.getTVShowDetails(tvShowId, [
-          "credits",
-          "videos",
-          "similar",
-          "recommendations",
-          "reviews",
-        ]);
-        return data;
-      } catch {
-        throw new Error(`Invalid TV show slug: ${slug}`);
-      }
+      const tvShowId = extractIdFromSlug(slug);
+      return tmdbClient.getTVShowDetails(tvShowId, [
+        "credits",
+        "videos",
+        "similar",
+        "recommendations",
+        "reviews",
+      ]);
     },
     enabled: enabled && !!slug,
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
   });
 };
 
-// ======================
-// PERSON HOOKS
-// ======================
-
-/**
- * Hook to fetch person details by slug
- */
 export const usePersonDetailsBySlug = (
   slug: string,
   enabled: boolean = true
@@ -852,23 +839,15 @@ export const usePersonDetailsBySlug = (
   return useQuery({
     queryKey: ["person-details-by-slug", slug],
     queryFn: async () => {
-      try {
-        const personId = extractIdFromSlug(slug);
-        const data = await tmdbClient.getPersonDetails(personId);
-        return data;
-      } catch {
-        throw new Error(`Invalid person slug: ${slug}`);
-      }
+      const personId = extractIdFromSlug(slug);
+      return tmdbClient.getPersonDetails(personId);
     },
     enabled: enabled && !!slug,
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
   });
 };
 
-/**
- * Hook to fetch person movie credits by slug
- */
 export const usePersonMovieCredits = (
   slug: string,
   enabled: boolean = true
@@ -876,44 +855,28 @@ export const usePersonMovieCredits = (
   return useQuery({
     queryKey: ["person-movie-credits", slug],
     queryFn: async () => {
-      try {
-        const personId = extractIdFromSlug(slug);
-        const data = await tmdbClient.getPersonMovieCredits(personId);
-        return data;
-      } catch {
-        throw new Error(`Invalid person slug: ${slug}`);
-      }
+      const personId = extractIdFromSlug(slug);
+      return tmdbClient.getPersonMovieCredits(personId);
     },
     enabled: enabled && !!slug,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to fetch person TV credits by slug
- */
 export const usePersonTVCredits = (slug: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["person-tv-credits", slug],
     queryFn: async () => {
-      try {
-        const personId = extractIdFromSlug(slug);
-        const data = await tmdbClient.getPersonTVCredits(personId);
-        return data;
-      } catch {
-        throw new Error(`Invalid person slug: ${slug}`);
-      }
+      const personId = extractIdFromSlug(slug);
+      return tmdbClient.getPersonTVCredits(personId);
     },
     enabled: enabled && !!slug,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to fetch TV show season details
- */
 export const useSeasonDetails = (
   tvShowSlug: string,
   seasonNumber: number,
@@ -922,51 +885,54 @@ export const useSeasonDetails = (
   return useQuery({
     queryKey: ["season-details", tvShowSlug, seasonNumber],
     queryFn: async () => {
-      try {
-        const tvId = extractIdFromSlug(tvShowSlug);
-        const data = await tmdbClient.getSeasonDetails(tvId, seasonNumber);
-        return data;
-      } catch {
-        throw new Error(
-          `Failed to fetch season ${seasonNumber} details for ${tvShowSlug}`
-        );
-      }
+      const tvId = extractIdFromSlug(tvShowSlug);
+      return tmdbClient.getSeasonDetails(tvId, seasonNumber);
     },
     enabled: enabled && !!tvShowSlug && seasonNumber > 0,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
-/**
- * Hook to get watchlist movie/tv details
- */
-export const useWatchlistDetails = (itemIds: number[]) => {
-  return useQuery({
-    queryKey: ["watchlist-details", itemIds.sort().join(",")],
-    queryFn: async () => {
-      if (itemIds.length === 0) return [];
+export const useWatchlistDetails = (
+  items: WatchlistItem[] | number[]
+) => {
+  const normalized = items.map((item) =>
+    typeof item === "number" ? { id: item, type: undefined } : { id: item.id, type: item.type }
+  );
+  const key = [...normalized]
+    .sort((a, b) => a.id - b.id)
+    .map((x) => `${x.type || "any"}-${x.id}`)
+    .join(",");
 
-      // Fetch details for all items in parallel
-      const promises = itemIds.map(async (id) => {
+  return useQuery({
+    queryKey: ["watchlist-details", key],
+    queryFn: async () => {
+      if (normalized.length === 0) return [];
+
+      const promises = normalized.map(async ({ id, type }) => {
         try {
-          // Try movie first
-          return await tmdbClient.getMovieDetails(id);
-        } catch {
-          // If movie fails, try TV show
-          try {
+          if (type === "tv") {
             return await tmdbClient.getTVShowDetails(id);
-          } catch {
-            return null;
           }
+          if (type === "movie") {
+            return await tmdbClient.getMovieDetails(id);
+          }
+          try {
+            return await tmdbClient.getMovieDetails(id);
+          } catch {
+            return await tmdbClient.getTVShowDetails(id);
+          }
+        } catch {
+          return null;
         }
       });
 
       const results = await Promise.all(promises);
-      return results.filter((item) => item !== null);
+      return results.filter((item): item is NonNullable<typeof item> => item !== null);
     },
-    enabled: itemIds.length > 0,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
+    enabled: normalized.length > 0,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
   });
 };

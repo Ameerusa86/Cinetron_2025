@@ -2,15 +2,23 @@
 
 import React from "react";
 import { AIHub } from "@/components/features/AIHub";
+import { PageHeader } from "@/components/media/PageHeader";
 
 export default function AIFeaturesPage() {
   return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full">
-      <div className="px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full">
+      <PageHeader
+        eyebrow="Gemini Intelligence"
+        title="AI Cinema"
+        accentWord="Studio"
+        description="Personalized recommendations, mood analysis, scene recognition, review synthesis, and auto-curated collections."
+      />
+
+      <section className="py-10">
+        <div className="container-cinema">
           <AIHub />
         </div>
-      </div>
+      </section>
     </div>
   );
 }

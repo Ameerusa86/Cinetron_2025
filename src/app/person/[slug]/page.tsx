@@ -1,27 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  Film,
+  Tv,
+  User,
+  Calendar,
+  MapPin,
+  Globe,
+  ExternalLink,
+  TrendingUp,
+} from "lucide-react";
 import {
   usePersonDetailsBySlug,
   usePersonMovieCredits,
   usePersonTVCredits,
 } from "@/hooks";
 import tmdbClient from "@/lib/tmdb-client";
-import { createMovieSlug, createTVShowSlug } from "@/lib/slug-utils";
-import { Button } from "@/components/ui/button";
+import { MediaCard, MediaGridSkeleton } from "@/components/media/MediaCard";
 
 interface PersonDetailPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>;
 }
 
 export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   const { slug } = React.use(params);
   const [activeTab, setActiveTab] = useState<"movies" | "tv">("movies");
+  const [expandBio, setExpandBio] = useState(false);
 
   const {
     data: person,
@@ -32,31 +39,48 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
     usePersonMovieCredits(slug);
   const { data: tvCredits, isLoading: tvLoading } = usePersonTVCredits(slug);
 
-  if (personLoading) {
-    return <PersonDetailSkeleton />;
-  }
+  const sortedMovieCredits = useMemo(() => {
+    if (!movieCredits) return null;
+    const sortByDateDesc = <T extends { release_date?: string }>(items: T[]) =>
+      [...items].sort((a, b) => {
+        const ta = a.release_date ? new Date(a.release_date).getTime() : 0;
+        const tb = b.release_date ? new Date(b.release_date).getTime() : 0;
+        return tb - ta;
+      });
 
-  if (personError || !person) {
-    notFound();
-  }
+    return {
+      cast: sortByDateDesc(movieCredits.cast).slice(0, 24),
+      crew: sortByDateDesc(movieCredits.crew).slice(0, 24),
+    };
+  }, [movieCredits]);
 
-  // Calculate age
+  const sortedTVCredits = useMemo(() => {
+    if (!tvCredits) return null;
+    const sortByDateDesc = <T extends { first_air_date?: string }>(items: T[]) =>
+      [...items].sort((a, b) => {
+        const ta = a.first_air_date ? new Date(a.first_air_date).getTime() : 0;
+        const tb = b.first_air_date ? new Date(b.first_air_date).getTime() : 0;
+        return tb - ta;
+      });
+
+    return {
+      cast: sortByDateDesc(tvCredits.cast).slice(0, 24),
+      crew: sortByDateDesc(tvCredits.crew).slice(0, 24),
+    };
+  }, [tvCredits]);
+
+  if (personLoading) return <PersonDetailSkeleton />;
+  if (personError || !person) notFound();
+
   const calculateAge = (birthday: string, deathday?: string) => {
     const birth = new Date(birthday);
-    const death = deathday ? new Date(deathday) : new Date();
-    const age = death.getFullYear() - birth.getFullYear();
-    const monthDiff = death.getMonth() - birth.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && death.getDate() < birth.getDate())
-    ) {
-      return age - 1;
-    }
+    const end = deathday ? new Date(deathday) : new Date();
+    let age = end.getFullYear() - birth.getFullYear();
+    const m = end.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && end.getDate() < birth.getDate())) age--;
     return age;
   };
 
-  // Get gender display
   const getGenderDisplay = (gender: number) => {
     switch (gender) {
       case 1:
@@ -70,401 +94,272 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
     }
   };
 
-  // Sort and filter credits
-  const sortedMovieCredits = movieCredits
-    ? {
-        cast: movieCredits.cast
-          .sort(
-            (a, b) =>
-              new Date(b.release_date || "1900-01-01").getTime() -
-              new Date(a.release_date || "1900-01-01").getTime()
-          )
-          .slice(0, 20),
-        crew: movieCredits.crew
-          .sort(
-            (a, b) =>
-              new Date(b.release_date || "1900-01-01").getTime() -
-              new Date(a.release_date || "1900-01-01").getTime()
-          )
-          .slice(0, 20),
-      }
-    : null;
-
-  const sortedTVCredits = tvCredits
-    ? {
-        cast: tvCredits.cast
-          .sort(
-            (a, b) =>
-              new Date(b.first_air_date || "1900-01-01").getTime() -
-              new Date(a.first_air_date || "1900-01-01").getTime()
-          )
-          .slice(0, 20),
-        crew: tvCredits.crew
-          .sort(
-            (a, b) =>
-              new Date(b.first_air_date || "1900-01-01").getTime() -
-              new Date(a.first_air_date || "1900-01-01").getTime()
-          )
-          .slice(0, 20),
-      }
-    : null;
+  const profileUrl = tmdbClient.getImageUrl(person.profile_path || null, "h632");
+  const bioParagraphs = person.biography
+    ? person.biography.split("\n\n").filter(Boolean)
+    : [];
+  const hasLongBio = bioParagraphs.length > 2;
 
   return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full">
-      {/* Hero Section */}
-      <section className="relative w-full bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-purple-900 dark:via-purple-700 dark:to-pink-800 overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%239C92AC' fillOpacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
-        </div>
+    <div className="min-h-screen w-full">
+      {/* Editorial Profile Header */}
+      <section className="relative border-b border-border bg-card/40 pt-24 pb-14 lg:pt-28">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(229,9,20,0.1),transparent_70%)]"
+        />
 
-        <div className="relative z-10 px-4 sm:px-6 lg:px-8 xl:px-12 py-16 w-full">
-          <div className="w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
-              {/* Profile Photo */}
-              <div className="lg:col-span-1">
-                <div className="aspect-[3/4] w-full max-w-sm mx-auto lg:max-w-none relative overflow-hidden rounded-2xl shadow-2xl">
+        <div className="container-cinema relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            {/* Portrait */}
+            <div className="lg:col-span-3">
+              <div className="relative aspect-[3/4] w-56 sm:w-64 lg:w-full mx-auto lg:mx-0 overflow-hidden rounded-2xl border border-border bg-secondary shadow-2xl">
+                {profileUrl ? (
                   <Image
-                    src={
-                      tmdbClient.getImageUrl(
-                        person.profile_path || null,
-                        "h632"
-                      ) || "/placeholder-avatar.svg"
-                    }
+                    src={profileUrl}
                     alt={person.name}
-                    width={400}
-                    height={600}
-                    className="w-full h-full object-cover"
+                    fill
                     priority
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/placeholder-avatar.svg";
-                    }}
+                    sizes="(max-width: 1024px) 256px, 25vw"
+                    className="object-cover"
                   />
-                  {/* 3D Hover Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <User className="h-14 w-14 opacity-40" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bio & Metadata */}
+            <div className="lg:col-span-9 space-y-6">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span>{person.known_for_department || "Talent"}</span>
                 </div>
+                <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground">
+                  {person.name}
+                </h1>
               </div>
 
-              {/* Person Details */}
-              <div className="lg:col-span-2 text-slate-900 dark:text-white text-center lg:text-left">
-                <div className="space-y-6">
-                  {/* Name */}
-                  <div>
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold mb-4">
-                      <span className="bg-gradient-to-r from-slate-800 to-slate-600 dark:from-purple-200 dark:to-pink-200 bg-clip-text text-transparent">
-                        {person.name}
-                      </span>
-                    </h1>
-                    <p className="text-xl text-slate-600 dark:text-purple-200">
-                      {person.known_for_department}
+              {/* Personal Metadata Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {person.birthday && (
+                  <div className="surface-card p-4">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                      <Calendar className="h-3.5 w-3.5 text-primary" />
+                      <span>Born</span>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {new Date(person.birthday).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                      {!person.deathday && (
+                        <span className="text-muted-foreground font-normal ml-1">
+                          ({calculateAge(person.birthday)})
+                        </span>
+                      )}
                     </p>
                   </div>
+                )}
 
-                  {/* Personal Info Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    {person.birthday && (
-                      <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
-                          Birthday
-                        </div>
-                        <div className="text-slate-900 dark:text-white">
-                          {new Date(person.birthday).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                          {!person.deathday && (
-                            <span className="text-slate-600 dark:text-purple-200 ml-2">
-                              (Age {calculateAge(person.birthday)})
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {person.deathday && (
-                      <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
-                          Death
-                        </div>
-                        <div className="text-slate-900 dark:text-white">
-                          {new Date(person.deathday).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                          {person.birthday && (
-                            <span className="text-slate-600 dark:text-purple-200 ml-2">
-                              (Age{" "}
-                              {calculateAge(person.birthday, person.deathday)})
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                      <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
-                        Gender
-                      </div>
-                      <div className="text-slate-900 dark:text-white">
-                        {getGenderDisplay(person.gender)}
-                      </div>
+                {person.deathday && (
+                  <div className="surface-card p-4">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>Died</span>
                     </div>
-
-                    {person.place_of_birth && (
-                      <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                        <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
-                          Place of Birth
-                        </div>
-                        <div className="text-slate-900 dark:text-white">
-                          {person.place_of_birth}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                      <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
-                        Popularity
-                      </div>
-                      <div className="text-slate-900 dark:text-white">
-                        {person.popularity.toFixed(1)}
-                      </div>
-                    </div>
-
-                    {person.also_known_as &&
-                      person.also_known_as.length > 0 && (
-                        <div className="bg-slate-100/80 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:col-span-2">
-                          <div className="text-slate-600 dark:text-purple-200 font-semibold mb-1">
-                            Also Known As
-                          </div>
-                          <div className="text-slate-900 dark:text-white text-sm">
-                            {person.also_known_as.slice(0, 5).join(", ")}
-                            {person.also_known_as.length > 5 && "..."}
-                          </div>
-                        </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {new Date(person.deathday).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                      {person.birthday && (
+                        <span className="text-muted-foreground font-normal ml-1">
+                          (Age {calculateAge(person.birthday, person.deathday)})
+                        </span>
                       )}
+                    </p>
                   </div>
+                )}
 
-                  {/* Biography */}
-                  {person.biography && (
-                    <div className="bg-slate-100/60 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6">
-                      <h2 className="text-xl font-semibold text-slate-700 dark:text-purple-200 mb-4">
-                        Biography
-                      </h2>
-                      <div className="text-slate-700 dark:text-white/90 leading-relaxed space-y-4">
-                        {person.biography
-                          .split("\n\n")
-                          .map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
-                          ))}
-                      </div>
+                {person.place_of_birth && (
+                  <div className="surface-card p-4">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                      <MapPin className="h-3.5 w-3.5 text-primary" />
+                      <span>Birthplace</span>
                     </div>
-                  )}
-
-                  {/* External Links */}
-                  <div className="flex flex-wrap gap-4">
-                    {person.homepage && (
-                      <a
-                        href={person.homepage}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-glass px-6 py-3"
-                      >
-                        🌐 Official Website
-                      </a>
-                    )}
-                    {person.imdb_id && (
-                      <a
-                        href={`https://www.imdb.com/name/${person.imdb_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-glass px-6 py-3"
-                      >
-                        🎬 IMDb Profile
-                      </a>
-                    )}
+                    <p className="text-sm font-semibold text-foreground line-clamp-1">
+                      {person.place_of_birth}
+                    </p>
                   </div>
+                )}
+
+                <div className="surface-card p-4">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                    <span>Popularity · Gender</span>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground font-mono">
+                    {person.popularity.toFixed(1)}{" "}
+                    <span className="font-sans font-normal text-muted-foreground">
+                      · {getGenderDisplay(person.gender)}
+                    </span>
+                  </p>
                 </div>
               </div>
+
+              {/* Biography */}
+              {bioParagraphs.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Biography
+                  </h2>
+                  <div className="space-y-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-4xl">
+                    {(expandBio ? bioParagraphs : bioParagraphs.slice(0, 2)).map(
+                      (p, i) => (
+                        <p key={i}>{p}</p>
+                      )
+                    )}
+                  </div>
+                  {hasLongBio && (
+                    <button
+                      type="button"
+                      onClick={() => setExpandBio((prev) => !prev)}
+                      className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+                    >
+                      {expandBio ? "Show less" : "Read full biography"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* External Links */}
+              {(person.homepage || person.imdb_id) && (
+                <div className="flex flex-wrap gap-3 pt-1">
+                  {person.imdb_id && (
+                    <a
+                      href={`https://www.imdb.com/name/${person.imdb_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-cinema-outline"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span>IMDb Profile</span>
+                    </a>
+                  )}
+                  {person.homepage && (
+                    <a
+                      href={person.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-cinema-outline"
+                    >
+                      <Globe className="h-4 w-4" />
+                      <span>Official Website</span>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Credits Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="w-full">
+      {/* Filmography */}
+      <section className="py-12">
+        <div className="container-cinema">
           {/* Tabs */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-slate-100 dark:bg-slate-800 rounded-full p-1 flex">
-              <Button
+          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+            <h2 className="text-2xl font-bold text-foreground">Filmography</h2>
+            <div className="inline-flex rounded-xl border border-border bg-card p-1">
+              <button
+                type="button"
                 onClick={() => setActiveTab("movies")}
-                className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
                   activeTab === "movies"
-                    ? "bg-purple-600 text-white shadow-lg"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                    ? "bg-primary text-white"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                🎬 Movies
+                <Film className="h-4 w-4" />
+                <span>Movies</span>
                 {movieCredits && (
-                  <span className="ml-2 text-sm opacity-75">
+                  <span className="font-mono text-xs opacity-80">
                     ({movieCredits.cast.length + movieCredits.crew.length})
                   </span>
                 )}
-              </Button>
-              <Button
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveTab("tv")}
-                className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
                   activeTab === "tv"
-                    ? "bg-purple-600 text-white shadow-lg"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                    ? "bg-primary text-white"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                📺 TV Shows
+                <Tv className="h-4 w-4" />
+                <span>TV Series</span>
                 {tvCredits && (
-                  <span className="ml-2 text-sm opacity-75">
+                  <span className="font-mono text-xs opacity-80">
                     ({tvCredits.cast.length + tvCredits.crew.length})
                   </span>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
 
+          {(moviesLoading || tvLoading) && <MediaGridSkeleton count={12} />}
+
           {/* Movie Credits */}
-          {activeTab === "movies" && (
+          {activeTab === "movies" && sortedMovieCredits && (
             <div className="space-y-12">
-              {/* Acting Credits */}
-              {sortedMovieCredits && sortedMovieCredits.cast.length > 0 && (
+              {sortedMovieCredits.cast.length > 0 && (
                 <div>
-                  <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-8">
-                    🎭 Acting Credits
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <h3 className="text-lg font-bold text-foreground mb-5">
+                    Acting Credits
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
                     {sortedMovieCredits.cast.map((movie) => (
-                      <Link
+                      <MediaCard
                         key={movie.credit_id}
-                        href={`/movie/${createMovieSlug(
-                          movie.title,
-                          movie.id
-                        )}`}
-                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
-                      >
-                        <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
-                          <Image
-                            src={
-                              tmdbClient.getImageUrl(
-                                movie.poster_path || null,
-                                "w300"
-                              ) || "/placeholder-poster.svg"
-                            }
-                            alt={movie.title}
-                            width={200}
-                            height={300}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/placeholder-poster.svg";
-                            }}
-                          />
-                          <div className="absolute top-3 right-3 bg-purple-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(
-                              movie.release_date || "1900-01-01"
-                            ).getFullYear()}
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-2">
-                            {movie.title}
-                          </h3>
-                          <p className="text-sm text-purple-600 dark:text-purple-400 mb-2 font-medium">
-                            as {movie.character}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                            <span>⭐ {movie.vote_average.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>
-                              {new Date(
-                                movie.release_date || "1900-01-01"
-                              ).getFullYear()}
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
+                        id={movie.id}
+                        title={movie.title}
+                        mediaType="movie"
+                        imagePath={movie.poster_path}
+                        rating={movie.vote_average}
+                        subtitle={
+                          movie.character
+                            ? `${movie.release_date ? `${movie.release_date.slice(0, 4)} · ` : ""}as ${movie.character}`
+                            : movie.release_date?.slice(0, 4) || "TBA"
+                        }
+                      />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Crew Credits */}
-              {sortedMovieCredits && sortedMovieCredits.crew.length > 0 && (
+              {sortedMovieCredits.crew.length > 0 && (
                 <div>
-                  <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-8">
-                    🎬 Crew Credits
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <h3 className="text-lg font-bold text-foreground mb-5">
+                    Crew &amp; Directing Credits
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
                     {sortedMovieCredits.crew.map((movie) => (
-                      <Link
+                      <MediaCard
                         key={movie.credit_id}
-                        href={`/movie/${createMovieSlug(
-                          movie.title,
-                          movie.id
-                        )}`}
-                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
-                      >
-                        <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
-                          <Image
-                            src={
-                              tmdbClient.getImageUrl(
-                                movie.poster_path || null,
-                                "w300"
-                              ) || "/placeholder-poster.svg"
-                            }
-                            alt={movie.title}
-                            width={200}
-                            height={300}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/placeholder-poster.svg";
-                            }}
-                          />
-                          <div className="absolute top-3 right-3 bg-pink-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(
-                              movie.release_date || "1900-01-01"
-                            ).getFullYear()}
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-2">
-                            {movie.title}
-                          </h3>
-                          <p className="text-sm text-pink-600 dark:text-pink-400 mb-2 font-medium">
-                            {movie.job} ({movie.department})
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                            <span>⭐ {movie.vote_average.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>
-                              {new Date(
-                                movie.release_date || "1900-01-01"
-                              ).getFullYear()}
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
+                        id={movie.id}
+                        title={movie.title}
+                        mediaType="movie"
+                        imagePath={movie.poster_path}
+                        rating={movie.vote_average}
+                        subtitle={`${movie.release_date ? `${movie.release_date.slice(0, 4)} · ` : ""}${movie.job}`}
+                      />
                     ))}
                   </div>
                 </div>
@@ -473,142 +368,53 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
           )}
 
           {/* TV Credits */}
-          {activeTab === "tv" && (
+          {activeTab === "tv" && sortedTVCredits && (
             <div className="space-y-12">
-              {/* Acting Credits */}
-              {sortedTVCredits && sortedTVCredits.cast.length > 0 && (
+              {sortedTVCredits.cast.length > 0 && (
                 <div>
-                  <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-8">
-                    🎭 Acting Credits
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <h3 className="text-lg font-bold text-foreground mb-5">
+                    Acting Credits
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
                     {sortedTVCredits.cast.map((show) => (
-                      <Link
+                      <MediaCard
                         key={show.credit_id}
-                        href={`/tv/${createTVShowSlug(show.name, show.id)}`}
-                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
-                      >
-                        <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
-                          <Image
-                            src={
-                              tmdbClient.getImageUrl(
-                                show.poster_path || null,
-                                "w300"
-                              ) || "/placeholder-poster.svg"
-                            }
-                            alt={show.name}
-                            width={200}
-                            height={300}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/placeholder-poster.svg";
-                            }}
-                          />
-                          <div className="absolute top-3 right-3 bg-purple-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(
-                              show.first_air_date || "1900-01-01"
-                            ).getFullYear()}
-                          </div>
-                          {show.episode_count > 1 && (
-                            <div className="absolute top-3 left-3 bg-black/80 text-white text-xs px-2 py-1 rounded-full">
-                              {show.episode_count} eps
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-2">
-                            {show.name}
-                          </h3>
-                          <p className="text-sm text-purple-600 dark:text-purple-400 mb-2 font-medium">
-                            as {show.character}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                            <span>⭐ {show.vote_average.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>
-                              {new Date(
-                                show.first_air_date || "1900-01-01"
-                              ).getFullYear()}
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
+                        id={show.id}
+                        title={show.name}
+                        mediaType="tv"
+                        imagePath={show.poster_path}
+                        rating={show.vote_average}
+                        subtitle={
+                          show.character
+                            ? `${show.first_air_date ? `${show.first_air_date.slice(0, 4)} · ` : ""}as ${show.character}`
+                            : show.first_air_date?.slice(0, 4) || "TBA"
+                        }
+                      />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Crew Credits */}
-              {sortedTVCredits && sortedTVCredits.crew.length > 0 && (
+              {sortedTVCredits.crew.length > 0 && (
                 <div>
-                  <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-8">
-                    📺 Crew Credits
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <h3 className="text-lg font-bold text-foreground mb-5">
+                    Crew Credits
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
                     {sortedTVCredits.crew.map((show) => (
-                      <Link
+                      <MediaCard
                         key={show.credit_id}
-                        href={`/tv/${createTVShowSlug(show.name, show.id)}`}
-                        className="rounded-xl border bg-card text-card-foreground shadow-lg hover:shadow-xl transition-all group cursor-pointer"
-                      >
-                        <div className="aspect-[2/3] relative overflow-hidden rounded-xl mb-4">
-                          <Image
-                            src={
-                              tmdbClient.getImageUrl(
-                                show.poster_path || null,
-                                "w300"
-                              ) || "/placeholder-poster.svg"
-                            }
-                            alt={show.name}
-                            width={200}
-                            height={300}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/placeholder-poster.svg";
-                            }}
-                          />
-                          <div className="absolute top-3 right-3 bg-pink-600/90 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {new Date(
-                              show.first_air_date || "1900-01-01"
-                            ).getFullYear()}
-                          </div>
-                          {show.episode_count > 1 && (
-                            <div className="absolute top-3 left-3 bg-black/80 text-white text-xs px-2 py-1 rounded-full">
-                              {show.episode_count} eps
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-2">
-                            {show.name}
-                          </h3>
-                          <p className="text-sm text-pink-600 dark:text-pink-400 mb-2 font-medium">
-                            {show.job} ({show.department})
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                            <span>⭐ {show.vote_average.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>
-                              {new Date(
-                                show.first_air_date || "1900-01-01"
-                              ).getFullYear()}
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
+                        id={show.id}
+                        title={show.name}
+                        mediaType="tv"
+                        imagePath={show.poster_path}
+                        rating={show.vote_average}
+                        subtitle={`${show.first_air_date ? `${show.first_air_date.slice(0, 4)} · ` : ""}${show.job}`}
+                      />
                     ))}
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Loading States */}
-          {(moviesLoading || tvLoading) && (
-            <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent"></div>
             </div>
           )}
         </div>
@@ -617,43 +423,19 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   );
 }
 
-// Loading skeleton component
 function PersonDetailSkeleton() {
   return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full animate-pulse">
-      {/* Hero Section Skeleton */}
-      <div className="bg-gradient-to-br from-slate-200 to-slate-300 dark:from-purple-900 dark:to-pink-800 px-4 sm:px-6 lg:px-8 xl:px-12 py-16 w-full">
-        <div className="w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
-            <div className="lg:col-span-1">
-              <div className="aspect-[3/4] w-full max-w-sm mx-auto lg:max-w-none bg-slate-300/50 dark:bg-white/20 rounded-2xl" />
-            </div>
-            <div className="lg:col-span-2 space-y-6">
-              <div className="h-16 bg-slate-300/50 dark:bg-white/20 rounded-lg w-3/4" />
-              <div className="h-6 bg-slate-300/50 dark:bg-white/20 rounded-lg w-1/2" />
-              <div className="grid grid-cols-2 gap-4">
-                <div className="h-20 bg-slate-300/50 dark:bg-white/20 rounded-lg" />
-                <div className="h-20 bg-slate-300/50 dark:bg-white/20 rounded-lg" />
-              </div>
-              <div className="h-32 bg-slate-300/50 dark:bg-white/20 rounded-lg" />
-            </div>
+    <div className="min-h-screen pt-28 pb-16 container-cinema">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-3 aspect-[3/4] rounded-2xl bg-secondary skeleton-shimmer" />
+        <div className="lg:col-span-9 space-y-5">
+          <div className="h-12 w-1/2 rounded-xl bg-secondary skeleton-shimmer" />
+          <div className="grid grid-cols-3 gap-4">
+            <div className="h-20 rounded-xl bg-secondary skeleton-shimmer" />
+            <div className="h-20 rounded-xl bg-secondary skeleton-shimmer" />
+            <div className="h-20 rounded-xl bg-secondary skeleton-shimmer" />
           </div>
-        </div>
-      </div>
-
-      {/* Content Skeleton */}
-      <div className="py-16 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="w-full">
-          <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-lg w-48 mx-auto mb-8" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="space-y-4">
-                <div className="aspect-[2/3] bg-slate-200 dark:bg-slate-700 rounded-xl" />
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full" />
-                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-              </div>
-            ))}
-          </div>
+          <div className="h-32 rounded-xl bg-secondary skeleton-shimmer" />
         </div>
       </div>
     </div>

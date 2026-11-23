@@ -4,7 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ArrowLeft, Home, User } from "lucide-react";
-import { motion } from "framer-motion";
 
 export interface BreadcrumbItem {
   label: string;
@@ -27,61 +26,66 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
   const router = useRouter();
 
   return (
-    <div className={`flex items-center gap-2 mb-6 ${className}`}>
+    <nav
+      aria-label="Breadcrumb"
+      className={`flex flex-wrap items-center gap-2 mb-6 ${className}`}
+    >
       {showBackButton && (
-        <motion.button
+        <button
+          type="button"
           onClick={() => router.back()}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] backdrop-blur-sm border border-white/10 hover:border-white/20 rounded-lg text-slate-300 hover:text-white transition-all group"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/70 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          <span className="text-sm font-medium">Back</span>
-        </motion.button>
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back</span>
+        </button>
       )}
 
-      <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-lg">
-        {items.map((item, index) => (
-          <React.Fragment key={index}>
-            <div className="flex items-center gap-2">
-              {item.icon && <item.icon className="w-4 h-4 text-slate-400" />}
-
+      <ol className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border bg-card/80 px-3 py-1.5 text-xs">
+        {items.map((item, index) => {
+          const Icon = item.icon;
+          const isLast = index === items.length - 1;
+          return (
+            <li key={index} className="inline-flex items-center gap-1.5">
               {item.href ? (
                 <Link
                   href={item.href}
-                  className="text-sm font-medium text-slate-400 hover:text-orange-400 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors font-medium"
                 >
-                  {item.label}
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  <span>{item.label}</span>
                 </Link>
               ) : item.action ? (
                 <button
+                  type="button"
                   onClick={item.action}
-                  className="text-sm font-medium text-slate-400 hover:text-orange-400 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors font-medium cursor-pointer"
                 >
-                  {item.label}
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  <span>{item.label}</span>
                 </button>
               ) : (
                 <span
-                  className={`text-sm font-medium ${
-                    index === items.length - 1 ? "text-white" : "text-slate-400"
+                  className={`inline-flex items-center gap-1.5 font-medium ${
+                    isLast ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
-                  {item.label}
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  <span>{item.label}</span>
                 </span>
               )}
-            </div>
 
-            {index < items.length - 1 && (
-              <ChevronRight className="w-4 h-4 text-slate-500" />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
+              {!isLast && (
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 };
 
-// Profile-specific breadcrumb component
 interface ProfileBreadcrumbProps {
   currentPage: string;
   showBackButton?: boolean;
@@ -94,19 +98,9 @@ export const ProfileBreadcrumb: React.FC<ProfileBreadcrumbProps> = ({
   const router = useRouter();
 
   const breadcrumbItems: BreadcrumbItem[] = [
-    {
-      label: "Home",
-      href: "/",
-      icon: Home,
-    },
-    {
-      label: "Profile",
-      action: () => router.push("/profile"),
-      icon: User,
-    },
-    {
-      label: currentPage,
-    },
+    { label: "Home", href: "/", icon: Home },
+    { label: "Profile", action: () => router.push("/profile"), icon: User },
+    { label: currentPage },
   ];
 
   return (

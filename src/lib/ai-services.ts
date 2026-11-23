@@ -201,53 +201,53 @@ export class AIMovieService {
   }
 
   // AI Reviews Summary - Enhanced with Gemini AI
-  async summarizeReviews(): Promise<ReviewSummary> {
-    await this.delay(1500);
+  async summarizeReviews(
+    movieTitle?: string,
+    reviews?: string[]
+  ): Promise<ReviewSummary> {
+    await this.delay(400);
 
     try {
-      // In a real implementation, we'd fetch actual reviews from TMDB or other sources
-      // For demo, we'll simulate reviews and use Gemini for analysis
-      const mockReviews = [
-        "Amazing cinematography and storytelling, truly a masterpiece!",
-        "The acting was phenomenal, especially the lead performances.",
-        "A bit slow in the middle, but the ending was worth it.",
-        "Not what I expected, but still a solid film overall.",
-        "Incredible visual effects and sound design.",
-      ];
+      const title = movieTitle?.trim() || "Current Movie";
+      const reviewList =
+        reviews && reviews.length > 0
+          ? reviews
+          : [
+              "Amazing cinematography and storytelling, truly compelling craft.",
+              "The acting was phenomenal, especially the lead performances.",
+              "A bit slow in the middle, but the ending was worth it.",
+              "Strong sound design and memorable atmosphere throughout.",
+            ];
 
       // Use Gemini AI for intelligent review analysis
-      const geminiResult = await geminiAI.summarizeReviews(
-        "Current Movie", // In real app, this would be the actual movie title
-        mockReviews
-      );
+      const geminiResult = await geminiAI.summarizeReviews(title, reviewList);
 
       return {
         overallSentiment: geminiResult.sentiment,
         keyPoints: {
           positive: geminiResult.keyPoints.positive,
           negative: geminiResult.keyPoints.negative,
-          neutral: [], // Add the missing neutral field
+          neutral: [],
         },
         themes: geminiResult.keyPoints.themes,
-        rating: 8.5, // Could be calculated from review sentiment
+        rating: 8.5,
         trustScore: geminiResult.trustScore,
       };
     } catch (error) {
       console.error("Gemini review analysis error:", error);
-      // Fallback to mock analysis
       return {
         overallSentiment: "positive",
         keyPoints: {
           positive: [
-            "Outstanding cinematography and visual effects",
-            "Compelling character development and performances",
+            "Outstanding cinematography and visual craft",
+            "Compelling character development and strong performances",
           ],
-          negative: ["Pacing issues in the second act"],
-          neutral: ["Runtime may not suit all viewers"],
+          negative: ["Occasional pacing dips in the second act"],
+          neutral: ["Runtime and tone may appeal most to genre fans"],
         },
-        themes: ["heroism", "sacrifice", "redemption"],
+        themes: ["cinematography", "character study", "atmosphere"],
         rating: 8.2,
-        trustScore: 0.75,
+        trustScore: 0.78,
       };
     }
   }

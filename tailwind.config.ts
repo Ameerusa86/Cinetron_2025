@@ -9,260 +9,61 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      animation: {
-        float: "float 6s ease-in-out infinite",
-        "float-slow": "float 8s ease-in-out infinite",
-        "float-fast": "float 4s ease-in-out infinite",
-        "rotate-slow": "spin 20s linear infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite alternate",
-        "bounce-gentle": "bounce-gentle 2s ease-in-out infinite",
-        "slide-in-up": "slide-in-up 0.6s ease-out",
-        "slide-in-down": "slide-in-down 0.6s ease-out",
-        "fade-in-scale": "fade-in-scale 0.5s ease-out",
-        wiggle: "wiggle 1s ease-in-out infinite",
-        "particle-drift": "particle-drift 10s linear infinite",
-        "cinema-glow": "cinema-glow 3s ease-in-out infinite alternate",
-      },
-      keyframes: {
-        float: {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-20px)" },
-        },
-        "pulse-glow": {
-          "0%": {
-            boxShadow: "0 0 20px rgba(244, 110, 12, 0.3)",
-            transform: "scale(1)",
-          },
-          "100%": {
-            boxShadow: "0 0 30px rgba(244, 110, 12, 0.6)",
-            transform: "scale(1.05)",
-          },
-        },
-        "bounce-gentle": {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
-        "slide-in-up": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(30px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
-        },
-        "slide-in-down": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(-30px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
-        },
-        "fade-in-scale": {
-          "0%": {
-            opacity: "0",
-            transform: "scale(0.8)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "scale(1)",
-          },
-        },
-        wiggle: {
-          "0%, 100%": { transform: "rotate(-3deg)" },
-          "50%": { transform: "rotate(3deg)" },
-        },
-        "particle-drift": {
-          "0%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
-          "33%": {
-            transform: "translateX(30px) translateY(-20px) rotate(120deg)",
-          },
-          "66%": {
-            transform: "translateX(-20px) translateY(-40px) rotate(240deg)",
-          },
-          "100%": { transform: "translateX(0) translateY(0) rotate(360deg)" },
-        },
-        "cinema-glow": {
-          "0%": {
-            boxShadow:
-              "0 0 30px rgba(244, 110, 12, 0.4), inset 0 0 30px rgba(244, 110, 12, 0.1)",
-          },
-          "100%": {
-            boxShadow:
-              "0 0 60px rgba(244, 110, 12, 0.8), inset 0 0 60px rgba(244, 110, 12, 0.3)",
-          },
-        },
-      },
       colors: {
         primary: {
-          50: "#fff0f2",
-          100: "#ffe0e5",
-          200: "#ffc1cc",
-          300: "#ffa2b2",
-          400: "#ff637e",
-          500: "#e50914", // Netflix Red
-          600: "#b30710",
-          700: "#80050b",
-          800: "#4d0307",
-          900: "#1a0102",
-          950: "#0d0001",
+          50: "#fff1f2",
+          100: "#ffe0e3",
+          200: "#ffc6cc",
+          300: "#ff9ea7",
+          400: "#ff6675",
+          500: "#e50914",
+          600: "#c80812",
+          700: "#a3060e",
+          800: "#850810",
+          900: "#700c13",
+          950: "#3d0206",
         },
         cinema: {
-          50: "#f8f8f8",
-          100: "#e8e8e8",
-          200: "#d3d3d3",
-          300: "#a6a6a6",
-          400: "#737373",
-          500: "#404040", 
-          600: "#262626",
-          700: "#171717",
-          800: "#141414", // Netflix Black
-          900: "#000000",
-          950: "#000000",
+          50: "#fafafa",
+          100: "#f4f4f5",
+          200: "#e4e4e7",
+          300: "#d4d4d8",
+          400: "#a1a1aa",
+          500: "#71717a",
+          600: "#52525b",
+          700: "#27272a",
+          800: "#18181b",
+          900: "#111114",
+          950: "#09090b",
+        },
+        gold: {
+          400: "#facc15",
+          500: "#eab308",
+          600: "#ca8a04",
         },
       },
-      gradientColorStops: {
-        "cinema-start": "#e50914", // Netflix Red
-        "cinema-end": "#b30710", // Darker Red
-        "premium-start": "#141414", // Netflix Black
-        "premium-end": "#000000", // Black
-      },
-      boxShadow: {
-        glow: "0 0 20px rgba(244, 110, 12, 0.3)",
-        "glow-lg": "0 0 40px rgba(244, 110, 12, 0.4)",
-        premium:
-          "0 10px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05)",
-        "3d": "0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)",
-        cinema:
-          "0 0 30px rgba(244, 110, 12, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-      },
-      backdropBlur: {
-        xs: "2px",
-      },
       fontFamily: {
-        display: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-playfair)", "Georgia", "serif"],
+        mono: ["var(--font-fira-code)", "monospace"],
       },
-      perspective: {
-        "1000": "1000px",
-        "1500": "1500px",
-        "2000": "2000px",
+      keyframes: {
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
       },
-      transform: {
-        "preserve-3d": "preserve-3d",
-      },
-      transformStyle: {
-        "preserve-3d": "preserve-3d",
+      animation: {
+        shimmer: "shimmer 1.8s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite",
       },
     },
   },
-  plugins: [
-    function ({
-      addUtilities,
-    }: {
-      addUtilities: (utilities: Record<string, Record<string, string>>) => void;
-    }) {
-      addUtilities({
-        ".text-gradient-premium": {
-          background: "linear-gradient(135deg, #f97316, #ef4444)",
-          "-webkit-background-clip": "text",
-          "-webkit-text-fill-color": "transparent",
-          "background-clip": "text",
-        },
-        ".text-gradient-cinema": {
-          background: "linear-gradient(135deg, #8b5cf6, #ec4899)",
-          "-webkit-background-clip": "text",
-          "-webkit-text-fill-color": "transparent",
-          "background-clip": "text",
-        },
-        ".bg-gradient-cinema": {
-          background: "linear-gradient(135deg, #f97316, #ef4444)",
-        },
-        ".bg-gradient-premium": {
-          background: "linear-gradient(135deg, #8b5cf6, #ec4899)",
-        },
-        ".btn-cinema": {
-          background: "#e50914",
-          color: "white",
-          padding: "12px 24px",
-          "border-radius": "4px",
-          "font-weight": "600",
-          "box-shadow": "0 4px 10px rgba(229, 9, 20, 0.3)",
-          transition: "all 0.3s ease",
-          border: "none",
-          cursor: "pointer",
-        },
-        ".btn-cinema:hover": {
-          background: "#b30710",
-          transform: "scale(1.05)",
-          "box-shadow": "0 6px 15px rgba(229, 9, 20, 0.4)",
-        },
-        ".btn-cinema-outline": {
-          background: "rgba(109, 109, 110, 0.7)",
-          color: "white",
-          padding: "12px 24px",
-          "border-radius": "4px",
-          "font-weight": "600",
-          border: "none",
-          transition: "all 0.3s ease",
-          cursor: "pointer",
-        },
-        ".btn-cinema-outline:hover": {
-          background: "rgba(109, 109, 110, 0.9)",
-          color: "white",
-          transform: "scale(1.05)",
-        },
-        ".card-premium": {
-          background: "#141414",
-          border: "1px solid #262626",
-          "border-radius": "8px",
-          "box-shadow": "0 10px 40px rgba(0, 0, 0, 0.5)",
-          transition: "all 0.3s ease",
-        },
-        ".card-premium:hover": {
-          transform: "translateY(-5px)",
-          "box-shadow": "0 20px 60px rgba(0, 0, 0, 0.7)",
-        },
-        ".card-cinema": {
-          background: "#141414",
-          border: "1px solid #262626",
-          "border-radius": "8px",
-          "box-shadow": "0 10px 40px rgba(0, 0, 0, 0.5)",
-          transition: "all 0.3s ease",
-        },
-        ".card-cinema:hover": {
-          transform: "translateY(-5px)",
-          "box-shadow": "0 20px 60px rgba(0, 0, 0, 0.7)",
-          "border-color": "#404040",
-        },
-        ".shadow-glow": {
-          "box-shadow": "0 0 20px rgba(229, 9, 20, 0.3)",
-        },
-        ".shadow-glow-lg": {
-          "box-shadow": "0 0 40px rgba(229, 9, 20, 0.4)",
-        },
-        ".shadow-premium": {
-          "box-shadow":
-            "0 10px 40px rgba(0, 0, 0, 0.5)",
-        },
-        ".perspective-1000": {
-          perspective: "1000px",
-        },
-        ".preserve-3d": {
-          "transform-style": "preserve-3d",
-        },
-        ".backface-hidden": {
-          "backface-visibility": "hidden",
-        },
-        ".rotateY-180": {
-          transform: "rotateY(180deg)",
-        },
-      });
-    },
-  ],
+  plugins: [],
 };
 
 export default config;

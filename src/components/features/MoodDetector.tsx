@@ -1,30 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Sparkles,
   Send,
-  Brain,
+  Sun,
   Heart,
   Zap,
-  Sun,
   Moon,
   Coffee,
+  Loader2,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { aiService, MoodAnalysis } from "@/lib/ai-services";
 import { Movie } from "@/types";
-import tmdbClient from "@/lib/tmdb-client";
-import { createMovieSlug } from "@/lib/slug-utils";
+import { MediaCard } from "@/components/media/MediaCard";
 
 const moodSuggestions = [
-  { emoji: "😊", text: "happy and energetic", icon: Sun },
-  { emoji: "😢", text: "sad and looking for comfort", icon: Heart },
-  { emoji: "⚡", text: "excited and want action", icon: Zap },
-  { emoji: "🌙", text: "relaxed and contemplative", icon: Moon },
-  { emoji: "☕", text: "cozy evening at home", icon: Coffee },
+  { text: "Uplifting and lighthearted", icon: Sun },
+  { text: "Emotional and comforting", icon: Heart },
+  { text: "Fast-paced adrenaline thriller", icon: Zap },
+  { text: "Atmospheric, slow-burn mystery", icon: Moon },
+  { text: "Cozy rainy-evening indie", icon: Coffee },
 ];
 
 export function MoodDetector() {
@@ -33,7 +29,8 @@ export function MoodDetector() {
   const [analysis, setAnalysis] = useState<MoodAnalysis | null>(null);
   const [recommendations, setRecommendations] = useState<Movie[]>([]);
 
-  const handleMoodAnalysis = async () => {
+  const handleMoodAnalysis = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!moodInput.trim()) return;
 
     setIsAnalyzing(true);
@@ -48,225 +45,114 @@ export function MoodDetector() {
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setMoodInput(suggestion);
-  };
-
   return (
-    <div>
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-          ✨ Movie Mood Detector
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-xl font-bold text-foreground">
+          Movie Mood Matcher
         </h2>
-        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Tell us how you&apos;re feeling, and our AI will find the perfect
-          movies to match your mood
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Describe how you feel or the exact atmosphere you want to watch
+          tonight.
         </p>
       </div>
 
-      {/* Mood Input */}
-      <div className="max-w-2xl mx-auto mb-8">
+      {/* Input Form */}
+      <form onSubmit={handleMoodAnalysis} className="space-y-4">
         <div className="relative">
           <textarea
             value={moodInput}
             onChange={(e) => setMoodInput(e.target.value)}
-            placeholder="Describe your current mood... (e.g., 'I'm feeling nostalgic and want something heartwarming' or 'I need an adrenaline rush!')"
-            className="w-full p-4 pr-16 rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
-            rows={4}
+            placeholder="e.g., 'I want a visually stunning sci-fi with a haunting score' or 'Something clever and warm after a long week'"
+            rows={3}
+            className="w-full rounded-xl border border-border bg-secondary/50 p-4 pr-36 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
           />
           <button
-            onClick={handleMoodAnalysis}
+            type="submit"
             disabled={!moodInput.trim() || isAnalyzing}
-            className={`absolute bottom-4 right-4 p-3 rounded-xl transition-all duration-300 ${
-              moodInput.trim() && !isAnalyzing
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:scale-105"
-                : "bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed"
-            }`}
+            className="btn-cinema absolute bottom-3 right-3 px-4 py-2"
           >
             {isAnalyzing ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              >
-                <Brain className="w-5 h-5" />
-              </motion.div>
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Matching...</span>
+              </>
             ) : (
-              <Send className="w-5 h-5" />
+              <>
+                <Send className="h-4 w-4" />
+                <span>Match</span>
+              </>
             )}
           </button>
         </div>
 
-        {/* Mood Suggestions */}
-        <div className="mt-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-            💡 Quick suggestions:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {moodSuggestions.map((suggestion, index) => {
-              const Icon = suggestion.icon;
-              return (
-                <button
-                  key={index}
-                  onClick={() =>
-                    handleSuggestionClick(`I'm feeling ${suggestion.text}`)
-                  }
-                  className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{suggestion.emoji}</span>
-                  <span>{suggestion.text}</span>
-                </button>
-              );
-            })}
+        {/* Preset Chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Presets:</span>
+          {moodSuggestions.map((s) => {
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.text}
+                type="button"
+                onClick={() => setMoodInput(s.text)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/40 hover:text-primary transition-colors cursor-pointer"
+              >
+                <Icon className="h-3.5 w-3.5 text-primary" />
+                <span>{s.text}</span>
+              </button>
+            );
+          })}
+        </div>
+      </form>
+
+      {/* Mood Breakdown */}
+      {analysis && (
+        <div className="rounded-xl border border-primary/25 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Detected Profile</span>
+            </div>
+            <p className="text-base font-bold text-foreground capitalize">
+              {analysis.primaryMood} ·{" "}
+              <span className="font-normal text-muted-foreground">
+                {analysis.suggestedTone} tone
+              </span>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {analysis.recommendedGenres.slice(0, 3).map((g, i) => (
+              <span
+                key={i}
+                className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground"
+              >
+                {g}
+              </span>
+            ))}
+            <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-xs font-semibold text-emerald-400">
+              {Math.round(analysis.confidence * 100)}%
+            </span>
           </div>
         </div>
-      </div>
-
-      {/* Analysis Loading */}
-      {isAnalyzing && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center py-12"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 mx-auto mb-6 p-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl shadow-xl"
-          >
-            <Sparkles className="w-10 h-10 text-white" />
-          </motion.div>
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-            Analyzing your mood...
-          </h3>
-          <p className="text-slate-600 dark:text-slate-400">
-            Our AI is processing your feelings and finding the perfect movies
-          </p>
-        </motion.div>
       )}
 
-      {/* Analysis Results */}
-      {analysis && !isAnalyzing && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-8"
-        >
-          {/* Mood Analysis Card */}
-          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-6 border border-purple-500/20">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Mood Analysis Results
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  AI Confidence: {(analysis.confidence * 100).toFixed(0)}%
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
-                  Detected Mood
-                </h4>
-                <div className="p-3 bg-white dark:bg-slate-800 rounded-lg">
-                  <span className="text-lg font-medium text-purple-600 dark:text-purple-400 capitalize">
-                    {analysis.primaryMood}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
-                  Recommended Tone
-                </h4>
-                <div className="p-3 bg-white dark:bg-slate-800 rounded-lg">
-                  <span className="text-lg font-medium text-pink-600 dark:text-pink-400 capitalize">
-                    {analysis.suggestedTone}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
-                Perfect Genres for You
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {analysis.recommendedGenres.map((genre, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-sm text-purple-700 dark:text-purple-300"
-                  >
-                    {genre}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Movie Recommendations */}
-          {recommendations.length > 0 && (
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                🎬 Perfect Movies for Your Mood
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recommendations.map((movie, index) => (
-                  <motion.div
-                    key={movie.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="group"
-                  >
-                    <Link
-                      href={`/movie/${createMovieSlug(movie.title, movie.id)}`}
-                    >
-                      <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                        <div className="aspect-[2/3] relative overflow-hidden">
-                          <Image
-                            src={
-                              tmdbClient.getImageUrl(
-                                movie.poster_path,
-                                "w500"
-                              ) || "/placeholder-poster.svg"
-                            }
-                            alt={movie.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>
-                        <div className="p-4">
-                          <h4 className="font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">
-                            {movie.title}
-                          </h4>
-                          <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-2">
-                            {movie.overview}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                            <span>⭐ {movie.vote_average.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>
-                              {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          )}
-        </motion.div>
+      {/* Matched Movies */}
+      {recommendations.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {recommendations.map((movie) => (
+            <MediaCard
+              key={movie.id}
+              id={movie.id}
+              title={movie.title}
+              mediaType="movie"
+              imagePath={movie.poster_path}
+              rating={movie.vote_average}
+              year={movie.release_date}
+              badge="Mood Pick"
+            />
+          ))}
+        </div>
       )}
     </div>
   );

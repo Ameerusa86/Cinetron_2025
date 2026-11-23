@@ -1,491 +1,461 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { TMDBClient } from "@/lib/tmdb-client";
-import { Movie } from "@/types";
-
-const tmdbClient = new TMDBClient();
+import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  Clapperboard,
+  Clock,
+  Trophy,
+  RotateCcw,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  ArrowLeft,
+  Play,
+} from "lucide-react";
+import tmdbClient from "@/lib/tmdb-client";
+import type { MovieDetails } from "@/types";
+import { PageHeader } from "@/components/media/PageHeader";
 
 interface QuizQuestion {
   id: number;
   question: string;
   options: string[];
   correctAnswer: number;
-  movie: Movie;
-  type: "year" | "director" | "genre" | "actor" | "plot";
+  movie: MovieDetails;
+  type: "year" | "genre" | "plot";
 }
 
-interface QuizState {
-  questions: QuizQuestion[];
-  currentQuestion: number;
-  score: number;
-  answers: number[];
-  showResult: boolean;
-  timeLeft: number;
-  difficulty: "easy" | "medium" | "hard";
+type Difficulty = "easy" | "medium" | "hard";
+
+const difficulties: {
+  id: Difficulty;
+  label: string;
+  time: number;
+  description: string;
+}[] = [
+  {
+    id: "easy",
+    label: "Casual",
+    time: 30,
+    description: "30s per question · wider year intervals",
+  },
+  {
+    id: "medium",
+    label: "Cinephile",
+    time: 20,
+    description: "20s per question · tighter distractors",
+  },
+  {
+    id: "hard",
+    label: "Auteur",
+    time: 12,
+    description: "12s per question · precision recall",
+  },
+];
+
+function shuffleWithCorrect(correct: string, distractors: string[]) {
+  const uniqueDistractors = Array.from(
+    new Set(distractors.filter((d) => d && d !== correct))
+  ).slice(0, 3);
+  const options = [correct, ...uniqueDistractors];
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+  }
+  return {
+    options,
+    correctAnswer: options.indexOf(correct),
+  };
 }
 
 export default function MovieQuizGenerator() {
-  const [quizState, setQuizState] = useState<QuizState>({
-    questions: [],
-    currentQuestion: 0,
-    score: 0,
-    answers: [],
-    showResult: false,
-    timeLeft: 30,
-    difficulty: "medium",
-  });
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [timeLeft, setTimeLeft] = useState(20);
   const [isGenerating, setIsGenerating] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Generate quiz questions from popular movies
-  const generateQuiz = async (difficulty: "easy" | "medium" | "hard") => {
+  const timePerQuestion =
+    difficulties.find((d) => d.id === difficulty)?.time ?? 20;
+
+  const advanceQuestion = useCallback(() => {
+    setSelectedOption(null);
+    if (currentIndex + 1 < questions.length) {
+      setCurrentIndex((prev) => prev + 1);
+      setTimeLeft(timePerQuestion);
+    } else {
+      setShowResult(true);
+    }
+  }, [currentIndex, questions.length, timePerQuestion]);
+
+  // Clean timer effect with proper cleanup
+  useEffect(() => {
+    if (!gameStarted || showResult || selectedOption !== null) return;
+    if (timeLeft <= 0) {
+      advanceQuestion();
+      return;
+    }
+    const id = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [gameStarted, showResult, selectedOption, timeLeft, advanceQuestion]);
+
+  const generateQuiz = async (chosenDifficulty: Difficulty) => {
+    setDifficulty(chosenDifficulty);
     setIsGenerating(true);
-    try {
-      const popularMovies = await tmdbClient.getPopularMovies(1);
-      const selectedMovies = popularMovies.results.slice(0, 10);
+    setError(null);
+    const seconds =
+      difficulties.find((d) => d.id === chosenDifficulty)?.time ?? 20;
 
-      const questions: QuizQuestion[] = await Promise.all(
-        selectedMovies.map(async (movie, index) => {
-          const details = await tmdbClient.getMovieDetails(movie.id);
-          // Merge genre_ids from the original movie object into details
-          const mergedMovie = { ...details, genre_ids: movie.genre_ids };
-          return generateQuestionFromMovie(mergedMovie, index, difficulty);
-        })
+    try {
+      const page = Math.floor(Math.random() * 3) + 1;
+      const popular = await tmdbClient.getPopularMovies(page);
+      const pool = popular.results
+        .filter((m) => m.release_date && m.overview && m.overview.length > 40)
+        .slice(0, 10);
+
+      const detailed = await Promise.all(
+        pool.slice(0, 5).map((m) => tmdbClient.getMovieDetails(m.id))
       );
 
-      setQuizState((prev) => ({
-        ...prev,
-        questions: questions.slice(0, 5), // 5 questions per quiz
-        difficulty,
-        timeLeft:
-          difficulty === "easy" ? 45 : difficulty === "medium" ? 30 : 20,
-      }));
+      const allTitles = pool.map((m) => m.title);
+      const fallbackGenres = [
+        "Action",
+        "Comedy",
+        "Drama",
+        "Horror",
+        "Sci-Fi",
+        "Thriller",
+        "Romance",
+        "Animation",
+      ];
 
+      const built: QuizQuestion[] = detailed.map((movie, idx) => {
+        const types: QuizQuestion["type"][] = ["year", "genre", "plot"];
+        const type = types[idx % types.length];
+
+        if (type === "year") {
+          const year = new Date(movie.release_date).getFullYear();
+          const step =
+            chosenDifficulty === "easy"
+              ? 4
+              : chosenDifficulty === "medium"
+              ? 2
+              : 1;
+          const { options, correctAnswer } = shuffleWithCorrect(String(year), [
+            String(year - step),
+            String(year + step),
+            String(year - step * 2),
+          ]);
+          return {
+            id: idx,
+            question: `In which year was "${movie.title}" released?`,
+            options,
+            correctAnswer,
+            movie,
+            type,
+          };
+        }
+
+        if (type === "genre" && movie.genres && movie.genres.length > 0) {
+          const primaryGenre = movie.genres[0].name;
+          const movieGenreNames = new Set(movie.genres.map((g) => g.name));
+          const wrongGenres = fallbackGenres.filter(
+            (g) => !movieGenreNames.has(g)
+          );
+          const { options, correctAnswer } = shuffleWithCorrect(
+            primaryGenre,
+            wrongGenres
+          );
+          return {
+            id: idx,
+            question: `Which primary genre belongs to "${movie.title}"?`,
+            options,
+            correctAnswer,
+            movie,
+            type,
+          };
+        }
+
+        const otherTitles = allTitles.filter((t) => t !== movie.title);
+        const { options, correctAnswer } = shuffleWithCorrect(
+          movie.title,
+          otherTitles
+        );
+        return {
+          id: idx,
+          question: `Which film matches this synopsis: "${movie.overview.slice(
+            0,
+            135
+          )}..."?`,
+          options,
+          correctAnswer,
+          movie,
+          type: "plot",
+        };
+      });
+
+      setQuestions(built);
+      setCurrentIndex(0);
+      setScore(0);
+      setSelectedOption(null);
+      setShowResult(false);
+      setTimeLeft(seconds);
       setGameStarted(true);
-      startTimer();
-    } catch (error) {
-      console.error("Error generating quiz:", error);
+    } catch (err) {
+      console.error("Error generating quiz:", err);
+      setError("Could not load movies for the quiz. Please try again.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Generate different types of questions based on movie data
-  const generateQuestionFromMovie = (
-    movie: Movie,
-    index: number,
-    difficulty: string
-  ): QuizQuestion => {
-    const questionTypes: QuizQuestion["type"][] = ["year", "genre", "plot"];
-    const type = questionTypes[index % questionTypes.length];
-
-    switch (type) {
-      case "year":
-        return {
-          id: index,
-          question: `In which year was "${movie.title}" released?`,
-          options: generateYearOptions(movie.release_date, difficulty),
-          correctAnswer: 0,
-          movie,
-          type,
-        };
-
-      case "genre":
-        return {
-          id: index,
-          question: `What genre best describes "${movie.title}"?`,
-          options: generateGenreOptions(),
-          correctAnswer: 0,
-          movie,
-          type,
-        };
-
-      case "plot":
-        return {
-          id: index,
-          question: `Which movie has this plot: "${movie.overview.slice(
-            0,
-            100
-          )}..."?`,
-          options: generateMovieOptions(movie.title),
-          correctAnswer: 0,
-          movie,
-          type,
-        };
-
-      default:
-        return {
-          id: index,
-          question: `What is the IMDb rating of "${movie.title}"?`,
-          options: generateRatingOptions(movie.vote_average),
-          correctAnswer: 0,
-          movie,
-          type: "year",
-        };
+  const handleAnswer = (optionIdx: number) => {
+    if (selectedOption !== null) return;
+    setSelectedOption(optionIdx);
+    const currentQ = questions[currentIndex];
+    if (optionIdx === currentQ.correctAnswer) {
+      setScore((s) => s + 1);
     }
+    setTimeout(() => advanceQuestion(), 1100);
   };
 
-  // Generate options for different question types
-  const generateYearOptions = (
-    releaseDate: string,
-    difficulty: string
-  ): string[] => {
-    const year = new Date(releaseDate).getFullYear();
-    const range = difficulty === "easy" ? 5 : difficulty === "medium" ? 3 : 1;
-
-    const options = [
-      year.toString(),
-      (year - range).toString(),
-      (year + range).toString(),
-      (year - range * 2).toString(),
-    ];
-
-    return shuffleArray(options);
-  };
-
-  const generateGenreOptions = (): string[] => {
-    const genres = [
-      "Action",
-      "Comedy",
-      "Drama",
-      "Horror",
-      "Romance",
-      "Sci-Fi",
-      "Thriller",
-    ];
-    return shuffleArray(genres).slice(0, 4);
-  };
-
-  const generateMovieOptions = (correctTitle: string): string[] => {
-    const options = [
-      correctTitle,
-      "The Dark Knight",
-      "Inception",
-      "Pulp Fiction",
-    ];
-    return shuffleArray(options);
-  };
-
-  const generateRatingOptions = (rating: number): string[] => {
-    const options = [
-      rating.toFixed(1),
-      (rating - 1).toFixed(1),
-      (rating + 1).toFixed(1),
-      (rating - 0.5).toFixed(1),
-    ];
-    return shuffleArray(options);
-  };
-
-  const shuffleArray = (array: string[]): string[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-
-  // Timer functionality
-  const startTimer = () => {
-    const timer = setInterval(() => {
-      setQuizState((prev) => {
-        if (prev.timeLeft <= 1) {
-          clearInterval(timer);
-          handleNextQuestion(); // Time's up, wrong answer
-          return prev;
-        }
-        return { ...prev, timeLeft: prev.timeLeft - 1 };
-      });
-    }, 1000);
-  };
-
-  // Handle answer selection
-  const handleAnswer = (selectedAnswer: number) => {
-    const isCorrect =
-      selectedAnswer ===
-      quizState.questions[quizState.currentQuestion].correctAnswer;
-
-    setQuizState((prev) => ({
-      ...prev,
-      answers: [...prev.answers, selectedAnswer],
-      score: isCorrect ? prev.score + 1 : prev.score,
-    }));
-
-    setTimeout(() => handleNextQuestion(), 1000);
-  };
-
-  // Move to next question or show results
-  const handleNextQuestion = () => {
-    if (quizState.currentQuestion < quizState.questions.length - 1) {
-      setQuizState((prev) => ({
-        ...prev,
-        currentQuestion: prev.currentQuestion + 1,
-        timeLeft:
-          prev.difficulty === "easy"
-            ? 45
-            : prev.difficulty === "medium"
-            ? 30
-            : 20,
-      }));
-      startTimer();
-    } else {
-      setQuizState((prev) => ({ ...prev, showResult: true }));
-    }
-  };
-
-  // Reset quiz
   const resetQuiz = () => {
-    setQuizState({
-      questions: [],
-      currentQuestion: 0,
-      score: 0,
-      answers: [],
-      showResult: false,
-      timeLeft: 30,
-      difficulty: "medium",
-    });
     setGameStarted(false);
+    setShowResult(false);
+    setQuestions([]);
+    setCurrentIndex(0);
+    setScore(0);
+    setSelectedOption(null);
   };
 
-  if (!gameStarted) {
-    return (
-      <div className="min-h-screen pt-20 lg:pt-28 w-full">
-        {/* Hero Section - Full Width */}
-        <section className="relative py-20 px-4 sm:px-6 lg:px-8 xl:px-12 overflow-hidden w-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(168,85,247,0.3),transparent)]" />
+  const currentQuestion = questions[currentIndex];
 
-          <div className="relative z-10 text-center w-full">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-display font-bold text-white mb-6">
-              🎭 <span className="text-gradient-premium">Movie</span>{" "}
-              <span className="text-white">Quiz Generator</span>
-            </h1>
-            <p className="text-xl lg:text-2xl xl:text-3xl text-slate-300 mb-12 max-w-4xl mx-auto">
-              Test your movie knowledge with AI-generated quizzes based on
-              popular films!
-            </p>
-          </div>
-        </section>
+  return (
+    <div className="min-h-screen w-full">
+      <PageHeader
+        eyebrow="Cinema Games"
+        title="Movie Quiz"
+        accentWord="Generator"
+        description="Five rapid-fire questions generated dynamically from live TMDB film data."
+      >
+        <Link
+          href="/games"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Games
+        </Link>
+      </PageHeader>
 
-        {/* Content Section */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 border border-purple-500/20"
-            >
-              <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                Choose Your Difficulty
-              </h2>
+      <section className="py-10">
+        <div className="container-cinema max-w-3xl">
+          {error && (
+            <div className="mb-6 rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-400">
+              {error}
+            </div>
+          )}
 
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                {["easy", "medium", "hard"].map((difficulty) => (
-                  <motion.button
-                    key={difficulty}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() =>
-                      generateQuiz(difficulty as "easy" | "medium" | "hard")
-                    }
+          {/* Setup Screen */}
+          {!gameStarted && (
+            <div className="surface-card p-6 sm:p-8 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-secondary text-primary">
+                  <Clapperboard className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">
+                    Choose Difficulty
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Select your pace to generate a fresh 5-question quiz
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {difficulties.map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
                     disabled={isGenerating}
-                    className={`p-6 rounded-2xl text-center transition-all duration-300 ${
-                      difficulty === "easy"
-                        ? "bg-green-600/20 border-green-500/30 hover:bg-green-600/30"
-                        : difficulty === "medium"
-                        ? "bg-yellow-600/20 border-yellow-500/30 hover:bg-yellow-600/30"
-                        : "bg-red-600/20 border-red-500/30 hover:bg-red-600/30"
-                    } border backdrop-blur-sm`}
+                    onClick={() => generateQuiz(d.id)}
+                    className="group surface-card-interactive p-5 text-left flex flex-col justify-between cursor-pointer disabled:opacity-50"
                   >
-                    <div className="text-3xl mb-2">
-                      {difficulty === "easy"
-                        ? "😊"
-                        : difficulty === "medium"
-                        ? "🤔"
-                        : "🔥"}
+                    <div>
+                      <span className="font-mono text-xs font-semibold text-primary">
+                        {d.time}s / Q
+                      </span>
+                      <h3 className="mt-1 text-base font-bold text-foreground group-hover:text-primary transition-colors">
+                        {d.label}
+                      </h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {d.description}
+                      </p>
                     </div>
-                    <h3 className="text-xl font-bold text-white capitalize mb-2">
-                      {difficulty}
-                    </h3>
-                    <p className="text-sm text-slate-300">
-                      {difficulty === "easy"
-                        ? "45 seconds per question • Basic movie facts"
-                        : difficulty === "medium"
-                        ? "30 seconds per question • Moderate difficulty"
-                        : "20 seconds per question • For movie experts"}
-                    </p>
-                  </motion.button>
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground group-hover:text-primary">
+                      <Play className="h-3.5 w-3.5" />
+                      Start
+                    </span>
+                  </button>
                 ))}
               </div>
 
               {isGenerating && (
-                <div className="text-center">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className="w-12 h-12 mx-auto mb-4"
-                  >
-                    <div className="w-full h-full border-4 border-purple-500/30 border-t-purple-500 rounded-full"></div>
-                  </motion.div>
-                  <p className="text-white">
-                    Generating your personalized movie quiz...
-                  </p>
+                <div className="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span>Generating fresh questions from TMDB...</span>
                 </div>
               )}
-            </motion.div>
-          </div>
-        </section>
-      </div>
-    );
-  }
+            </div>
+          )}
 
-  if (quizState.showResult) {
-    const percentage = Math.round(
-      (quizState.score / quizState.questions.length) * 100
-    );
-
-    return (
-      <div className="min-h-screen pt-20 lg:pt-28 w-full">
-        {/* Results Section */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 border border-purple-500/20 text-center"
-            >
-              <div className="text-6xl mb-6">
-                {percentage >= 80
-                  ? "🏆"
-                  : percentage >= 60
-                  ? "🎭"
-                  : percentage >= 40
-                  ? "🎬"
-                  : "📚"}
-              </div>
-              <h1 className="text-4xl font-bold mb-4 text-white">
-                Quiz Complete!
-              </h1>
-              <p className="text-2xl mb-6 text-slate-300">
-                You scored{" "}
-                <span className="text-purple-400 font-bold">
-                  {quizState.score}/{quizState.questions.length}
+          {/* Active Question */}
+          {gameStarted && !showResult && currentQuestion && (
+            <div className="surface-card p-6 sm:p-8 space-y-6">
+              {/* Top Bar */}
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-mono text-xs font-semibold text-muted-foreground">
+                  QUESTION {currentIndex + 1} / {questions.length}
                 </span>
-              </p>
-              <p className="text-xl mb-8 text-slate-400">
-                {percentage >= 80
-                  ? "Movie Master! 🌟"
-                  : percentage >= 60
-                  ? "Great job! You know your movies! 🎉"
-                  : percentage >= 40
-                  ? "Not bad! Keep watching more movies! 💪"
-                  : "Time to watch more movies! 📽️"}
-              </p>
-
-              <div className="flex gap-4 justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={resetQuiz}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-                >
-                  Play Again
-                </motion.button>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
-  const currentQ = quizState.questions[quizState.currentQuestion];
-
-  return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full">
-      {/* Quiz Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
-        <div className="max-w-4xl mx-auto">
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-slate-300">
-                Question {quizState.currentQuestion + 1} of{" "}
-                {quizState.questions.length}
-              </span>
-              <span className="text-slate-300">Score: {quizState.score}</span>
-            </div>
-            <div className="w-full bg-slate-700 rounded-full h-2">
-              <motion.div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-                initial={{ width: 0 }}
-                animate={{
-                  width: `${
-                    ((quizState.currentQuestion + 1) /
-                      quizState.questions.length) *
-                    100
-                  }%`,
-                }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-          </div>
-
-          {/* Timer */}
-          <motion.div
-            className="text-center mb-8"
-            animate={{ scale: quizState.timeLeft <= 10 ? [1, 1.1, 1] : 1 }}
-            transition={{
-              duration: 0.5,
-              repeat: quizState.timeLeft <= 10 ? Infinity : 0,
-            }}
-          >
-            <div
-              className={`text-4xl font-bold ${
-                quizState.timeLeft <= 10 ? "text-red-400" : "text-purple-400"
-              }`}
-            >
-              {quizState.timeLeft}s
-            </div>
-          </motion.div>
-
-          {/* Question */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={quizState.currentQuestion}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 border border-purple-500/20"
-            >
-              <h2 className="text-2xl font-bold text-white mb-8 text-center">
-                {currentQ.question}
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                {currentQ.options.map((option, index) => (
-                  <motion.button
-                    key={index}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleAnswer(index)}
-                    className="p-4 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl text-white text-left transition-all duration-300 border border-slate-600/50 hover:border-purple-500/50"
+                <div className="flex items-center gap-3">
+                  <span className="rounded-lg border border-border bg-secondary px-2.5 py-1 font-mono text-xs font-semibold text-foreground">
+                    Score: {score}
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 font-mono text-xs font-bold ${
+                      timeLeft <= 5
+                        ? "border-rose-500/40 bg-rose-500/15 text-rose-400"
+                        : "border-border bg-secondary text-foreground"
+                    }`}
                   >
-                    <span className="font-semibold text-purple-400 mr-3">
-                      {String.fromCharCode(65 + index)}.
-                    </span>
-                    {option}
-                  </motion.button>
-                ))}
+                    <Clock className="h-3.5 w-3.5" />
+                    {timeLeft}s
+                  </span>
+                </div>
               </div>
-            </motion.div>
-          </AnimatePresence>
+
+              {/* Progress Bar */}
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{
+                    width: `${((currentIndex + 1) / questions.length) * 100}%`,
+                  }}
+                />
+              </div>
+
+              {/* Question + Optional Poster Hint for non-plot questions */}
+              <div className="flex flex-col sm:flex-row gap-5 items-start">
+                {currentQuestion.type !== "plot" &&
+                  currentQuestion.movie.poster_path && (
+                    <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
+                      <Image
+                        src={
+                          tmdbClient.getImageUrl(
+                            currentQuestion.movie.poster_path,
+                            "w185"
+                          ) || ""
+                        }
+                        alt={currentQuestion.movie.title}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                <h2 className="text-lg sm:text-xl font-bold text-foreground leading-snug">
+                  {currentQuestion.question}
+                </h2>
+              </div>
+
+              {/* Options */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {currentQuestion.options.map((opt, idx) => {
+                  const isChosen = selectedOption === idx;
+                  const isRight = idx === currentQuestion.correctAnswer;
+                  let style =
+                    "border-border bg-secondary/50 text-foreground hover:border-foreground/30 hover:bg-secondary";
+
+                  if (selectedOption !== null) {
+                    if (isRight) {
+                      style =
+                        "border-emerald-500/50 bg-emerald-500/15 text-emerald-300";
+                    } else if (isChosen) {
+                      style =
+                        "border-rose-500/50 bg-rose-500/15 text-rose-300";
+                    } else {
+                      style = "border-border bg-secondary/20 text-muted-foreground opacity-60";
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={selectedOption !== null}
+                      onClick={() => handleAnswer(idx)}
+                      className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-left text-sm font-medium transition-all cursor-pointer ${style}`}
+                    >
+                      <span>{opt}</span>
+                      {selectedOption !== null && isRight && (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                      )}
+                      {selectedOption !== null && isChosen && !isRight && (
+                        <XCircle className="h-4 w-4 text-rose-400 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Results Screen */}
+          {showResult && (
+            <div className="surface-card p-8 text-center space-y-6">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/15 text-amber-400">
+                <Trophy className="h-7 w-7" />
+              </div>
+
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">
+                  Quiz Complete
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You scored{" "}
+                  <span className="font-mono font-bold text-foreground">
+                    {score} / {questions.length}
+                  </span>{" "}
+                  ({Math.round((score / Math.max(1, questions.length)) * 100)}%)
+                </p>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => generateQuiz(difficulty)}
+                  className="btn-cinema"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Play Again
+                </button>
+                <button
+                  type="button"
+                  onClick={resetQuiz}
+                  className="btn-cinema-outline"
+                >
+                  Change Difficulty
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

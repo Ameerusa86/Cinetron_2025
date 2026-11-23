@@ -1,53 +1,61 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useUserStore } from "@/stores";
+import {
+  Bookmark,
+  Film,
+  Tv,
+  Trash2,
+  Star,
+  Plus,
+  Compass,
+  User,
+  Calendar,
+} from "lucide-react";
+import { useUserStore, useNotificationStore } from "@/stores";
 import { useWatchlistDetails } from "@/hooks";
 import { createMovieSlug, createTVShowSlug } from "@/lib/slug-utils";
 import tmdbClient from "@/lib/tmdb-client";
-import { WatchlistItem } from "@/types";
+import type { WatchlistItem, MovieDetails, TVShowDetails } from "@/types";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ProfileBreadcrumb } from "@/components/ui/Breadcrumb";
-import { User, Plus, Tv, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/media/PageHeader";
+
+type MediaDetails = MovieDetails | TVShowDetails;
 
 function WatchlistContent() {
   const { user, updateWatchlistItem, removeFromWatchlist } = useUserStore();
+  const { addNotification } = useNotificationStore();
+
   const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
   const [statusFilter, setStatusFilter] = useState<
     WatchlistItem["status"] | "all"
   >("all");
   const [sortBy, setSortBy] = useState<"added" | "title" | "rating">("added");
 
-  // Extract IDs from watchlist items for the details hook
-  const watchlistIds = user?.watchlist?.map((item) => item.id) || [];
+  const watchlistItems = useMemo(() => user?.watchlist || [], [user?.watchlist]);
+  const { data: mediaDetails, isLoading } = useWatchlistDetails(watchlistItems);
 
-  // Get detailed data for watchlist items
-  const { data: mediaDetails, isLoading } = useWatchlistDetails(watchlistIds);
+  const watchlistWithDetails = useMemo(() => {
+    if (!watchlistItems.length || !mediaDetails) return [];
 
-  // Combine watchlist items with their media details
-  const watchlistWithDetails = React.useMemo(() => {
-    if (!user?.watchlist || !mediaDetails) return [];
-
-    return user.watchlist
+    return watchlistItems
       .map((watchlistItem) => {
-        const details = mediaDetails.find(
-          (media) => media.id === watchlistItem.id
-        );
-        return {
-          watchlistItem,
-          details,
-        };
+        const details = mediaDetails.find((m) => {
+          if (m.id !== watchlistItem.id) return false;
+          const isMovie = "title" in m;
+          return watchlistItem.type === "movie" ? isMovie : !isMovie;
+        });
+        return { watchlistItem, details };
       })
-      .filter((item) => item.details); // Only include items with valid details
-  }, [user?.watchlist, mediaDetails]);
+      .filter((entry): entry is { watchlistItem: WatchlistItem; details: MediaDetails } =>
+        Boolean(entry.details)
+      );
+  }, [watchlistItems, mediaDetails]);
 
-  // Filter and sort watchlist
-  const filteredWatchlist = React.useMemo(() => {
-    if (!watchlistWithDetails) return [];
-
+  const filteredWatchlist = useMemo(() => {
     const filtered = watchlistWithDetails.filter((item) => {
       if (filter !== "all" && item.watchlistItem.type !== filter) return false;
       if (statusFilter !== "all" && item.watchlistItem.status !== statusFilter)
@@ -55,158 +63,90 @@ function WatchlistContent() {
       return true;
     });
 
-    // Sort
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "title":
-          const titleA =
-            "title" in a.details! ? a.details.title : a.details!.name;
-          const titleB =
-            "title" in b.details! ? b.details.title : b.details!.name;
-          return titleA.localeCompare(titleB);
-        case "rating":
-          return (
-            (b.details!.vote_average || 0) - (a.details!.vote_average || 0)
-          );
-        case "added":
-        default:
-          return (
-            new Date(b.watchlistItem.addedAt).getTime() -
-            new Date(a.watchlistItem.addedAt).getTime()
-          );
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "title") {
+        const titleA = "title" in a.details ? a.details.title : a.details.name;
+        const titleB = "title" in b.details ? b.details.title : b.details.name;
+        return titleA.localeCompare(titleB);
       }
+      if (sortBy === "rating") {
+        return (b.details.vote_average || 0) - (a.details.vote_average || 0);
+      }
+      return (
+        new Date(b.watchlistItem.addedAt).getTime() -
+        new Date(a.watchlistItem.addedAt).getTime()
+      );
     });
-
-    return filtered;
   }, [watchlistWithDetails, filter, statusFilter, sortBy]);
 
-  // Helper function to get title from either movie or TV show
-  type MovieDetails = {
-    id: number;
-    title: string;
-    release_date?: string;
-    poster_path?: string | null;
-    vote_average?: number;
-  };
-
-  type TVShowDetails = {
-    id: number;
-    name: string;
-    first_air_date?: string;
-    poster_path?: string | null;
-    vote_average?: number;
-  };
-
-  type MediaDetails = MovieDetails | TVShowDetails;
-
-  const getTitle = (details: MediaDetails): string => {
-    return "title" in details ? details.title : details.name || "Unknown Title";
-  };
-
-  // Helper function to get release year
-  const getReleaseYear = (details: MediaDetails): string => {
-    if ("release_date" in details && details.release_date) {
-      return new Date(details.release_date).getFullYear().toString();
-    }
-    if ("first_air_date" in details && details.first_air_date) {
-      return new Date(details.first_air_date).getFullYear().toString();
-    }
-    return "Unknown";
-  };
-
-  const getStatusColor = (status: WatchlistItem["status"]) => {
+  const getStatusBadge = (status: WatchlistItem["status"]) => {
     switch (status) {
       case "completed":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
+        return "border-emerald-500/35 bg-emerald-500/10 text-emerald-400";
       case "watching":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+        return "border-sky-500/35 bg-sky-500/10 text-sky-400";
       case "plan-to-watch":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+        return "border-amber-500/35 bg-amber-500/10 text-amber-400";
       case "dropped":
-        return "bg-red-500/20 text-red-400 border-red-500/30";
-      case "on-hold":
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+        return "border-rose-500/35 bg-rose-500/10 text-rose-400";
       default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+        return "border-border bg-secondary text-muted-foreground";
     }
   };
 
-  const getPriorityColor = (priority: WatchlistItem["priority"]) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500/20 text-red-400";
-      case "medium":
-        return "bg-yellow-500/20 text-yellow-400";
-      case "low":
-        return "bg-green-500/20 text-green-400";
-      default:
-        return "bg-gray-500/20 text-gray-400";
-    }
-  };
-
-  const handleStatusChange = (
-    id: number,
-    newStatus: WatchlistItem["status"]
-  ) => {
-    updateWatchlistItem(id, { status: newStatus });
-  };
-
-  const handlePriorityChange = (
-    id: number,
-    newPriority: WatchlistItem["priority"]
-  ) => {
-    updateWatchlistItem(id, { priority: newPriority });
-  };
-
-  const handleRemove = (id: number) => {
+  const handleRemove = (id: number, title: string) => {
     removeFromWatchlist(id);
+    addNotification({
+      type: "info",
+      title: "Removed from Watchlist",
+      message: `"${title}" was removed from your watchlist.`,
+      read: false,
+    });
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pt-20 lg:pt-28 w-full">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-lg text-slate-600 dark:text-slate-400">
-              Loading your watchlist...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen pt-20 lg:pt-28 w-full bg-gradient-to-br from-slate-50 via-white to-orange-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <ProfileBreadcrumb currentPage="My Watchlist" />
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl lg:text-5xl font-display font-bold text-slate-900 dark:text-white mb-4">
-            📚 My Watchlist
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
-            Track and manage your movies and TV shows
-          </p>
+    <div className="min-h-screen w-full">
+      <PageHeader
+        eyebrow="Personal Library"
+        title="My"
+        accentWord="Watchlist"
+        description="Organize what you plan to watch, track current series, and archive completed films."
+      >
+        <ProfileBreadcrumb currentPage="Watchlist" />
+        <div className="flex flex-wrap gap-2.5">
+          <Link href="/movies" className="btn-cinema">
+            <Plus className="h-4 w-4" />
+            <span>Add Movies</span>
+          </Link>
+          <Link href="/tv-shows" className="btn-cinema-outline">
+            <Tv className="h-4 w-4" />
+            <span>Add TV Shows</span>
+          </Link>
+          <Link href="/discover" className="btn-cinema-outline">
+            <Compass className="h-4 w-4" />
+            <span>Discover</span>
+          </Link>
+          <Link href="/profile" className="btn-cinema-outline">
+            <User className="h-4 w-4" />
+            <span>Profile</span>
+          </Link>
         </div>
+      </PageHeader>
 
-        {/* Filters and Controls */}
-        <div className="mb-8 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Type Filter */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Type
+      <section className="py-10">
+        <div className="container-cinema space-y-8">
+          {/* Controls & Stats */}
+          <div className="surface-card p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                Media Type
               </label>
               <select
                 value={filter}
                 onChange={(e) =>
                   setFilter(e.target.value as "all" | "movie" | "tv")
                 }
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full rounded-xl border border-border bg-secondary px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
                 <option value="all">All Types</option>
                 <option value="movie">Movies</option>
@@ -214,10 +154,9 @@ function WatchlistContent() {
               </select>
             </div>
 
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Status
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                Watch Status
               </label>
               <select
                 value={statusFilter}
@@ -226,7 +165,7 @@ function WatchlistContent() {
                     e.target.value as WatchlistItem["status"] | "all"
                   )
                 }
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full rounded-xl border border-border bg-secondary px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
                 <option value="all">All Statuses</option>
                 <option value="plan-to-watch">Plan to Watch</option>
@@ -237,287 +176,246 @@ function WatchlistContent() {
               </select>
             </div>
 
-            {/* Sort By */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Sort By
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                Sort Order
               </label>
               <select
                 value={sortBy}
                 onChange={(e) =>
                   setSortBy(e.target.value as "added" | "title" | "rating")
                 }
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full rounded-xl border border-border bg-secondary px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
-                <option value="added">Date Added</option>
-                <option value="title">Title</option>
-                <option value="rating">Rating</option>
+                <option value="added">Recently Added</option>
+                <option value="title">Title (A–Z)</option>
+                <option value="rating">Highest Rated</option>
               </select>
             </div>
 
-            {/* Stats */}
-            <div className="flex flex-col justify-center">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Total Items:{" "}
-                <span className="font-bold text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between sm:justify-around rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-center">
+              <div>
+                <p className="font-mono text-lg font-bold text-foreground">
                   {filteredWatchlist.length}
-                </span>
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Movies:{" "}
-                <span className="font-bold text-slate-900 dark:text-white">
+                </p>
+                <p className="text-[11px] text-muted-foreground">Showing</p>
+              </div>
+              <div className="h-7 w-px bg-border" />
+              <div>
+                <p className="font-mono text-lg font-bold text-foreground">
                   {
                     filteredWatchlist.filter(
-                      (item) => item.watchlistItem.type === "movie"
+                      (i) => i.watchlistItem.type === "movie"
                     ).length
                   }
-                </span>
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                TV Shows:{" "}
-                <span className="font-bold text-slate-900 dark:text-white">
+                </p>
+                <p className="text-[11px] text-muted-foreground">Movies</p>
+              </div>
+              <div className="h-7 w-px bg-border" />
+              <div>
+                <p className="font-mono text-lg font-bold text-foreground">
                   {
                     filteredWatchlist.filter(
-                      (item) => item.watchlistItem.type === "tv"
+                      (i) => i.watchlistItem.type === "tv"
                     ).length
                   }
-                </span>
-              </p>
+                </p>
+                <p className="text-[11px] text-muted-foreground">Series</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8 bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-          <div className="flex flex-wrap gap-4 justify-center sm:justify-start">
-            <Link
-              href="/profile"
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/20 to-orange-600/20 hover:from-orange-500/30 hover:to-orange-600/30 border border-orange-500/20 rounded-lg text-orange-300 hover:text-orange-200 transition-all group"
-            >
-              <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-medium">Back to Profile</span>
-            </Link>
-
-            <Link
-              href="/movies"
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-slate-300 hover:text-white transition-all group"
-            >
-              <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-medium">Add Movies</span>
-            </Link>
-
-            <Link
-              href="/tv-shows"
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-slate-300 hover:text-white transition-all group"
-            >
-              <Tv className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-medium">Add TV Shows</span>
-            </Link>
-
-            <Link
-              href="/discover"
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-slate-300 hover:text-white transition-all group"
-            >
-              <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-medium">Discover</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Watchlist Items */}
-        {filteredWatchlist.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">�</div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              {user?.watchlist?.length === 0
-                ? "Your watchlist is empty"
-                : "No items match your filters"}
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              {user?.watchlist?.length === 0
-                ? "Start adding movies and TV shows to keep track of what you want to watch!"
-                : "Try adjusting your filters to see more items."}
-            </p>
-            {user?.watchlist?.length === 0 && (
-              <Link
-                href="/movies"
-                className="btn-cinema inline-flex items-center gap-2 px-6 py-3"
-              >
-                🎬 Browse Movies
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredWatchlist.map((item) => {
-              const { watchlistItem, details } = item;
-              if (!details) return null;
-
-              const title = getTitle(details);
-              const releaseYear = getReleaseYear(details);
-
-              return (
+          {/* Loading Skeletons */}
+          {isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div
-                  key={watchlistItem.id}
-                  className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-                >
-                  {/* Poster and Quick Actions */}
-                  <div className="relative">
-                    <div className="aspect-[2/3] w-full max-w-[200px] mx-auto relative overflow-hidden">
-                      <Image
-                        src={
-                          tmdbClient.getImageUrl(
-                            details.poster_path || null,
-                            "w500"
-                          ) || "/placeholder-poster.svg"
-                        }
-                        alt={title}
-                        width={200}
-                        height={300}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/placeholder-poster.svg";
-                        }}
-                      />
-                    </div>
+                  key={i}
+                  className="h-52 rounded-2xl bg-secondary skeleton-shimmer"
+                />
+              ))}
+            </div>
+          )}
 
-                    {/* Quick Remove Button */}
-                    <Button
-                      onClick={() => handleRemove(watchlistItem.id)}
-                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-colors duration-200"
-                      title="Remove from watchlist"
+          {/* Empty State */}
+          {!isLoading && filteredWatchlist.length === 0 && (
+            <div className="surface-card p-12 text-center space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-secondary text-primary">
+                <Bookmark className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">
+                  {watchlistItems.length === 0
+                    ? "Your watchlist is empty"
+                    : "No items match these filters"}
+                </h2>
+                <p className="mt-1.5 text-sm text-muted-foreground max-w-md mx-auto">
+                  {watchlistItems.length === 0
+                    ? "Bookmark movies and series across Cinetron to build your personal queue."
+                    : "Try clearing one of the active type or status filters."}
+                </p>
+              </div>
+              <div className="pt-2">
+                {watchlistItems.length === 0 ? (
+                  <Link href="/movies" className="btn-cinema">
+                    <Film className="h-4 w-4" />
+                    <span>Browse Movies</span>
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilter("all");
+                      setStatusFilter("all");
+                    }}
+                    className="btn-cinema-outline"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Watchlist Cards */}
+          {!isLoading && filteredWatchlist.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filteredWatchlist.map(({ watchlistItem, details }) => {
+                const title =
+                  "title" in details ? details.title : details.name;
+                const dateStr =
+                  "release_date" in details
+                    ? details.release_date
+                    : details.first_air_date;
+                const year = dateStr ? dateStr.slice(0, 4) : "TBA";
+                const poster = tmdbClient.getImageUrl(
+                  details.poster_path || null,
+                  "w342"
+                );
+                const href =
+                  watchlistItem.type === "movie"
+                    ? `/movie/${createMovieSlug(title, watchlistItem.id)}`
+                    : `/tv/${createTVShowSlug(title, watchlistItem.id)}`;
+
+                return (
+                  <article
+                    key={`${watchlistItem.type}-${watchlistItem.id}`}
+                    className="surface-card p-4 flex gap-4"
+                  >
+                    {/* Poster */}
+                    <Link
+                      href={href}
+                      className="relative h-44 w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-secondary"
                     >
-                      ❌
-                    </Button>
-
-                    {/* Priority Indicator */}
-                    <div
-                      className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                        watchlistItem.priority
-                      )}`}
-                    >
-                      {watchlistItem.priority.toUpperCase()}
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-6">
-                    <div className="mb-4">
-                      <Link
-                        href={
-                          watchlistItem.type === "movie"
-                            ? `/movie/${createMovieSlug(
-                                title,
-                                watchlistItem.id
-                              )}`
-                            : `/tv/${createTVShowSlug(title, watchlistItem.id)}`
-                        }
-                        className="text-xl font-bold text-slate-900 dark:text-white hover:text-orange-500 dark:hover:text-orange-400 transition-colors duration-200 line-clamp-2"
-                      >
-                        {title}
-                      </Link>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        {watchlistItem.type === "movie"
-                          ? "🎬 Movie"
-                          : "📺 TV Show"}{" "}
-                        • {releaseYear}
-                      </p>
-                      {details.vote_average && details.vote_average > 0 && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          ⭐ {details.vote_average.toFixed(1)}/10
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Status Control */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Status
-                      </label>
-                      <select
-                        value={watchlistItem.status}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            watchlistItem.id,
-                            e.target.value as WatchlistItem["status"]
-                          )
-                        }
-                        className={`w-full px-3 py-2 rounded-lg border text-sm font-medium ${getStatusColor(
-                          watchlistItem.status
-                        )}`}
-                      >
-                        <option value="plan-to-watch">Plan to Watch</option>
-                        <option value="watching">Currently Watching</option>
-                        <option value="completed">Completed</option>
-                        <option value="on-hold">On Hold</option>
-                        <option value="dropped">Dropped</option>
-                      </select>
-                    </div>
-
-                    {/* Priority Control */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Priority
-                      </label>
-                      <select
-                        value={watchlistItem.priority}
-                        onChange={(e) =>
-                          handlePriorityChange(
-                            watchlistItem.id,
-                            e.target.value as WatchlistItem["priority"]
-                          )
-                        }
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        <option value="low">Low Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="high">High Priority</option>
-                      </select>
-                    </div>
-
-                    {/* Episode Progress for TV Shows */}
-                    {watchlistItem.type === "tv" &&
-                      watchlistItem.episodeProgress && (
-                        <div className="mb-4">
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Progress: Season{" "}
-                            {watchlistItem.episodeProgress.season}, Episode{" "}
-                            {watchlistItem.episodeProgress.episode}
-                          </p>
+                      {poster ? (
+                        <Image
+                          src={poster}
+                          alt={title}
+                          fill
+                          sizes="112px"
+                          className="object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                          {watchlistItem.type === "movie" ? (
+                            <Film className="h-6 w-6 opacity-40" />
+                          ) : (
+                            <Tv className="h-6 w-6 opacity-40" />
+                          )}
                         </div>
                       )}
+                    </Link>
 
-                    {/* Notes */}
-                    {watchlistItem.notes && (
-                      <div className="mb-4">
-                        <p className="text-sm text-slate-600 dark:text-slate-400 italic">
-                          &ldquo;{watchlistItem.notes}&rdquo;
-                        </p>
+                    {/* Controls & Info */}
+                    <div className="min-w-0 flex-1 flex flex-col justify-between gap-3">
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <Link
+                            href={href}
+                            className="text-base font-bold text-foreground hover:text-primary transition-colors line-clamp-1"
+                          >
+                            {title}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleRemove(watchlistItem.id, title)}
+                            aria-label={`Remove ${title}`}
+                            className="rounded-lg p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
+                          <span className="capitalize font-sans">
+                            {watchlistItem.type === "tv" ? "Series" : "Movie"}
+                          </span>
+                          <span>·</span>
+                          <span>{year}</span>
+                          {details.vote_average > 0 && (
+                            <>
+                              <span>·</span>
+                              <span className="inline-flex items-center gap-1 text-foreground">
+                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                {details.vote_average.toFixed(1)}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                    )}
 
-                    {/* Added Date */}
-                    <p className="text-xs text-slate-500 dark:text-slate-500">
-                      Added{" "}
-                      {new Date(watchlistItem.addedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          aria-label="Watch status"
+                          value={watchlistItem.status}
+                          onChange={(e) =>
+                            updateWatchlistItem(watchlistItem.id, {
+                              status: e.target.value as WatchlistItem["status"],
+                            })
+                          }
+                          className={`w-full rounded-lg border px-2 py-1.5 text-xs font-semibold focus:outline-none ${getStatusBadge(
+                            watchlistItem.status
+                          )}`}
+                        >
+                          <option value="plan-to-watch">Plan to Watch</option>
+                          <option value="watching">Watching</option>
+                          <option value="completed">Completed</option>
+                          <option value="on-hold">On Hold</option>
+                          <option value="dropped">Dropped</option>
+                        </select>
 
-        {/* Floating Profile Button */}
-        <Link
-          href="/profile"
-          className="fixed bottom-8 right-8 z-50 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 group"
-        >
-          <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <span className="text-sm font-medium hidden sm:inline">Profile</span>
-        </Link>
-      </div>
+                        <select
+                          aria-label="Priority"
+                          value={watchlistItem.priority}
+                          onChange={(e) =>
+                            updateWatchlistItem(watchlistItem.id, {
+                              priority: e.target
+                                .value as WatchlistItem["priority"],
+                            })
+                          }
+                          className="w-full rounded-lg border border-border bg-secondary px-2 py-1.5 text-xs font-medium text-foreground focus:outline-none"
+                        >
+                          <option value="low">Low Priority</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High Priority</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          Added{" "}
+                          {new Date(watchlistItem.addedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

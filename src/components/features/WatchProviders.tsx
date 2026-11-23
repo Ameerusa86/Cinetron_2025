@@ -2,108 +2,132 @@
 
 import React from "react";
 import Image from "next/image";
-import { useMovieWatchProviders } from "@/hooks";
+import { Tv, ExternalLink } from "lucide-react";
+import { useMovieWatchProviders, useTVWatchProviders } from "@/hooks";
+import { useUserStore } from "@/stores";
 import tmdbClient from "@/lib/tmdb-client";
+import type { WatchProvider } from "@/types";
 
 interface WatchProvidersProps {
-  movieId: number;
+  movieId?: number;
+  tvId?: number;
 }
 
-export function WatchProviders({ movieId }: WatchProvidersProps) {
-  const { data: providersData, isLoading } = useMovieWatchProviders(movieId);
+function ProviderGroup({
+  label,
+  providers,
+}: {
+  label: string;
+  providers: WatchProvider[];
+}) {
+  return (
+    <div className="space-y-2.5">
+      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </h3>
+      <div className="flex flex-wrap gap-2.5">
+        {providers.map((provider) => {
+          const logo = tmdbClient.getImageUrl(provider.logo_path, "w154");
+          return (
+            <div
+              key={provider.provider_id}
+              title={provider.provider_name}
+              className="inline-flex items-center gap-2.5 rounded-xl border border-border bg-secondary/60 pr-3 overflow-hidden"
+            >
+              {logo && (
+                <Image
+                  src={logo}
+                  alt={provider.provider_name}
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 object-cover shrink-0"
+                />
+              )}
+              <span className="text-xs font-medium text-foreground">
+                {provider.provider_name}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-  if (isLoading || !providersData) return null;
+export function WatchProviders({ movieId, tvId }: WatchProvidersProps) {
+  const country = useUserStore((s) => s.user?.preferences?.country) || "US";
 
-  // Let's default to US providers
-  const usProviders = providersData.results["US"];
+  const movieQuery = useMovieWatchProviders(movieId || 0, Boolean(movieId));
+  const tvQuery = useTVWatchProviders(tvId || 0, Boolean(tvId && !movieId));
 
-  if (!usProviders || (!usProviders.flatrate && !usProviders.rent && !usProviders.buy)) {
+  const providersData = movieId ? movieQuery.data : tvQuery.data;
+  const isLoading = movieId ? movieQuery.isLoading : tvQuery.isLoading;
+
+  if (isLoading || !providersData?.results) return null;
+
+  const regionCode = providersData.results[country]
+    ? country
+    : providersData.results["US"]
+    ? "US"
+    : Object.keys(providersData.results)[0];
+
+  const regionData = regionCode ? providersData.results[regionCode] : undefined;
+
+  if (
+    !regionData ||
+    (!regionData.flatrate?.length &&
+      !regionData.free?.length &&
+      !regionData.rent?.length &&
+      !regionData.buy?.length)
+  ) {
     return null;
   }
 
   return (
-    <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 lg:p-10 shadow-2xl mt-8">
-      <h2 className="text-3xl font-display font-bold text-white flex items-center gap-3 mb-8">
-        <span>🍿</span> Where to Watch
-      </h2>
-
-      <div className="space-y-6">
-        {usProviders.flatrate && (
-          <div>
-            <h3 className="text-lg font-semibold text-slate-300 mb-4">Stream</h3>
-            <div className="flex flex-wrap gap-4">
-              {usProviders.flatrate.map((provider) => (
-                <div key={provider.provider_id} className="group relative w-12 h-12 rounded-xl overflow-hidden shadow-lg">
-                  <Image
-                    src={tmdbClient.getImageUrl(provider.logo_path, "w154") || ""}
-                    alt={provider.provider_name}
-                    width={48}
-                    height={48}
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                    <span className="text-[10px] text-white text-center font-bold px-1 leading-tight">
-                      {provider.provider_name}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+    <div className="surface-card p-6 sm:p-8 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-secondary text-primary">
+            <Tv className="h-4 w-4" />
           </div>
-        )}
-
-        {usProviders.rent && (
           <div>
-            <h3 className="text-lg font-semibold text-slate-300 mb-4">Rent</h3>
-            <div className="flex flex-wrap gap-4">
-              {usProviders.rent.map((provider) => (
-                <div key={provider.provider_id} className="group relative w-12 h-12 rounded-xl overflow-hidden shadow-lg">
-                  <Image
-                    src={tmdbClient.getImageUrl(provider.logo_path, "w154") || ""}
-                    alt={provider.provider_name}
-                    width={48}
-                    height={48}
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                    <span className="text-[10px] text-white text-center font-bold px-1 leading-tight">
-                      {provider.provider_name}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h2 className="text-lg font-bold text-foreground">
+              Where to Watch
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Region: <span className="font-mono text-foreground">{regionCode}</span> ·
+              Availability via JustWatch
+            </p>
           </div>
-        )}
+        </div>
 
-        {usProviders.buy && (
-          <div>
-            <h3 className="text-lg font-semibold text-slate-300 mb-4">Buy</h3>
-            <div className="flex flex-wrap gap-4">
-              {usProviders.buy.map((provider) => (
-                <div key={provider.provider_id} className="group relative w-12 h-12 rounded-xl overflow-hidden shadow-lg">
-                  <Image
-                    src={tmdbClient.getImageUrl(provider.logo_path, "w154") || ""}
-                    alt={provider.provider_name}
-                    width={48}
-                    height={48}
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                    <span className="text-[10px] text-white text-center font-bold px-1 leading-tight">
-                      {provider.provider_name}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {regionData.link && (
+          <a
+            href={regionData.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+          >
+            <span>View on TMDB</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         )}
       </div>
-      
-      <p className="text-slate-500 text-xs mt-6">
-        Data provided by JustWatch via TMDB.
-      </p>
+
+      <div className="space-y-5">
+        {regionData.flatrate && regionData.flatrate.length > 0 && (
+          <ProviderGroup label="Stream" providers={regionData.flatrate} />
+        )}
+        {regionData.free && regionData.free.length > 0 && (
+          <ProviderGroup label="Free" providers={regionData.free} />
+        )}
+        {regionData.rent && regionData.rent.length > 0 && (
+          <ProviderGroup label="Rent" providers={regionData.rent} />
+        )}
+        {regionData.buy && regionData.buy.length > 0 && (
+          <ProviderGroup label="Buy" providers={regionData.buy} />
+        )}
+      </div>
     </div>
   );
 }

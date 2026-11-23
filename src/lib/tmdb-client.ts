@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance } from "axios";
 import type {
   Movie,
   MovieDetails,
@@ -11,12 +11,51 @@ import type {
   ReviewResponse,
   Person,
   PersonDetails,
+  PersonResponse,
   Genre,
   MultiSearchResult,
   TMDBResponse,
   MultiSearchResponse,
   WatchProvidersResponse,
 } from "@/types";
+
+export interface DiscoverMoviesOptions {
+  page?: number;
+  sort_by?: string;
+  genre?: number[];
+  with_genres?: number | string;
+  year?: number;
+  "primary_release_date.gte"?: string;
+  "primary_release_date.lte"?: string;
+  "vote_average.gte"?: number;
+  "vote_average.lte"?: number;
+  "vote_count.gte"?: number;
+  vote_average_gte?: number;
+  vote_average_lte?: number;
+  with_runtime_gte?: number;
+  with_runtime_lte?: number;
+  with_companies?: number[];
+  with_keywords?: number[];
+  language?: string;
+  include_adult?: boolean;
+  certification?: string;
+  certification_country?: string;
+  with_original_language?: string;
+  without_genres?: number[];
+}
+
+export interface DiscoverTVOptions {
+  page?: number;
+  sort_by?: string;
+  with_genres?: number | string;
+  "first_air_date.gte"?: string;
+  "first_air_date.lte"?: string;
+  "vote_average.gte"?: number;
+  "vote_count.gte"?: number;
+  language?: string;
+  include_adult?: boolean;
+  with_original_language?: string;
+}
 
 class TMDBClient {
   private api: AxiosInstance;
@@ -32,9 +71,9 @@ class TMDBClient {
       process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL ||
       "https://image.tmdb.org/t/p";
 
-    if (!this.apiKey) {
+    if (!this.apiKey && process.env.NODE_ENV === "development") {
       console.warn(
-        "⚠️ TMDB API key is not configured. Please add NEXT_PUBLIC_TMDB_API_KEY to your .env.local file"
+        "TMDB API key is not configured. Please add NEXT_PUBLIC_TMDB_API_KEY to your .env.local file"
       );
     }
 
@@ -45,43 +84,12 @@ class TMDBClient {
         api_key: this.apiKey,
       },
     });
-
-    // Request interceptor
-    this.api.interceptors.request.use(
-      (config) => {
-        console.log(
-          `🎬 [TMDB API] ${config.method?.toUpperCase()} ${config.url}`
-        );
-        return config;
-      },
-      (error) => {
-        console.error("❌ [TMDB API] Request error:", error);
-        return Promise.reject(error);
-      }
-    );
-
-    // Response interceptor
-    this.api.interceptors.response.use(
-      (response: AxiosResponse) => {
-        console.log(
-          `✅ [TMDB API] Response received for ${response.config.url}`
-        );
-        return response;
-      },
-      (error) => {
-        console.error(
-          "❌ [TMDB API] Response error:",
-          error.response?.data || error.message
-        );
-        return Promise.reject(error);
-      }
-    );
   }
 
   /**
    * Get image URL with specified size
    */
-  getImageUrl(path: string | null, size: string = "w500"): string | null {
+  getImageUrl(path: string | null | undefined, size: string = "w500"): string | null {
     if (!path) return null;
     return `${this.imageBaseURL}/${size}${path}`;
   }
@@ -103,21 +111,39 @@ class TMDBClient {
   // DISCOVER & TRENDING
   // ======================
 
-  /**
-   * Get trending movies
-   */
   async getTrendingMovies(
-    timeWindow: "day" | "week" = "day"
+    timeWindow: "day" | "week" = "day",
+    page: number = 1
   ): Promise<MovieResponse> {
     const response = await this.api.get<MovieResponse>(
-      `/trending/movie/${timeWindow}`
+      `/trending/movie/${timeWindow}`,
+      { params: { page } }
     );
     return response.data;
   }
 
-  /**
-   * Get popular movies
-   */
+  async getTrendingTVShows(
+    timeWindow: "day" | "week" = "day",
+    page: number = 1
+  ): Promise<TVShowResponse> {
+    const response = await this.api.get<TVShowResponse>(
+      `/trending/tv/${timeWindow}`,
+      { params: { page } }
+    );
+    return response.data;
+  }
+
+  async getTrendingPeople(
+    timeWindow: "day" | "week" = "day",
+    page: number = 1
+  ): Promise<PersonResponse> {
+    const response = await this.api.get<PersonResponse>(
+      `/trending/person/${timeWindow}`,
+      { params: { page } }
+    );
+    return response.data;
+  }
+
   async getPopularMovies(page: number = 1): Promise<MovieResponse> {
     const response = await this.api.get<MovieResponse>("/movie/popular", {
       params: { page },
@@ -125,9 +151,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get popular TV shows
-   */
   async getPopularTVShows(page: number = 1): Promise<TVShowResponse> {
     const response = await this.api.get<TVShowResponse>("/tv/popular", {
       params: { page },
@@ -135,24 +158,49 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get TV show details
-   */
-  async getTVShowDetails(
-    tvId: number,
-    appendToResponse: string[] = []
-  ): Promise<TVShowDetails> {
-    const response = await this.api.get<TVShowDetails>(`/tv/${tvId}`, {
-      params: {
-        append_to_response: appendToResponse.join(","),
-      },
+  async getTopRatedTVShows(page: number = 1): Promise<TVShowResponse> {
+    const response = await this.api.get<TVShowResponse>("/tv/top_rated", {
+      params: { page },
     });
     return response.data;
   }
 
-  /**
-   * Get top rated movies
-   */
+  async getOnTheAirTVShows(page: number = 1): Promise<TVShowResponse> {
+    const response = await this.api.get<TVShowResponse>("/tv/on_the_air", {
+      params: { page },
+    });
+    return response.data;
+  }
+
+  async getTVShowDetails(
+    tvId: number,
+    appendToResponse: string[] = []
+  ): Promise<TVShowDetails> {
+    const params: Record<string, string> = {};
+    if (appendToResponse.length > 0) {
+      params.append_to_response = appendToResponse.join(",");
+    }
+    const response = await this.api.get<TVShowDetails>(`/tv/${tvId}`, {
+      params,
+    });
+    return response.data;
+  }
+
+  async getTVWatchProviders(tvId: number): Promise<WatchProvidersResponse> {
+    const response = await this.api.get<WatchProvidersResponse>(
+      `/tv/${tvId}/watch/providers`
+    );
+    return response.data;
+  }
+
+  async getTVReviews(tvId: number, page: number = 1): Promise<ReviewResponse> {
+    const response = await this.api.get<ReviewResponse>(
+      `/tv/${tvId}/reviews`,
+      { params: { page } }
+    );
+    return response.data;
+  }
+
   async getTopRatedMovies(page: number = 1): Promise<MovieResponse> {
     const response = await this.api.get<MovieResponse>("/movie/top_rated", {
       params: { page },
@@ -160,9 +208,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get upcoming movies
-   */
   async getUpcomingMovies(page: number = 1): Promise<MovieResponse> {
     const response = await this.api.get<MovieResponse>("/movie/upcoming", {
       params: { page },
@@ -170,9 +215,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get now playing movies
-   */
   async getNowPlayingMovies(page: number = 1): Promise<MovieResponse> {
     const response = await this.api.get<MovieResponse>("/movie/now_playing", {
       params: { page },
@@ -180,41 +222,43 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Discover movies with advanced filters
-   */
-  async discoverMovies(
-    options: {
-      page?: number;
-      sort_by?: string;
-      genre?: number[];
-      year?: number;
-      vote_average_gte?: number;
-      vote_average_lte?: number;
-      with_runtime_gte?: number;
-      with_runtime_lte?: number;
-      with_companies?: number[];
-      with_keywords?: number[];
-      language?: string;
-      include_adult?: boolean;
-      certification?: string;
-      certification_country?: string;
-      with_original_language?: string;
-      without_genres?: number[];
-    } = {}
-  ): Promise<MovieResponse> {
-    const params: Record<string, unknown> = { page: 1, ...options };
+  async discoverMovies(options: DiscoverMoviesOptions = {}): Promise<MovieResponse> {
+    const params: Record<string, unknown> = { page: 1 };
 
-    // Convert arrays to comma-separated strings
-    if (options.genre) params.with_genres = options.genre.join(",");
-    if (options.with_companies)
-      params.with_companies = options.with_companies.join(",");
-    if (options.with_keywords)
-      params.with_keywords = options.with_keywords.join(",");
-    if (options.without_genres)
-      params.without_genres = options.without_genres.join(",");
+    for (const [key, value] of Object.entries(options)) {
+      if (value === undefined || value === null || value === "") continue;
+      if (key === "genre" && Array.isArray(value)) {
+        params.with_genres = value.join(",");
+      } else if (key === "vote_average_gte") {
+        params["vote_average.gte"] = value;
+      } else if (key === "vote_average_lte") {
+        params["vote_average.lte"] = value;
+      } else if (key === "with_runtime_gte") {
+        params["with_runtime.gte"] = value;
+      } else if (key === "with_runtime_lte") {
+        params["with_runtime.lte"] = value;
+      } else if (Array.isArray(value)) {
+        params[key] = value.join(",");
+      } else {
+        params[key] = value;
+      }
+    }
 
     const response = await this.api.get<MovieResponse>("/discover/movie", {
+      params,
+    });
+    return response.data;
+  }
+
+  async discoverTVShows(options: DiscoverTVOptions = {}): Promise<TVShowResponse> {
+    const params: Record<string, unknown> = { page: 1 };
+
+    for (const [key, value] of Object.entries(options)) {
+      if (value === undefined || value === null || value === "") continue;
+      params[key] = value;
+    }
+
+    const response = await this.api.get<TVShowResponse>("/discover/tv", {
       params,
     });
     return response.data;
@@ -224,15 +268,12 @@ class TMDBClient {
   // MOVIE DETAILS
   // ======================
 
-  /**
-   * Get movie details by ID
-   */
   async getMovieDetails(
     movieId: number,
     appendToResponse?: string[]
   ): Promise<MovieDetails> {
     const params: Record<string, string> = {};
-    if (appendToResponse) {
+    if (appendToResponse && appendToResponse.length > 0) {
       params.append_to_response = appendToResponse.join(",");
     }
 
@@ -242,17 +283,11 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get movie credits (cast and crew)
-   */
   async getMovieCredits(movieId: number): Promise<Credits> {
     const response = await this.api.get<Credits>(`/movie/${movieId}/credits`);
     return response.data;
   }
 
-  /**
-   * Get movie videos (trailers, teasers, etc.)
-   */
   async getMovieVideos(movieId: number): Promise<VideoResponse> {
     const response = await this.api.get<VideoResponse>(
       `/movie/${movieId}/videos`
@@ -260,57 +295,39 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get movie reviews
-   */
   async getMovieReviews(
     movieId: number,
     page: number = 1
   ): Promise<ReviewResponse> {
     const response = await this.api.get<ReviewResponse>(
       `/movie/${movieId}/reviews`,
-      {
-        params: { page },
-      }
+      { params: { page } }
     );
     return response.data;
   }
 
-  /**
-   * Get similar movies
-   */
   async getSimilarMovies(
     movieId: number,
     page: number = 1
   ): Promise<MovieResponse> {
     const response = await this.api.get<MovieResponse>(
       `/movie/${movieId}/similar`,
-      {
-        params: { page },
-      }
+      { params: { page } }
     );
     return response.data;
   }
 
-  /**
-   * Get movie recommendations
-   */
   async getMovieRecommendations(
     movieId: number,
     page: number = 1
   ): Promise<MovieResponse> {
     const response = await this.api.get<MovieResponse>(
       `/movie/${movieId}/recommendations`,
-      {
-        params: { page },
-      }
+      { params: { page } }
     );
     return response.data;
   }
 
-  /**
-   * Get watch providers
-   */
   async getMovieWatchProviders(movieId: number): Promise<WatchProvidersResponse> {
     const response = await this.api.get<WatchProvidersResponse>(
       `/movie/${movieId}/watch/providers`
@@ -322,9 +339,6 @@ class TMDBClient {
   // SEARCH
   // ======================
 
-  /**
-   * Search for movies
-   */
   async searchMovies(
     query: string,
     page: number = 1,
@@ -342,9 +356,21 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Multi search (movies, TV shows, people)
-   */
+  async searchTVShows(
+    query: string,
+    page: number = 1,
+    options?: {
+      include_adult?: boolean;
+      language?: string;
+      first_air_date_year?: number;
+    }
+  ): Promise<TVShowResponse> {
+    const response = await this.api.get<TVShowResponse>("/search/tv", {
+      params: { query, page, ...options },
+    });
+    return response.data;
+  }
+
   async multiSearch(
     query: string,
     page: number = 1,
@@ -362,9 +388,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Search for people
-   */
   async searchPeople(
     query: string,
     page: number = 1,
@@ -386,9 +409,6 @@ class TMDBClient {
   // GENRES
   // ======================
 
-  /**
-   * Get list of movie genres
-   */
   async getMovieGenres(): Promise<{ genres: Genre[] }> {
     const response = await this.api.get<{ genres: Genre[] }>(
       "/genre/movie/list"
@@ -396,9 +416,11 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get movies by genre
-   */
+  async getTVGenres(): Promise<{ genres: Genre[] }> {
+    const response = await this.api.get<{ genres: Genre[] }>("/genre/tv/list");
+    return response.data;
+  }
+
   async getMoviesByGenre(
     genreId: number,
     page: number = 1
@@ -413,17 +435,11 @@ class TMDBClient {
   // PERSON
   // ======================
 
-  /**
-   * Get person details
-   */
   async getPersonDetails(personId: number): Promise<PersonDetails> {
     const response = await this.api.get(`/person/${personId}`);
     return response.data;
   }
 
-  /**
-   * Get person movie credits
-   */
   async getPersonMovieCredits(personId: number): Promise<{
     cast: (Movie & { character: string; credit_id: string; order: number })[];
     crew: (Movie & { department: string; job: string; credit_id: string })[];
@@ -432,9 +448,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get person TV credits
-   */
   async getPersonTVCredits(personId: number): Promise<{
     cast: (TVShow & {
       character: string;
@@ -456,9 +469,6 @@ class TMDBClient {
   // COLLECTIONS
   // ======================
 
-  /**
-   * Get collection details
-   */
   async getCollectionDetails(collectionId: number): Promise<{
     id: number;
     name: string;
@@ -475,9 +485,6 @@ class TMDBClient {
   // UTILITY METHODS
   // ======================
 
-  /**
-   * Get configuration
-   */
   async getConfiguration(): Promise<{
     images: {
       base_url: string;
@@ -494,9 +501,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get available countries
-   */
   async getCountries(): Promise<
     { iso_3166_1: string; english_name: string; native_name: string }[]
   > {
@@ -504,9 +508,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get available languages
-   */
   async getLanguages(): Promise<
     { iso_639_1: string; english_name: string; name: string }[]
   > {
@@ -514,9 +515,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Get TV show season details
-   */
   async getSeasonDetails(
     tvId: number,
     seasonNumber: number
@@ -564,9 +562,6 @@ class TMDBClient {
     return response.data;
   }
 
-  /**
-   * Health check
-   */
   async healthCheck(): Promise<boolean> {
     try {
       await this.api.get("/configuration");
@@ -577,9 +572,7 @@ class TMDBClient {
   }
 }
 
-// Create and export singleton instance
 const tmdbClient = new TMDBClient();
 export default tmdbClient;
 
-// Export class for testing
 export { TMDBClient };

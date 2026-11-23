@@ -1,71 +1,47 @@
 "use client";
 
 import { Show, UserButton } from "@clerk/nextjs";
-import { motion } from "framer-motion";
 import Link from "next/link";
 
 export default function ClerkAuthButton() {
   return (
     <>
-      {/* When signed out */}
       <Show when="signed-out">
-        <div className="flex items-center space-x-2">
-          <Link href="/sign-in">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg border border-slate-200 dark:border-slate-700 transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              Login
-            </motion.button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/sign-in"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-secondary/70 px-3.5 text-sm font-medium text-foreground hover:bg-secondary hover:border-foreground/20 transition-colors"
+          >
+            Sign in
           </Link>
-          <Link href="/sign-up">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              Register
-            </motion.button>
+          <Link
+            href="/sign-up"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-600 transition-colors shadow-sm shadow-primary/20"
+          >
+            Join
           </Link>
         </div>
       </Show>
 
-      {/* When signed in */}
       <Show when="signed-in">
-        <div className="flex items-center">
-          {/* Clerk User Button with Large Avatar */}
-          <div className="clerk-avatar-large">
-            <UserButton
-              userProfileUrl="/profile"
-              appearance={{
-                elements: {
-                  avatarBox:
-                    "border-2 border-orange-500/50 hover:border-orange-500 transition-colors duration-200",
-                  userButtonPopoverCard: `
-                  bg-slate-900/90 
-                  backdrop-blur-xl 
-                  border 
-                  border-white/10 
-                  shadow-2xl 
-                  shadow-black/50 
-                  rounded-2xl
-                `,
-                  userButtonPopoverActions: "bg-transparent",
-                  userButtonPopoverActionButton: `
-                  text-slate-300 
-                  hover:text-white 
-                  hover:bg-white/10 
-                  rounded-lg 
-                  transition-all 
-                  duration-200
-                `,
-                  userButtonPopoverActionButtonText:
-                    "text-slate-300 hover:text-white",
-                  userButtonPopoverFooter: "hidden",
-                },
-              }} />
-          </div>
+        <div className="flex items-center clerk-avatar-btn">
+          <UserButton
+            userProfileUrl="/profile"
+            appearance={{
+              elements: {
+                avatarBox:
+                  "ring-1 ring-border hover:ring-primary transition-all duration-200",
+                userButtonPopoverCard:
+                  "bg-popover border border-border shadow-2xl rounded-xl",
+                userButtonPopoverActions: "bg-transparent",
+                userButtonPopoverActionButton:
+                  "text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors",
+                userButtonPopoverActionButtonText:
+                  "text-foreground",
+                userButtonPopoverFooter: "hidden",
+              },
+            }}
+          />
         </div>
       </Show>
     </>

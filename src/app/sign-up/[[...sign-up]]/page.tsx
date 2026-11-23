@@ -1,97 +1,104 @@
 import { SignUp } from "@clerk/nextjs";
+import {
+  Film,
+  Sparkles,
+  Bookmark,
+  Gamepad2,
+  ShieldCheck,
+  Zap,
+  Globe,
+} from "lucide-react";
 import { ClerkPremiumBackground, clerkPremiumTheme } from "@/lib/clerk-theme";
+
+const benefits = [
+  {
+    icon: Sparkles,
+    title: "AI-Powered Discovery",
+    description:
+      "Match films to your exact mood and generate curated double-feature collections.",
+  },
+  {
+    icon: Bookmark,
+    title: "Unified Watchlist & Log",
+    description:
+      "Track movies and series across Plan to Watch, Watching, and Completed queues.",
+  },
+  {
+    icon: Gamepad2,
+    title: "Interactive Cinema Games",
+    description:
+      "Challenge friends with Movie Night Bingo, timed quizzes, and box office forecasts.",
+  },
+];
 
 export default function SignUpPage() {
   return (
     <ClerkPremiumBackground>
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mb-4 shadow-2xl">
-            <span className="text-3xl">🎬</span>
+      <div className="container-cinema max-w-5xl py-8">
+        <div className="mb-10 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white shadow-sm shadow-primary/30">
+            <Film className="h-6 w-6" />
           </div>
-          <h1 className="text-4xl font-bold mb-3">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             Join{" "}
-            <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <span className="font-display italic font-semibold text-primary">
               Cinetron
             </span>
           </h1>
-          <p className="text-slate-300 text-lg font-medium max-w-md mx-auto">
-            Start your premium movie experience with exclusive features
+          <p className="mt-1.5 text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
+            Create your account to sync watchlists, favorites, and personalized
+            recommendations.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
-          {/* Sign Up Form */}
-          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-6">
             <SignUp appearance={clerkPremiumTheme} />
           </div>
 
-          {/* Features */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              Premium Features
-            </h2>
+          <div className="lg:col-span-6 space-y-5">
+            <div className="surface-card p-6 sm:p-8 space-y-5">
+              <h2 className="text-lg font-bold text-foreground">
+                Included with your account
+              </h2>
 
-            <div className="space-y-4">
-              {[
-                {
-                  icon: "🎪",
-                  title: "3D Movie Experience",
-                  description:
-                    "Immerse yourself with interactive 3D movie posters and environments",
-                },
-                {
-                  icon: "🤖",
-                  title: "AI Recommendations",
-                  description:
-                    "Get personalized movie suggestions powered by machine learning",
-                },
-                {
-                  icon: "🎭",
-                  title: "Social Watch Parties",
-                  description:
-                    "Watch movies with friends in real-time with synchronized playback",
-                },
-                {
-                  icon: "🎙️",
-                  title: "Voice Commands",
-                  description:
-                    "Navigate and search using advanced voice recognition",
-                },
-              ].map((feature, index) => (
-                <div
-                  key={index}
-                  className="flex gap-4 p-4 bg-white/[0.02] backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/[0.05] transition-all duration-300"
-                >
-                  <div className="text-2xl">{feature.icon}</div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">
-                      {feature.title}
-                    </h3>
-                    <p className="text-slate-300 text-sm">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+              <div className="space-y-4">
+                {benefits.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.title}
+                      className="flex items-start gap-4 rounded-xl border border-border bg-secondary/40 p-4"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-primary">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-foreground">
+                          {item.title}
+                        </h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-            {/* Trust Indicators */}
-            <div className="pt-6 border-t border-white/10">
-              <div className="flex items-center justify-center gap-6 text-sm text-slate-400">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">🔒</span>
-                  <span>Secure & Private</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-400">⚡</span>
-                  <span>Lightning Fast</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">🌟</span>
-                  <span>Premium Quality</span>
-                </div>
+              <div className="pt-4 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                  Private by default
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-amber-400" />
+                  Live TMDB sync
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Globe className="h-3.5 w-3.5 text-sky-400" />
+                  Global catalog
+                </span>
               </div>
             </div>
           </div>

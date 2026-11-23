@@ -1,59 +1,41 @@
 "use client";
 
 import React from "react";
+import { Sun, Moon, Monitor, Film, Clapperboard, Check } from "lucide-react";
 import { useThemeStore } from "@/stores";
 import type { Theme } from "@/types";
 
 interface ThemeOption {
   value: Theme;
   label: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   description: string;
-  gradient?: string;
 }
 
 const themeOptions: ThemeOption[] = [
   {
-    value: "light",
-    label: "Light",
-    icon: "☀️",
-    description: "Clean and bright interface",
-    gradient: "from-yellow-400 to-orange-500",
-  },
-  {
     value: "dark",
-    label: "Dark",
-    icon: "🌙",
-    description: "Easy on the eyes",
-    gradient: "from-blue-600 to-purple-600",
+    label: "Cinema Dark",
+    icon: Moon,
+    description: "Obsidian editorial default",
   },
   {
-    value: "cinema",
-    label: "Cinema Light",
-    icon: "🎬",
-    description: "Premium movie experience",
-    gradient: "from-red-500 to-yellow-500",
+    value: "light",
+    label: "Editorial Light",
+    icon: Sun,
+    description: "Crisp high-contrast daylight",
   },
   {
     value: "cinema-dark",
-    label: "Cinema Dark",
-    icon: "🎭",
-    description: "Immersive theater mode",
-    gradient: "from-purple-600 to-pink-600",
+    label: "Theater Mode",
+    icon: Clapperboard,
+    description: "Deep low-glare cinema dark",
   },
   {
     value: "system",
     label: "System",
-    icon: "🖥️",
-    description: "Follow system preference",
-    gradient: "from-gray-500 to-gray-700",
-  },
-  {
-    value: "auto",
-    label: "Auto",
-    icon: "🔄",
-    description: "Adapts automatically",
-    gradient: "from-teal-500 to-blue-500",
+    icon: Monitor,
+    description: "Match OS appearance",
   },
 ];
 
@@ -70,191 +52,94 @@ export default function ThemeSelector({
 }: ThemeSelectorProps) {
   const { theme, setTheme, isDark } = useThemeStore();
 
-  const sizeClasses = {
-    sm: "text-xs p-3",
-    md: "text-sm p-4",
-    lg: "text-base p-5",
-  };
-
-  const iconSizes = {
-    sm: "text-lg",
-    md: "text-xl",
-    lg: "text-2xl",
-  };
+  const padding =
+    size === "sm" ? "p-3" : size === "lg" ? "p-5" : "p-4";
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-          Theme Preference
-        </h3>
-        <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
-          <span>Current:</span>
-          <div className="flex items-center space-x-1">
-            <span>{themeOptions.find((opt) => opt.value === theme)?.icon}</span>
-            <span className="font-medium">
-              {themeOptions.find((opt) => opt.value === theme)?.label}
-            </span>
-            {(theme === "system" || theme === "auto") && (
-              <span className="text-xs bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">
-                {isDark ? "Dark" : "Light"}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-3">
       <div
-        className={`
-        grid gap-3
-        ${layout === "grid" ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-1"}
-      `}
+        className={`grid gap-3 ${
+          layout === "grid" ? "grid-cols-2" : "grid-cols-1"
+        }`}
       >
-        {themeOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => setTheme(option.value)}
-            className={`
-              ${sizeClasses[size]}
-              group relative overflow-hidden rounded-xl border-2 transition-all duration-300 text-left
-              ${
-                theme === option.value
-                  ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-lg scale-105"
-                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-25 dark:hover:bg-purple-900/10 hover:scale-102"
-              }
-            `}
-          >
-            {/* Background gradient overlay */}
-            <div
-              className={`
-              absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300
-              bg-gradient-to-br ${option.gradient}
-            `}
-            />
+        {themeOptions.map((option) => {
+          const Icon = option.icon;
+          const active =
+            theme === option.value ||
+            (option.value === "system" && theme === "auto") ||
+            (option.value === "light" && theme === "cinema");
 
-            {/* Content */}
-            <div className="relative z-10 flex items-start space-x-3">
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setTheme(option.value)}
+              className={`${padding} relative flex items-start gap-3 rounded-xl border text-left transition-all cursor-pointer ${
+                active
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-foreground/20"
+              }`}
+            >
               <div
-                className={`
-                ${
-                  iconSizes[size]
-                } transition-transform duration-300 group-hover:scale-110
-                ${theme === option.value ? "animate-pulse" : ""}
-              `}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                  active
+                    ? "border-primary/40 bg-primary text-white"
+                    : "border-border bg-card text-foreground"
+                }`}
               >
-                {option.icon}
+                <Icon className="h-4 w-4" />
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h4
-                    className={`
-                    font-semibold text-slate-900 dark:text-white
-                    ${
-                      theme === option.value
-                        ? "text-purple-700 dark:text-purple-300"
-                        : ""
-                    }
-                  `}
-                  >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-foreground">
                     {option.label}
-                  </h4>
-
-                  {theme === option.value && (
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-                  )}
+                  </span>
+                  {active && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
                 </div>
-
                 {showDescription && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
                     {option.description}
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Ripple effect on click */}
-            <div className="absolute inset-0 opacity-0 group-active:opacity-20 bg-purple-500 transition-opacity duration-150" />
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
-      {/* System preference info */}
       {(theme === "system" || theme === "auto") && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-          <div className="flex items-start space-x-2">
-            <span className="text-blue-500 mt-0.5">ℹ️</span>
-            <div className="text-sm">
-              <p className="text-blue-700 dark:text-blue-300 font-medium">
-                Following system preference
-              </p>
-              <p className="text-blue-600 dark:text-blue-400 mt-1">
-                Your system is currently set to{" "}
-                <strong>{isDark ? "dark" : "light"}</strong> mode. The theme
-                will automatically change when you update your system
-                preferences.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview section for cinema themes */}
-      {(theme === "cinema" || theme === "cinema-dark") && (
-        <div className="bg-gradient-to-r from-red-50 to-yellow-50 dark:from-red-900/20 dark:to-yellow-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-          <div className="flex items-start space-x-2">
-            <span className="text-red-500 mt-0.5">🎬</span>
-            <div className="text-sm">
-              <p className="text-red-700 dark:text-red-300 font-medium">
-                Premium Cinema Experience
-              </p>
-              <p className="text-red-600 dark:text-red-400 mt-1">
-                Enjoy enhanced colors and movie-theater-inspired design elements
-                for the ultimate viewing experience.
-              </p>
-            </div>
-          </div>
-        </div>
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <Film className="h-3.5 w-3.5 text-primary" />
+          Following system preference — currently{" "}
+          <span className="font-medium text-foreground">
+            {isDark ? "Dark" : "Light"}
+          </span>
+          .
+        </p>
       )}
     </div>
   );
 }
 
-// Quick theme toggle component for headers/navbars
 export function QuickThemeToggle({
   size = "md",
 }: {
   size?: "sm" | "md" | "lg";
 }) {
-  const { theme, toggleTheme, isDark } = useThemeStore();
+  const { toggleTheme, isDark } = useThemeStore();
 
-  const sizeClasses = {
-    sm: "p-1.5 text-sm",
-    md: "p-2 text-base",
-    lg: "p-3 text-lg",
-  };
-
-  const currentTheme = themeOptions.find((opt) => opt.value === theme);
+  const dim =
+    size === "sm" ? "h-8 w-8" : size === "lg" ? "h-10 w-10" : "h-9 w-9";
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
-      className={`
-        ${sizeClasses[size]}
-        rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300
-        hover:bg-slate-200 dark:hover:bg-slate-700 
-        hover:text-slate-900 dark:hover:text-white
-        transition-all duration-300 group relative
-      `}
-      title={`Current: ${currentTheme?.label}${
-        theme === "system" || theme === "auto"
-          ? ` (${isDark ? "Dark" : "Light"})`
-          : ""
-      } - Click to toggle`}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className={`${dim} inline-flex items-center justify-center rounded-lg border border-border bg-secondary/70 text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors cursor-pointer`}
     >
-      <span className="transition-transform duration-300 group-hover:scale-110 block">
-        {currentTheme?.icon || "🌓"}
-      </span>
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
   );
 }

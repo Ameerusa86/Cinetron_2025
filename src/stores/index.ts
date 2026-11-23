@@ -19,6 +19,42 @@ import type {
   CustomList,
 } from "@/types";
 
+function createDefaultUser(): User {
+  return {
+    id:
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `guest-${Date.now()}`,
+    username: "Guest User",
+    email: "",
+    avatar: undefined,
+    watchlist: [],
+    favorites: [],
+    ratings: {},
+    customLists: [],
+    preferences: {
+      language: "en",
+      country: "US",
+      genres: [],
+      adultContent: false,
+      notifications: {
+        email: false,
+        push: false,
+        newReleases: true,
+        recommendations: true,
+        social: false,
+      },
+      privacy: {
+        profileVisibility: "private",
+        watchlistVisibility: "private",
+        activityVisibility: "private",
+      },
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 // ======================
 // THEME STORE
 // ======================
@@ -26,91 +62,51 @@ import type {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      theme: "system",
-      isDark: false,
+      theme: "dark",
+      isDark: true,
       setTheme: (theme: Theme) => {
         const applyTheme = (isDarkMode: boolean) => {
-          const root = document.documentElement;
-
-          // Debug logging
-          console.log(`Applying theme: ${theme}, isDark: ${isDarkMode}`);
-
-          if (isDarkMode) {
-            root.classList.add("dark");
-            root.setAttribute(
-              "data-theme",
-              theme === "cinema" || theme === "cinema-dark"
-                ? "cinema-dark"
-                : "dark"
-            );
-          } else {
-            root.classList.remove("dark");
-            root.setAttribute(
-              "data-theme",
-              theme === "cinema" || theme === "cinema-dark" ? "cinema" : "light"
-            );
+          if (typeof document !== "undefined") {
+            const root = document.documentElement;
+            if (isDarkMode) {
+              root.classList.add("dark");
+              root.setAttribute(
+                "data-theme",
+                theme === "cinema" || theme === "cinema-dark"
+                  ? "cinema-dark"
+                  : "dark"
+              );
+            } else {
+              root.classList.remove("dark");
+              root.setAttribute(
+                "data-theme",
+                theme === "cinema" || theme === "cinema-dark"
+                  ? "cinema"
+                  : "light"
+              );
+            }
           }
-
           set({ isDark: isDarkMode });
-
-          // Debug logging
-          console.log(`Theme applied. Root classes:`, root.className);
-          console.log(`Data theme:`, root.getAttribute("data-theme"));
         };
 
         set({ theme });
 
-        // Apply theme logic
-        if (theme === "light") {
+        if (typeof window === "undefined") return;
+
+        if (theme === "light" || theme === "cinema") {
           applyTheme(false);
-        } else if (theme === "dark") {
-          applyTheme(true);
-        } else if (theme === "cinema") {
-          applyTheme(false);
-        } else if (theme === "cinema-dark") {
+        } else if (theme === "dark" || theme === "cinema-dark") {
           applyTheme(true);
         } else if (theme === "system" || theme === "auto") {
-          // System/Auto theme - follow system preference
           const isDarkSystem = window.matchMedia(
             "(prefers-color-scheme: dark)"
           ).matches;
           applyTheme(isDarkSystem);
-
-          // Listen for system theme changes
-          const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-          const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-            if (get().theme === "system" || get().theme === "auto") {
-              applyTheme(e.matches);
-            }
-          };
-
-          // Remove existing listener and add new one
-          mediaQuery.removeEventListener("change", handleSystemThemeChange);
-          mediaQuery.addEventListener("change", handleSystemThemeChange);
         }
       },
       toggleTheme: () => {
-        const { theme } = get();
-        let newTheme: Theme;
-
-        // Smart toggle based on current theme
-        if (theme === "light") {
-          newTheme = "dark";
-        } else if (theme === "dark") {
-          newTheme = "light";
-        } else if (theme === "cinema") {
-          newTheme = "cinema-dark";
-        } else if (theme === "cinema-dark") {
-          newTheme = "cinema";
-        } else {
-          // For system/auto, toggle to opposite of current appearance
-          const isDarkSystem = window.matchMedia(
-            "(prefers-color-scheme: dark)"
-          ).matches;
-          newTheme = isDarkSystem ? "light" : "dark";
-        }
-
-        get().setTheme(newTheme);
+        const { isDark } = get();
+        get().setTheme(isDark ? "light" : "dark");
       },
     }),
     {
@@ -182,40 +178,32 @@ export const useCacheStore = create<CacheState>()(
           genres: {
             data,
             timestamp: Date.now(),
-            expiry: Date.now() + CACHE_EXPIRY * 4, // Cache genres for 1 hour
+            expiry: Date.now() + CACHE_EXPIRY * 4,
           },
         });
       },
       getMovies: (key: string) => {
         const { movies } = get();
         const entry = movies[key];
-        if (!entry || entry.expiry < Date.now()) {
-          return null;
-        }
+        if (!entry || entry.expiry < Date.now()) return null;
         return entry.data;
       },
       getMovieDetails: (id: number) => {
         const { movieDetails } = get();
         const entry = movieDetails[id];
-        if (!entry || entry.expiry < Date.now()) {
-          return null;
-        }
+        if (!entry || entry.expiry < Date.now()) return null;
         return entry.data;
       },
       getGenres: () => {
         const { genres } = get();
-        if (!genres || genres.expiry < Date.now()) {
-          return null;
-        }
+        if (!genres || genres.expiry < Date.now()) return null;
         return genres.data;
       },
       clearExpired: () => {
         const now = Date.now();
         set((state) => ({
           movies: Object.fromEntries(
-            Object.entries(state.movies).filter(
-              ([, entry]) => entry.expiry > now
-            )
+            Object.entries(state.movies).filter(([, entry]) => entry.expiry > now)
           ),
           movieDetails: Object.fromEntries(
             Object.entries(state.movieDetails).filter(
@@ -257,11 +245,13 @@ export const useSearchStore = create<SearchState>()(
       setError: (error: string | null) => set({ error }),
       setFilters: (filters: SearchFilters) => set({ filters }),
       addToHistory: (query: string) => {
+        const trimmed = query.trim();
+        if (!trimmed) return;
         const { history } = get();
-        const newHistory = [query, ...history.filter((q) => q !== query)].slice(
-          0,
-          10
-        );
+        const newHistory = [
+          trimmed,
+          ...history.filter((q) => q.toLowerCase() !== trimmed.toLowerCase()),
+        ].slice(0, 8);
         set({ history: newHistory });
       },
       clearHistory: () => set({ history: [] }),
@@ -313,7 +303,10 @@ export const useUserStore = create<{
     planToWatch: number;
   };
   createCustomList: (name: string, description: string, isPublic: boolean) => void;
-  updateCustomList: (id: string, updates: Partial<Omit<CustomList, "id" | "createdAt" | "movies">>) => void;
+  updateCustomList: (
+    id: string,
+    updates: Partial<Omit<CustomList, "id" | "createdAt" | "movies">>
+  ) => void;
   deleteCustomList: (id: string) => void;
   addMovieToList: (listId: string, movieId: number) => void;
   removeMovieFromList: (listId: string, movieId: number) => void;
@@ -322,87 +315,37 @@ export const useUserStore = create<{
     (set, get) => ({
       user: null,
       setUser: (user: User | null) => {
-        // If setting a user for the first time, ensure they have the correct watchlist structure
         if (
           user &&
           user.watchlist &&
           Array.isArray(user.watchlist) &&
-          user.watchlist.length > 0
+          user.watchlist.length > 0 &&
+          typeof user.watchlist[0] === "number"
         ) {
-          // Check if watchlist contains old format (numbers) and convert them
-          const firstItem = user.watchlist[0];
-          if (typeof firstItem === "number") {
-            // Convert old format to new format
-            user.watchlist = (user.watchlist as unknown as number[]).map(
-              (id: number) => ({
-                id,
-                type: "movie" as const,
-                status: "plan-to-watch" as const,
-                priority: "medium" as const,
-                addedAt: new Date().toISOString(),
-              })
-            );
-          }
+          user.watchlist = (user.watchlist as unknown as number[]).map(
+            (id: number) => ({
+              id,
+              type: "movie" as const,
+              status: "plan-to-watch" as const,
+              priority: "medium" as const,
+              addedAt: new Date().toISOString(),
+            })
+          );
         }
-
         set({ user });
       },
       updatePreferences: (newPreferences: Partial<UserPreferences>) => {
-        const { user } = get();
-        if (user) {
-          set({
-            user: {
-              ...user,
-              preferences: { ...user.preferences, ...newPreferences },
-              updatedAt: new Date().toISOString(),
-            },
-          });
-        }
-      },
-      addToWatchlist: (item: {
-        id: number;
-        type: "movie" | "tv";
-        status?: "plan-to-watch" | "watching" | "completed";
-        priority?: "low" | "medium" | "high";
-        notes?: string;
-      }) => {
-        let { user } = get();
-
-        // If no user exists, create a default user
-        if (!user) {
-          user = {
-            id: crypto.randomUUID(),
-            username: "Guest User",
-            email: "",
-            avatar: undefined,
-            watchlist: [],
-            favorites: [],
-            ratings: {},
-            customLists: [],
-            preferences: {
-              language: "en",
-              country: "US",
-              genres: [],
-              adultContent: false,
-              notifications: {
-                email: false,
-                push: false,
-                newReleases: true,
-                recommendations: true,
-                social: false,
-              },
-              privacy: {
-                profileVisibility: "private",
-                watchlistVisibility: "private",
-                activityVisibility: "private",
-              },
-            },
-            createdAt: new Date().toISOString(),
+        const user = get().user || createDefaultUser();
+        set({
+          user: {
+            ...user,
+            preferences: { ...user.preferences, ...newPreferences },
             updatedAt: new Date().toISOString(),
-          };
-        }
-
-        // Check if item is already in watchlist
+          },
+        });
+      },
+      addToWatchlist: (item) => {
+        const user = get().user || createDefaultUser();
         if (!user.watchlist.some((w) => w.id === item.id)) {
           const watchlistItem: WatchlistItem = {
             id: item.id,
@@ -412,15 +355,12 @@ export const useUserStore = create<{
             addedAt: new Date().toISOString(),
             notes: item.notes,
           };
-
-          const updatedUser: User = {
-            ...user,
-            watchlist: [...user.watchlist, watchlistItem],
-            updatedAt: new Date().toISOString(),
-          };
-
           set({
-            user: updatedUser,
+            user: {
+              ...user,
+              watchlist: [...user.watchlist, watchlistItem],
+              updatedAt: new Date().toISOString(),
+            },
           });
         }
       },
@@ -436,10 +376,7 @@ export const useUserStore = create<{
           });
         }
       },
-      updateWatchlistItem: (
-        itemId: number,
-        updates: Partial<Omit<WatchlistItem, "id" | "addedAt">>
-      ) => {
+      updateWatchlistItem: (itemId, updates) => {
         const { user } = get();
         if (user) {
           set({
@@ -465,8 +402,8 @@ export const useUserStore = create<{
         }
       },
       addToFavorites: (movieId: number) => {
-        const { user } = get();
-        if (user && !user.favorites.includes(movieId)) {
+        const user = get().user || createDefaultUser();
+        if (!user.favorites.includes(movieId)) {
           set({
             user: {
               ...user,
@@ -489,16 +426,14 @@ export const useUserStore = create<{
         }
       },
       rateMovie: (movieId: number, rating: number) => {
-        const { user } = get();
-        if (user) {
-          set({
-            user: {
-              ...user,
-              ratings: { ...user.ratings, [movieId]: rating },
-              updatedAt: new Date().toISOString(),
-            },
-          });
-        }
+        const user = get().user || createDefaultUser();
+        set({
+          user: {
+            ...user,
+            ratings: { ...user.ratings, [movieId]: rating },
+            updatedAt: new Date().toISOString(),
+          },
+        });
       },
       isInWatchlist: (itemId: number) => {
         const { user } = get();
@@ -530,58 +465,55 @@ export const useUserStore = create<{
             planToWatch: 0,
           };
 
-        const stats = {
+        return {
           total: user.watchlist.length,
           movies: user.watchlist.filter((item) => item.type === "movie").length,
           tvShows: user.watchlist.filter((item) => item.type === "tv").length,
-          completed: user.watchlist.filter(
-            (item) => item.status === "completed"
-          ).length,
+          completed: user.watchlist.filter((item) => item.status === "completed")
+            .length,
           watching: user.watchlist.filter((item) => item.status === "watching")
             .length,
           planToWatch: user.watchlist.filter(
             (item) => item.status === "plan-to-watch"
           ).length,
         };
-
-        return stats;
       },
-      createCustomList: (name: string, description: string, isPublic: boolean) => {
-        const { user } = get();
-        if (user) {
-          const newList: CustomList = {
-            id: crypto.randomUUID(),
-            name,
-            description,
-            isPublic,
-            movies: [],
-            createdAt: new Date().toISOString(),
+      createCustomList: (name, description, isPublic) => {
+        const user = get().user || createDefaultUser();
+        const newList: CustomList = {
+          id: crypto.randomUUID(),
+          name,
+          description,
+          isPublic,
+          movies: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        set({
+          user: {
+            ...user,
+            customLists: [...(user.customLists || []), newList],
             updatedAt: new Date().toISOString(),
-          };
-          set({
-            user: {
-              ...user,
-              customLists: [...(user.customLists || []), newList],
-              updatedAt: new Date().toISOString(),
-            },
-          });
-        }
+          },
+        });
       },
-      updateCustomList: (id: string, updates: Partial<Omit<CustomList, "id" | "createdAt" | "movies">>) => {
+      updateCustomList: (id, updates) => {
         const { user } = get();
         if (user && user.customLists) {
           set({
             user: {
               ...user,
               customLists: user.customLists.map((list) =>
-                list.id === id ? { ...list, ...updates, updatedAt: new Date().toISOString() } : list
+                list.id === id
+                  ? { ...list, ...updates, updatedAt: new Date().toISOString() }
+                  : list
               ),
               updatedAt: new Date().toISOString(),
             },
           });
         }
       },
-      deleteCustomList: (id: string) => {
+      deleteCustomList: (id) => {
         const { user } = get();
         if (user && user.customLists) {
           set({
@@ -593,7 +525,7 @@ export const useUserStore = create<{
           });
         }
       },
-      addMovieToList: (listId: string, movieId: number) => {
+      addMovieToList: (listId, movieId) => {
         const { user } = get();
         if (user && user.customLists) {
           set({
@@ -601,7 +533,11 @@ export const useUserStore = create<{
               ...user,
               customLists: user.customLists.map((list) =>
                 list.id === listId && !list.movies.includes(movieId)
-                  ? { ...list, movies: [...list.movies, movieId], updatedAt: new Date().toISOString() }
+                  ? {
+                      ...list,
+                      movies: [...list.movies, movieId],
+                      updatedAt: new Date().toISOString(),
+                    }
                   : list
               ),
               updatedAt: new Date().toISOString(),
@@ -609,7 +545,7 @@ export const useUserStore = create<{
           });
         }
       },
-      removeMovieFromList: (listId: string, movieId: number) => {
+      removeMovieFromList: (listId, movieId) => {
         const { user } = get();
         if (user && user.customLists) {
           set({
@@ -617,7 +553,11 @@ export const useUserStore = create<{
               ...user,
               customLists: user.customLists.map((list) =>
                 list.id === listId
-                  ? { ...list, movies: list.movies.filter((id) => id !== movieId), updatedAt: new Date().toISOString() }
+                  ? {
+                      ...list,
+                      movies: list.movies.filter((id) => id !== movieId),
+                      updatedAt: new Date().toISOString(),
+                    }
                   : list
               ),
               updatedAt: new Date().toISOString(),
@@ -653,12 +593,14 @@ export const useNotificationStore = create<{
   addNotification: (notification) => {
     const newNotification: Notification = {
       ...notification,
-      id: crypto.randomUUID(),
+      id:
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}`,
       createdAt: new Date().toISOString(),
       read: false,
     };
 
-    // Trigger Shadcn Sonner toast based on type
     if (notification.type === "success") {
       toast.success(notification.title, { description: notification.message });
     } else if (notification.type === "error") {
@@ -721,22 +663,19 @@ export const useNotificationStore = create<{
 }));
 
 // ======================
-// UTILITY HOOKS
+// UTILITY INITIALIZERS
 // ======================
 
-// Initialize theme on app start
 export const initializeTheme = () => {
   const { theme, setTheme } = useThemeStore.getState();
   setTheme(theme);
 };
 
-// Clear expired cache on app start
 export const initializeCache = () => {
   const { clearExpired } = useCacheStore.getState();
   clearExpired();
 };
 
-// Clear expired notifications on app start
 export const initializeNotifications = () => {
   const { clearExpired } = useNotificationStore.getState();
   clearExpired();

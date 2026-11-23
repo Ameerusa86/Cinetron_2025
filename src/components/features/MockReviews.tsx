@@ -1,174 +1,238 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
+import { MessageSquare, Star, ThumbsUp, Send, User } from "lucide-react";
+import type { Review } from "@/types";
+import { useNotificationStore } from "@/stores";
 
-interface MockReview {
+interface LocalReview {
   id: string;
   author: string;
-  avatar: string;
-  rating: number;
+  rating: number | null;
   content: string;
   date: string;
+  source: "tmdb" | "community";
   likes: number;
+  liked?: boolean;
 }
-
-const generateMockReviews = (movieId: number): MockReview[] => {
-  // Use movieId as seed for consistent mock data
-  const seed = movieId % 5;
-  const reviewsList = [
-    [
-      {
-        id: "1",
-        author: "Sarah Jenkins",
-        avatar: "https://i.pravatar.cc/150?u=sarah",
-        rating: 9,
-        content: "Absolutely brilliant! The cinematography was breathtaking and the performances were top-notch. I couldn't look away for a single second.",
-        date: "2 days ago",
-        likes: 124
-      },
-      {
-        id: "2",
-        author: "Mike Ross",
-        avatar: "https://i.pravatar.cc/150?u=mike",
-        rating: 7,
-        content: "A solid effort, but the pacing felt a bit off in the second act. Still worth watching for the stunning visual effects.",
-        date: "1 week ago",
-        likes: 45
-      },
-      {
-        id: "3",
-        author: "Elena Rodriguez",
-        avatar: "https://i.pravatar.cc/150?u=elena",
-        rating: 10,
-        content: "A masterpiece. This will go down as one of the best films of the decade.",
-        date: "3 weeks ago",
-        likes: 312
-      }
-    ],
-    [
-      {
-        id: "4",
-        author: "David Chen",
-        avatar: "https://i.pravatar.cc/150?u=david",
-        rating: 8,
-        content: "Really enjoyed the character development here. The ending was surprising but fitting.",
-        date: "4 days ago",
-        likes: 89
-      },
-      {
-        id: "5",
-        author: "Anna Smith",
-        avatar: "https://i.pravatar.cc/150?u=anna",
-        rating: 6,
-        content: "It was okay. I felt like I've seen this story told better before, but the acting saved it.",
-        date: "2 weeks ago",
-        likes: 23
-      }
-    ]
-  ];
-
-  return reviewsList[seed % reviewsList.length];
-};
 
 interface MockReviewsProps {
   movieId: number;
+  tmdbReviews?: Review[];
 }
 
-export function MockReviews({ movieId }: MockReviewsProps) {
-  const [reviews, setReviews] = useState<MockReview[]>(generateMockReviews(movieId));
+export function MockReviews({ tmdbReviews = [] }: MockReviewsProps) {
+  const { user } = useUser();
+  const { addNotification } = useNotificationStore();
+
+  const initialTMDB: LocalReview[] = tmdbReviews.slice(0, 8).map((r) => ({
+    id: r.id,
+    author: r.author_details?.name || r.author || "TMDB Member",
+    rating: r.author_details?.rating ?? null,
+    content: r.content,
+    date: r.created_at
+      ? new Date(r.created_at).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "Verified Review",
+    source: "tmdb",
+    likes: 0,
+    liked: false,
+  }));
+
+  const [communityReviews, setCommunityReviews] = useState<LocalReview[]>([]);
+  const [likedIds, setLikedIds] = useState<Record<string, boolean>>({});
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
   const [newReview, setNewReview] = useState("");
-  const [rating, setRating] = useState(10);
+  const [rating, setRating] = useState(8);
+
+  const allReviews = [...communityReviews, ...initialTMDB];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReview.trim()) return;
 
-    const review: MockReview = {
-      id: Date.now().toString(),
-      author: "Guest User",
-      avatar: "https://i.pravatar.cc/150?u=guest",
+    const authorName =
+      user?.fullName || user?.firstName || user?.username || "Guest Cinephile";
+
+    const review: LocalReview = {
+      id: `local-${Date.now()}`,
+      author: authorName,
       rating,
-      content: newReview,
+      content: newReview.trim(),
       date: "Just now",
-      likes: 0
+      source: "community",
+      likes: 0,
+      liked: false,
     };
 
-    setReviews([review, ...reviews]);
+    setCommunityReviews((prev) => [review, ...prev]);
     setNewReview("");
-    setRating(10);
+    setRating(8);
+
+    addNotification({
+      type: "success",
+      title: "Review Posted",
+      message: "Your review has been published to this title.",
+      read: false,
+    });
+  };
+
+  const toggleLike = (id: string) => {
+    setLikedIds((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
-    <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 lg:p-10 shadow-2xl mt-8">
-      <h2 className="text-3xl font-display font-bold text-white flex items-center gap-3 mb-8">
-        <span>💬</span> Community Reviews
-      </h2>
-
-      {/* Review Form */}
-      <form onSubmit={handleSubmit} className="mb-10 bg-black/40 p-6 rounded-2xl border border-white/5">
-        <h3 className="text-xl font-semibold text-white mb-4">Write a Review</h3>
-        <div className="mb-4">
-          <label className="block text-slate-400 text-sm mb-2">Rating ({rating}/10)</label>
-          <input 
-            type="range" 
-            min="1" 
-            max="10" 
-            value={rating} 
-            onChange={(e) => setRating(parseInt(e.target.value))}
-            className="w-full accent-emerald-500"
-          />
+    <div className="surface-card p-6 sm:p-8 space-y-8">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-secondary text-primary">
+            <MessageSquare className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">
+              Audience &amp; Critic Reviews
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {allReviews.length}{" "}
+              {allReviews.length === 1 ? "review" : "reviews"} available
+            </p>
+          </div>
         </div>
+      </div>
+
+      {/* Write a Review Form */}
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-xl border border-border bg-secondary/40 p-5 space-y-4"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold text-foreground">
+            Share Your Take
+          </h3>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">Your Rating:</span>
+            <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1">
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <span className="font-mono text-xs font-bold text-foreground">
+                {rating}/10
+              </span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={rating}
+              onChange={(e) => setRating(parseInt(e.target.value, 10))}
+              aria-label="Rating out of 10"
+              className="w-28 accent-primary cursor-pointer"
+            />
+          </div>
+        </div>
+
         <textarea
           value={newReview}
           onChange={(e) => setNewReview(e.target.value)}
-          placeholder="What did you think of the movie?"
-          className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors mb-4 min-h-[100px]"
+          placeholder="Write your thoughts on direction, performances, pacing, or cinematography..."
+          rows={3}
           required
+          className="w-full rounded-xl border border-border bg-card p-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
         />
-        <button
-          type="submit"
-          className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
-        >
-          Post Review
-        </button>
+
+        <div className="flex justify-end">
+          <button type="submit" className="btn-cinema px-5 py-2">
+            <Send className="h-3.5 w-3.5" />
+            <span>Post Review</span>
+          </button>
+        </div>
       </form>
 
       {/* Reviews List */}
-      <div className="space-y-6">
-        {reviews.map((review) => (
-          <div key={review.id} className="border-b border-white/10 pb-6 last:border-0">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <Image 
-                  src={review.avatar} 
-                  alt={review.author} 
-                  width={40} 
-                  height={40} 
-                  className="rounded-full"
-                />
-                <div>
-                  <h4 className="text-white font-medium">{review.author}</h4>
-                  <p className="text-slate-400 text-xs">{review.date}</p>
+      {allReviews.length === 0 ? (
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          No TMDB reviews yet for this title. Be the first to share your take
+          above.
+        </div>
+      ) : (
+        <div className="divide-y divide-border">
+          {allReviews.map((review) => {
+            const isLong = review.content.length > 360;
+            const isExpanded = Boolean(expandedIds[review.id]);
+            const isLiked = Boolean(likedIds[review.id]);
+
+            return (
+              <article key={review.id} className="py-5 first:pt-0 last:pb-0">
+                <div className="flex items-start justify-between gap-4 mb-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-foreground">
+                          {review.author}
+                        </h4>
+                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                          {review.source === "tmdb" ? "TMDB" : "Community"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {review.date}
+                      </p>
+                    </div>
+                  </div>
+
+                  {review.rating !== null && (
+                    <div className="inline-flex items-center gap-1 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400 shrink-0">
+                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                      <span className="font-mono">{review.rating}/10</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-1 bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded font-bold text-sm">
-                <span>⭐</span> {review.rating}/10
-              </div>
-            </div>
-            <p className="text-slate-300 text-sm leading-relaxed mb-3">
-              {review.content}
-            </p>
-            <div className="flex items-center gap-2 text-slate-400 text-xs">
-              <button className="flex items-center gap-1 hover:text-emerald-400 transition-colors">
-                <span>👍</span> {review.likes}
-              </button>
-              <span>•</span>
-              <button className="hover:text-emerald-400 transition-colors">Reply</button>
-            </div>
-          </div>
-        ))}
-      </div>
+
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {isLong && !isExpanded
+                    ? `${review.content.slice(0, 360)}...`
+                    : review.content}
+                </p>
+
+                <div className="mt-3 flex items-center gap-4 text-xs">
+                  {isLong && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedIds((prev) => ({
+                          ...prev,
+                          [review.id]: !prev[review.id],
+                        }))
+                      }
+                      className="font-medium text-primary hover:underline cursor-pointer"
+                    >
+                      {isExpanded ? "Show less" : "Read full review"}
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => toggleLike(review.id)}
+                    className={`inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
+                      isLiked
+                        ? "text-primary font-medium"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <ThumbsUp className="h-3.5 w-3.5" />
+                    <span>Helpful ({review.likes + (isLiked ? 1 : 0)})</span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

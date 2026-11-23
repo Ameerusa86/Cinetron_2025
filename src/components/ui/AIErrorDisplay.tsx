@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
-import { AlertTriangle, Clock, RefreshCw, Zap, Coffee } from "lucide-react";
+import { AlertTriangle, Clock, RefreshCw, Sparkles } from "lucide-react";
 import {
   AIError,
   AIQuotaExceededError,
@@ -18,6 +17,27 @@ interface AIErrorDisplayProps {
   compact?: boolean;
 }
 
+const toneClasses = {
+  amber: {
+    box: "border-amber-500/25 bg-amber-500/10",
+    iconWrap: "bg-amber-500/15 border-amber-500/30 text-amber-400",
+    icon: "text-amber-400",
+    btn: "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30",
+  },
+  rose: {
+    box: "border-rose-500/25 bg-rose-500/10",
+    iconWrap: "bg-rose-500/15 border-rose-500/30 text-rose-400",
+    icon: "text-rose-400",
+    btn: "bg-rose-500/20 text-rose-300 hover:bg-rose-500/30",
+  },
+  sky: {
+    box: "border-sky-500/25 bg-sky-500/10",
+    iconWrap: "bg-sky-500/15 border-sky-500/30 text-sky-400",
+    icon: "text-sky-400",
+    btn: "bg-sky-500/20 text-sky-300 hover:bg-sky-500/30",
+  },
+};
+
 export function AIErrorDisplay({
   error,
   onRetry,
@@ -29,9 +49,9 @@ export function AIErrorDisplay({
     if (error instanceof AIQuotaExceededError) {
       return {
         icon: Clock,
-        title: "AI Quota Exceeded",
+        title: "AI Quota Reached",
         message: error.message,
-        color: "orange",
+        tone: toneClasses.amber,
         showRetry: false,
         retryText: `Try again in ${error.retryAfterSeconds || 60}s`,
       };
@@ -40,19 +60,20 @@ export function AIErrorDisplay({
     if (error instanceof AIInvalidAPIKeyError) {
       return {
         icon: AlertTriangle,
-        title: "AI Service Configuration Issue",
-        message: "Please check your API configuration or contact support.",
-        color: "red",
+        title: "AI Configuration Required",
+        message: "Gemini API key is missing or invalid. You can continue using built-in curated questions.",
+        tone: toneClasses.rose,
         showRetry: false,
+        retryText: "Retry",
       };
     }
 
     if (error instanceof AIServiceUnavailableError) {
       return {
         icon: RefreshCw,
-        title: "AI Service Unavailable",
+        title: "AI Service Temporarily Unavailable",
         message: error.message,
-        color: "blue",
+        tone: toneClasses.sky,
         showRetry: true,
         retryText: "Try Again",
       };
@@ -60,9 +81,10 @@ export function AIErrorDisplay({
 
     return {
       icon: AlertTriangle,
-      title: "AI Service Error",
-      message: "Something went wrong with the AI service.",
-      color: "red",
+      title: "Unable to Reach AI Service",
+      message:
+        (error as Error)?.message || "Something went wrong with the AI request.",
+      tone: toneClasses.rose,
       showRetry: true,
       retryText: "Try Again",
     };
@@ -73,103 +95,71 @@ export function AIErrorDisplay({
 
   if (compact) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className={`flex items-center gap-3 p-3 rounded-lg border border-${config.color}-500/20 bg-${config.color}-500/10 ${className}`}
+      <div
+        className={`flex flex-wrap items-center gap-3 rounded-xl border p-3.5 ${config.tone.box} ${className}`}
       >
-        <Icon className={`w-5 h-5 text-${config.color}-500`} />
-        <div className="flex-1">
-          <p className="text-sm text-slate-300">{error.message}</p>
+        <Icon className={`h-4 w-4 shrink-0 ${config.tone.icon}`} />
+        <p className="flex-1 text-xs sm:text-sm text-foreground">
+          {config.message}
+        </p>
+        <div className="flex items-center gap-2">
+          {config.showRetry && onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${config.tone.btn}`}
+            >
+              {config.retryText}
+            </button>
+          )}
+          {onUseFallback && (
+            <button
+              type="button"
+              onClick={onUseFallback}
+              className="rounded-lg border border-border bg-secondary px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors cursor-pointer"
+            >
+              Use Curated Set
+            </button>
+          )}
         </div>
-        {config.showRetry && onRetry && (
-          <button
-            onClick={onRetry}
-            className={`text-xs px-3 py-1 rounded-md bg-${config.color}-500/20 text-${config.color}-400 hover:bg-${config.color}-500/30 transition-colors`}
-          >
-            {config.retryText}
-          </button>
-        )}
-        {onUseFallback && (
-          <button
-            onClick={onUseFallback}
-            className="text-xs px-3 py-1 rounded-md bg-slate-500/20 text-slate-400 hover:bg-slate-500/30 transition-colors"
-          >
-            Use Fallback
-          </button>
-        )}
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-${config.color}-500/20 text-center ${className}`}
+    <div
+      className={`rounded-2xl border bg-card p-6 sm:p-8 text-center ${config.tone.box} ${className}`}
     >
-      {/* Icon and Title */}
-      <div className="flex items-center justify-center mb-4">
-        <div
-          className={`p-3 rounded-2xl bg-${config.color}-500/20 border border-${config.color}-500/30`}
-        >
-          <Icon className={`w-8 h-8 text-${config.color}-500`} />
-        </div>
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border bg-background">
+        <Icon className={`h-6 w-6 ${config.tone.icon}`} />
       </div>
 
-      <h3 className="text-xl font-bold text-white mb-2">{config.title}</h3>
-      <p className="text-slate-300 mb-6">{error.message}</p>
+      <h3 className="text-lg font-bold text-foreground mb-1.5">
+        {config.title}
+      </h3>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        {config.message}
+      </p>
 
-      {/* Special message for quota exceeded */}
-      {error instanceof AIQuotaExceededError && (
-        <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Coffee className="w-5 h-5 text-orange-400" />
-            <span className="text-orange-400 font-medium">Take a Break!</span>
-          </div>
-          <p className="text-sm text-orange-300">
-            The free AI service has a daily limit of 50 requests. Your quota
-            will reset tomorrow, or you can upgrade to premium for unlimited AI
-            features.
-          </p>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      <div className="flex flex-wrap justify-center gap-3">
         {config.showRetry && onRetry && (
-          <button
-            onClick={onRetry}
-            className={`px-6 py-3 bg-${config.color}-600 text-white rounded-xl font-medium hover:bg-${config.color}-500 transition-all duration-300 flex items-center justify-center gap-2`}
-          >
-            <RefreshCw className="w-4 h-4" />
+          <button type="button" onClick={onRetry} className="btn-cinema">
+            <RefreshCw className="h-4 w-4" />
             {config.retryText}
           </button>
         )}
 
         {onUseFallback && (
           <button
+            type="button"
             onClick={onUseFallback}
-            className="px-6 py-3 bg-slate-600 text-slate-300 rounded-xl font-medium hover:bg-slate-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-2"
+            className="btn-cinema-outline"
           >
-            <Zap className="w-4 h-4" />
-            Use Sample Questions
+            <Sparkles className="h-4 w-4" />
+            Use Curated Questions
           </button>
         )}
       </div>
-
-      {/* Premium upgrade hint for quota exceeded */}
-      {error instanceof AIQuotaExceededError && (
-        <div className="mt-6 pt-6 border-t border-slate-700">
-          <p className="text-sm text-slate-400 mb-3">
-            Want unlimited AI features?
-          </p>
-          <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:from-purple-500 hover:to-blue-500 transition-all duration-300 text-sm flex items-center gap-2 mx-auto">
-            <Zap className="w-4 h-4" />
-            Upgrade to Premium
-          </button>
-        </div>
-      )}
-    </motion.div>
+    </div>
   );
 }
